@@ -5,6 +5,7 @@ import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.wallet.model.Wallet;
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -16,6 +17,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@SuperBuilder
 @Table(name = "users") // alt sınıfın tablosu
 @PrimaryKeyJoinColumn(name = "id")
 public class User extends SecurityUser {
@@ -26,13 +28,9 @@ public class User extends SecurityUser {
     @Column(nullable = false, length = 50)
     private String surname;
 
-    private Role role; // Dilersen bunu kaldırıp roles setinden kullanabilirsin
-
     private boolean active = true;
 
     private boolean phoneVerified = false;
-
-    private boolean emailVerified = false;
 
     @CreationTimestamp
     private LocalDateTime createdAt;

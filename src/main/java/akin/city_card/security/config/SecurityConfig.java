@@ -34,10 +34,10 @@ public class SecurityConfig {
                 "/v1/api/auth/login/**",
                 "/v1/api/admin/register",
                 "/v1/api/token/**",
-                "/v1/api/student/sign-up/**",
-                "/v1/api/student/forgot-password/**",
-                "/v1/api/student/reset-password/**",
-                "/v1/api/student/active/**",
+                "/v1/api/user/sign-up/**",
+                "/v1/api/user/forgot-password/**",
+                "/v1/api/user/reset-password/**",
+                "/v1/api/user/active/**",
 
 
         };
@@ -49,7 +49,7 @@ public class SecurityConfig {
 
         // Öğrenci rolleri için yollar
         String[] userPaths = {
-                "/v1/api/student/**"
+                "/v1/api/user/**"
         };
 
         return httpSecurity

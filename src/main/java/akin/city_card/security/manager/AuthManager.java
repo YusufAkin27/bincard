@@ -43,7 +43,7 @@ public class AuthManager implements AuthService {
             throws NotFoundUserException, UserDeletedException, UserNotActiveException,
             IncorrectPasswordException, UserRoleNotAssignedException {
 
-        SecurityUser user = securityUserRepository.findByUserNumber(loginRequestDTO.getUsername())
+        SecurityUser user = securityUserRepository.findByUserNumber(loginRequestDTO.getTelephone())
                 .orElseThrow(NotFoundUserException::new);
 
         if (user instanceof User u && !u.isActive()) {

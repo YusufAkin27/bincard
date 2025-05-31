@@ -2,6 +2,7 @@ package akin.city_card.security.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -14,7 +15,7 @@ import java.util.stream.Collectors;
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
-@Builder
+@SuperBuilder
 @Table(name = "security_users") // 'user' yerine güvenli bir tablo adı
 @Inheritance(strategy = InheritanceType.JOINED)
 public class SecurityUser implements UserDetails {
