@@ -1,15 +1,28 @@
 package akin.city_card.station.model;
 
-import akin.city_card.route.model.Route;
 import jakarta.persistence.*;
 
-import java.util.List;
+import lombok.*;
+
 @Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Station {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false, length = 100)
     private String name;
-    private String address;
+
+    private double latitude;   // Enlem
+    private double longitude;  // Boylam
+
+    private boolean active = true;
+
 }
+
+

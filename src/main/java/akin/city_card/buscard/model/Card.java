@@ -1,6 +1,5 @@
-package akin.city_card.card.model;
+package akin.city_card.buscard.model;
 
-import akin.city_card.activity.model.Activity;
 import akin.city_card.user.model.User;
 import jakarta.persistence.*;
 

@@ -1,4 +1,4 @@
-package akin.city_card.card.model;
+package akin.city_card.buscard.model;
 
 public enum CardType {
     TAM,

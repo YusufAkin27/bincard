@@ -1,13 +1,9 @@
 package akin.city_card.user.model;
 
-import akin.city_card.card.model.Card;
+import akin.city_card.buscard.model.Card;
+import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.wallet.model.Wallet;
 import jakarta.persistence.*;
-
-import java.util.List;
-
-
-
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -17,16 +13,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "users") // 'user' bazı DB’lerde rezerve kelimedir
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+@Table(name = "users") // alt sınıfın tablosu
+@PrimaryKeyJoinColumn(name = "id")
+public class User extends SecurityUser {
 
     @Column(nullable = false, length = 50)
     private String name;
@@ -34,13 +26,7 @@ public class User {
     @Column(nullable = false, length = 50)
     private String surname;
 
-    @Column(unique = true, nullable = false, length = 11)
-    private String phoneNumber;
-
-    @Column(nullable = false)
-    private String password;
-
-    private Role role;
+    private Role role; // Dilersen bunu kaldırıp roles setinden kullanabilirsin
 
     private boolean active = true;
 
@@ -62,5 +48,4 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<VerificationCode> verificationCodes;
-
 }

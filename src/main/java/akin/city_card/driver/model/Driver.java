@@ -1,11 +1,11 @@
 package akin.city_card.driver.model;
 
 import akin.city_card.bus.model.Bus;
-import ch.qos.logback.core.joran.event.BodyEvent;
+import akin.city_card.security.entity.SecurityUser;
 import jakarta.persistence.*;
 
 @Entity
-public class Driver {
+public class Driver extends SecurityUser {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

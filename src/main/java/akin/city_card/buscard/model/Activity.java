@@ -1,12 +1,11 @@
-package akin.city_card.activity.model;
+package akin.city_card.buscard.model;
 
 import akin.city_card.bus.model.Bus;
-import akin.city_card.card.model.Card;
+import akin.city_card.route.model.Route;
 import akin.city_card.station.model.Station;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,7 +17,7 @@ public class Activity {
 
     private LocalDateTime useDateTime;
     private BigDecimal price;
-    private boolean isTransfer; // önceki binişten kısa süre sonra mı?
+    private boolean isTransfer;
 
     @ManyToOne
     private Card card;
@@ -28,4 +27,8 @@ public class Activity {
 
     @ManyToOne
     private Station station;
+
+    @ManyToOne
+    private Route route;
 }
+
