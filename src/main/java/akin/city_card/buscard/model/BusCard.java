@@ -39,10 +39,10 @@ public class BusCard {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "card", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Activity> activityHistory;
 
-    @OneToMany(mappedBy = "card", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CardVisa> visaHistory;
 
 

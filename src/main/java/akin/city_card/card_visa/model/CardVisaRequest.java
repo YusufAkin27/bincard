@@ -41,9 +41,5 @@ public class CardVisaRequest {
 
     private BigDecimal fee; // Vize ücreti
 
-    public enum RequestStatus {
-        PENDING,
-        APPROVED,
-        REJECTED
-    }
+
 }

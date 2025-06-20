@@ -33,7 +33,7 @@ public class CardVisa {
     private Admin verifiedBy;
 
     @ManyToOne
-    @JoinColumn(name = "card_id")
+    @JoinColumn(name = "bus_card_id")
     private BusCard busCard;
 
     @OneToOne

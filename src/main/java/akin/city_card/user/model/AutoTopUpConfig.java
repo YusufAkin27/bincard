@@ -55,6 +55,7 @@ public class AutoTopUpConfig {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
-    @OneToMany(mappedBy = "autoTopUpConfig", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "config", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<AutoTopUpLog> autoTopUpLogs;
+
 }

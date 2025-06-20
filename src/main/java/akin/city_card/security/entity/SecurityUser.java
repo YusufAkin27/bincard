@@ -42,6 +42,8 @@ public class SecurityUser implements UserDetails {
     @Column(name = "ip_address")
     private String ipAddress;
 
+
+
     public SecurityUser(String userNumber, Set<Role> roles) {
         this.userNumber = userNumber;
         this.roles = roles;
