@@ -20,7 +20,7 @@ public class Activity {
     private boolean isTransfer;
 
     @ManyToOne
-    private Card card;
+    private BusCard busCard;
 
     @ManyToOne
     private Bus bus;

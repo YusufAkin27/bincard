@@ -1,6 +1,7 @@
-package akin.city_card.user.model;
+package akin.city_card.verification.model;
 
 
+import akin.city_card.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
