@@ -1,4 +1,4 @@
-package akin.city_card.config;
+package akin.city_card.cloudinary;
 
 
 import akin.city_card.user.exceptions.FileFormatCouldNotException;

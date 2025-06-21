@@ -1,4 +1,4 @@
-package akin.city_card.config;
+package akin.city_card.cloudinary;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
