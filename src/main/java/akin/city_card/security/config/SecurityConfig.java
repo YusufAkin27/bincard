@@ -35,6 +35,7 @@ public class SecurityConfig {
                 "/v1/api/admin/register",
                 "/v1/api/token/**",
                 "/v1/api/user/sign-up/**",
+                "/v1/api/user/collective-sign-up/**",
                 "/v1/api/user/forgot-password/**",
                 "/v1/api/user/reset-password/**",
                 "/v1/api/user/active/**",

@@ -12,6 +12,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.List;
@@ -38,6 +39,23 @@ public class User extends SecurityUser {
 
     // Telefon doğrulandı mı?
     private boolean phoneVerified = false;
+
+    // Telefon doğrulandı mı?
+    private boolean emailVerified = false;
+
+    private String email;
+
+    // Kimlik numarası (isteğe bağlı, sadece cüzdan aktifleştirildiğinde doldurulur)
+    @Column(name = "national_id", length = 11, unique = true)
+    private String nationalId;//kimlik numarası
+
+    // Doğum tarihi (isteğe bağlı, sadece cüzdan aktifleştirildiğinde doldurulur)
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
+
+    // Cüzdan bilgileri aktif mi? (bu flag üzerinden kontrol edilir)
+    @Column(name = "wallet_activated")
+    private boolean walletActivated = false;
 
     // Kullanıcı oluşturulma zamanı (otomatik atanır)
     @CreationTimestamp

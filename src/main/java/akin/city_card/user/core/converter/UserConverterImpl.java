@@ -27,6 +27,11 @@ public class UserConverterImpl implements UserConverter {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .roles(Collections.singleton(Role.USER)) // default olarak USER atanıyor
                 .active(true)
+                .nationalId(request.getNationalId()) // EKLENDİ
+                .birthDate(request.getBirthDate())
+                .allowNegativeBalance(false)
+                .negativeBalanceLimit(-10.0)
+                .autoTopUpEnabled(false)
                 .phoneVerified(false)
                 .build();
     }
