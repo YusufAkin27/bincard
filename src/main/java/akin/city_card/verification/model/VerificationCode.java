@@ -1,6 +1,5 @@
 package akin.city_card.verification.model;
 
-
 import akin.city_card.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -20,10 +19,24 @@ public class VerificationCode {
     private Long id;
 
     @Column(nullable = false, length = 6)
-    private String code; // örn: "457921"
+    private String code;
 
     @Column(nullable = false)
     private boolean used = false;
+
+    @Column(nullable = false)
+    private boolean cancelled = false; // 5 hatalı denemeden sonra true olacak
+
+    @Column(nullable = false)
+    private int attemptCount = 0; // Hatalı giriş sayısı
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 10)
+    private VerificationChannel channel; // EMAIL / SMS
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private VerificationPurpose purpose; // REGISTER, LOGIN, etc.
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -31,7 +44,13 @@ public class VerificationCode {
     @Column(nullable = false)
     private LocalDateTime expiresAt;
 
+    @Column(length = 50)
+    private String ipAddress;
+
+    @Column(length = 255)
+    private String userAgent;
+
     @ManyToOne
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 }
