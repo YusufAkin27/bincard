@@ -10,7 +10,11 @@ import java.util.Optional;
 
 public interface TokenRepository extends JpaRepository<Token, Long> {
 
+    // Belirli bir kullanıcı ve token tipine göre silme
+    void deleteBySecurityUserIdAndTokenType(Long userId, TokenType tokenType);
 
+    // Belirli bir kullanıcıya ait tüm tokenları sil (hem access hem refresh)
+    void deleteBySecurityUserId(Long userId);
 
 
     Optional<Token> findByTokenValue(String token);

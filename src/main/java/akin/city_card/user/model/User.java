@@ -41,9 +41,14 @@ public class User extends SecurityUser {
     private boolean phoneVerified = false;
 
     // Telefon doğrulandı mı?
+    @Column(name = "email_verified")
     private boolean emailVerified = false;
 
+    private String profilePicture="https://w7.pngwing.com/pngs/177/551/png-transparent-user-interface-design-computer-icons-default-stephen-salazar-graphy-user-interface-design-computer-wallpaper-sphere-thumbnail.png";
+
     private String email;
+
+
 
     // Kimlik numarası (isteğe bağlı, sadece cüzdan aktifleştirildiğinde doldurulur)
     @Column(name = "national_id", length = 11, unique = true)
@@ -126,9 +131,8 @@ public class User extends SecurityUser {
     // Kullanıcı negatif bakiyeye izin veriyor mu?
     private boolean allowNegativeBalance = false;
 
-    // Negatif bakiyenin alt limiti (örnek: -10 TL)
     @Column(nullable = false)
-    private Double negativeBalanceLimit = -10.0;
+    private Double negativeBalanceLimit = 0.0;
 
     // Otomatik bakiye yükleme aktif mi?
     private boolean autoTopUpEnabled = false;

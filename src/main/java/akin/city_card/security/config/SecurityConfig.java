@@ -29,19 +29,24 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
-        // Public erişim için yollar
         String[] publicPaths = {
-                "/v1/api/auth/login/**",
-                "/v1/api/admin/register",
+                // Authentication işlemleri
+                "/v1/api/auth/login/**",              // login
+                "/v1/api/user/sign-up/**",            // kullanıcı kayıt
+                "/v1/api/user/collective-sign-up/**", // toplu kayıt
+                "/v1/api/user/verify/phone/**",       // telefon doğrulama
+                "/v1/api/user/verify/email/**",       // email doğrulama (hem GET hem POST olabilir)
+                "/v1/api/user/verify/email/send",
+                "/v1/api/user/verify/phone/resend/**",// email doğrulama linki gönderme
+                "/v1/api/user/password/forgot/**",    // şifre sıfırlama kodu gönderme
+                "/v1/api/user/password/reset/**",     // şifre sıfırlama
+                "/v1/api/user/active/**",              // aktif etme işlemleri varsa
+                // Diğer izin verilenler (örnek: token yenileme)
                 "/v1/api/token/**",
-                "/v1/api/user/sign-up/**",
-                "/v1/api/user/collective-sign-up/**",
-                "/v1/api/user/forgot-password/**",
-                "/v1/api/user/reset-password/**",
-                "/v1/api/user/active/**",
-
-
+                // Admin kayıt yolu
+                "/v1/api/admin/register"
         };
+
 
         // Sadece admin için yollar
         String[] adminPaths = {

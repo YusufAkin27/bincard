@@ -141,6 +141,13 @@
             <version>10.5.2</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>4.5.13</version>
+        </dependency>
+
+
         <!-- Ödeme için Stripe Java SDK -->
         <dependency>
             <groupId>com.stripe</groupId>

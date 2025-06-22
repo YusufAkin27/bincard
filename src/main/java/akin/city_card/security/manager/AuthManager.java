@@ -11,14 +11,25 @@ import akin.city_card.security.exception.*;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.security.repository.TokenRepository;
 import akin.city_card.security.service.JwtService;
+import akin.city_card.sms.SmsRequest;
+import akin.city_card.sms.SmsService;
+import akin.city_card.user.exceptions.UserIsNotPhoneVerifyException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
+import akin.city_card.user.service.concretes.PhoneNumberFormatter;
+import akin.city_card.verification.model.VerificationChannel;
+import akin.city_card.verification.model.VerificationCode;
+import akin.city_card.verification.model.VerificationPurpose;
+import akin.city_card.verification.repository.VerificationCodeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.Random;
 
 @Service
 @RequiredArgsConstructor
@@ -28,43 +39,114 @@ public class AuthManager implements AuthService {
     private final JwtService jwtService;
     private final TokenRepository tokenRepository;
     private final UserRepository userRepository;
+    private final VerificationCodeRepository verificationCodeRepository;
+    private final SmsService smsService;
 
     @Override
     @Transactional
     public ResponseMessage logout(String username) throws UserNotFoundException {
-        User student = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
+        User student = userRepository.findByUserNumber(username);
         tokenRepository.deleteAllBySecurityUser_Id(student.getId());
 
 
         return new ResponseMessage("Çıkış başarılı", true);
     }
-    @Override
-    public TokenResponseDTO login(LoginRequestDTO loginRequestDTO)
-            throws NotFoundUserException, UserDeletedException, UserNotActiveException,
-            IncorrectPasswordException, UserRoleNotAssignedException {
 
-        SecurityUser user = securityUserRepository.findByUserNumber(loginRequestDTO.getTelephone())
-                .orElseThrow(NotFoundUserException::new);
+        @Override
+        @Transactional
+        public TokenResponseDTO login(LoginRequestDTO loginRequestDTO)
+                throws NotFoundUserException, UserDeletedException, UserNotActiveException,
+                IncorrectPasswordException, UserRoleNotAssignedException, PhoneNotVerifiedException, UnrecognizedDeviceException {
 
-        if (user instanceof User u && !u.isActive()) {
-            throw new UserNotActiveException();
+            String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
+            loginRequestDTO.setTelephone(normalizedPhone);
+
+            SecurityUser securityUser = securityUserRepository.findByUserNumber(loginRequestDTO.getTelephone())
+                    .orElseThrow(NotFoundUserException::new);
+
+            if (!(securityUser instanceof User user)) {
+                throw new NotFoundUserException(); // login yapan kullanıcı CityUser değilse
+            }
+
+            if (!user.isActive()) {
+                throw new UserNotActiveException();
+            }
+
+            if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
+                throw new IncorrectPasswordException();
+            }
+
+            if (user.getRoles() == null || user.getRoles().isEmpty()) {
+                throw new UserRoleNotAssignedException();
+            }
+
+            // ✅ Telefon doğrulama kontrolü
+            if (!user.isPhoneVerified()) {
+                sendLoginVerificationCode(user, loginRequestDTO);
+                throw new PhoneNotVerifiedException();
+            }
+
+            // ✅ Cihaz doğrulama kontrolü (IP değil, sadece deviceInfo)
+            String currentDevice = loginRequestDTO.getDeviceInfo();
+            String lastDevice = user.getLastLoginDevice();
+
+            if (lastDevice != null && !lastDevice.equals(currentDevice)) {
+                sendLoginVerificationCode(user, loginRequestDTO);
+                throw new UnrecognizedDeviceException();
+            }
+            tokenRepository.deleteBySecurityUserId(user.getId());
+
+            // ✅ Token oluşturuluyor
+            String accessToken = jwtService.generateAccessToken(user, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
+            String refreshToken = jwtService.generateRefreshToken(user, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
+
+            // Cihazı güvenli olarak işaretle
+            user.setLastLoginDevice(currentDevice);
+            user.setLastLoginAt(LocalDateTime.now());
+            user.setLastLoginIp(loginRequestDTO.getIpAddress());
+            user.setLastLoginAppVersion(loginRequestDTO.getAppVersion());  // appVersion getter ekle DTO'ya
+            user.setLastLoginPlatform(loginRequestDTO.getPlatform());
+            userRepository.save(user);
+
+            return new TokenResponseDTO(accessToken, refreshToken);
         }
 
-        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
-            throw new IncorrectPasswordException();
-        }
 
-        if (user.getRoles() == null || user.getRoles().isEmpty()) {
-            throw new UserRoleNotAssignedException();
-        }
+    private void sendLoginVerificationCode(User user, LoginRequestDTO request) {
+        // Eski kodları iptal et
+        verificationCodeRepository.cancelAllActiveCodes(user.getId(), VerificationPurpose.LOGIN);
 
-        String accessToken = jwtService.generateAccessToken(user, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
-        String refreshToken = jwtService.generateRefreshToken(user, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
+        // Yeni kod oluştur
+        String code = randomSixDigit();
 
-        return new TokenResponseDTO(accessToken, refreshToken);
+        VerificationCode verificationCode = VerificationCode.builder()
+                .code(code)
+                .user(user)
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusMinutes(3))
+                .channel(VerificationChannel.SMS)
+                .attemptCount(0)
+                .used(false)
+                .cancelled(false)
+                .purpose(VerificationPurpose.LOGIN)
+                .ipAddress(request.getIpAddress())
+                .userAgent(request.getDeviceInfo())
+                .build();
+
+        verificationCodeRepository.save(verificationCode);
+
+        // SMS gönder
+        SmsRequest smsRequest = new SmsRequest();
+        smsRequest.setTo(user.getUserNumber());
+        smsRequest.setMessage("City Card - Giriş için doğrulama kodunuz: " + code + ". Kod 3 dakika geçerlidir.");
+        smsService.sendSms(smsRequest);
     }
 
 
+    public String randomSixDigit() {
+        Random random = new Random();
+        return String.format("%06d", random.nextInt(1000000)); // 000000 ile 999999 arasında 6 hane
+    }
 
     @Override
     public ResponseEntity<?> updateAccessToken(UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) {
@@ -74,8 +156,8 @@ public class AuthManager implements AuthService {
             }
 
             String userNumber = jwtService.getRefreshTokenClaims(updateAccessTokenRequestDTO.getRefreshToken()).getSubject();
-            User user = userRepository.findByUserNumber(userNumber)
-                    .orElseThrow(UserNotFoundException::new);
+            User user = userRepository.findByUserNumber(userNumber);
+
 
             String ipAddress = updateAccessTokenRequestDTO.getIpAddress();
             String deviceInfo = updateAccessTokenRequestDTO.getDeviceInfo();
@@ -92,8 +174,6 @@ public class AuthManager implements AuthService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Bir hata meydana geldi: " + e.getMessage());
         }
     }
-
-
 
 
 }

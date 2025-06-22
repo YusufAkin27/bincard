@@ -10,4 +10,6 @@ public class LoginRequestDTO {
     private String password;   // Kullanıcı şifresi
     private String ipAddress;  // Kullanıcının giriş yaptığı IP adresi
     private String deviceInfo; // Kullanıcının giriş yaptığı cihaz bilgisi
+    private String appVersion;
+    private String platform;
 }
