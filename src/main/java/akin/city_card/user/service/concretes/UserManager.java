@@ -93,7 +93,10 @@ public class UserManager implements UserService {
         verificationCode.setUsed(false);
         verificationCode.setIpAddress(request.getIpAddress());
         verificationCode.setUserAgent(request.getUserAgent());
-        user.getVerificationCodes().add(verificationCode);
+        if(user.getVerificationCodes()==null){
+            user.setVerificationCodes(new ArrayList<>());
+            user.getVerificationCodes().add(verificationCode);
+        }
 
         verificationCodeRepository.save(verificationCode);
 
