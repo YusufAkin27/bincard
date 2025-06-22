@@ -1,0 +1,98 @@
+{
+	"info": {
+		"_postman_id": "80c15339-3dbd-4df8-89d1-f9bea31b687b",
+		"name": "city_card",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "27281663"
+	},
+	"item": [
+		{
+			"name": "kullanıcı",
+			"item": [
+				{
+					"name": "kayıt ol",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"telephone\":\"5366543798\",\r\n    \"password\":\"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/auth/login"
+					},
+					"response": []
+				},
+				{
+					"name": "token yenileme",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiI1MzM2MzYwMDc5IiwiaWF0IjoxNzQ5MTY0NjcwLCJleHAiOjE3ODA3MDA2NzB9.CKYo7XjTk4JLHkQwekwp5UQY_TSazv2_B-8zN8DZIs2kTnUpJETNsNOkVNktPooW\"\r\n    \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/auth/refresh"
+					},
+					"response": []
+				},
+				{
+					"name": "toplu kullanıcı ekleme",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "telefon doğrula",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\":\"665666\"\r\n  \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/user/verify/phone"
+					},
+					"response": []
+				},
+				{
+					"name": "yeniden telefona kod al",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\":\"665666\"\r\n  \r\n}"
+						},
+						"url": "http://localhost:8080/v1/api/user/verify/phone/resend"
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
