@@ -44,6 +44,8 @@ public class AdminManager implements AdminService {
                 .roles(Collections.singleton(Role.ADMIN))
                 .password(passwordEncoder.encode(adminRequest.getPassword()))
                 .ipAddress(adminRequest.getIpAddress())
+                .isDeleted(false)
+                .isActive(false)
                 .userNumber(adminRequest.getTelephone())
                 .deviceUuid(adminRequest.getDeviceUuid())
                 .superAdminApproved(false) // onaylanmamış başvuru

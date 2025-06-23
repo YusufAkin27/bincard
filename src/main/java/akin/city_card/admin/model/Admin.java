@@ -30,6 +30,9 @@ public class Admin extends SecurityUser {
     // Son başarılı giriş zamanı
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
+    private boolean isActive;
+    private boolean isDeleted;
+
 
 
     @PrePersist
