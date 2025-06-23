@@ -69,11 +69,11 @@ public class UserController {
         return userService.resendEmailVerificationLink(email);
     }
     @PostMapping("/2fa/enable")
-    public ResponseMessage enable2FA(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseMessage enable2FA(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
         return userService.enableTwoFactor(userDetails.getUsername());
     }
     @DeleteMapping("/2fa/disable")
-    public ResponseMessage disable2FA(@AuthenticationPrincipal UserDetails userDetails) {
+    public ResponseMessage disable2FA(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
         return userService.disableTwoFactor(userDetails.getUsername());
     }
 

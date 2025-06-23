@@ -1,24 +1,44 @@
 package akin.city_card.admin.model;
 
 import akin.city_card.security.entity.SecurityUser;
-import akin.city_card.user.model.User;
-import jakarta.persistence.Entity;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
+
+import java.time.LocalDateTime;
 
 @Entity
 @SuperBuilder
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Table(name = "admins")
 public class Admin extends SecurityUser {
 
+    // Super admin bu kişiyi onayladı mı
+    @Column(name = "super_admin_approved", nullable = false)
+    private boolean superAdminApproved;
 
-    @OneToOne
-    private User user;
+    // Onay tarihi (nullable olabilir)
+    @Column(name = "approved_at")
+    private LocalDateTime approvedAt;
 
-    private String position; // Örn: "Sistem Yöneticisi"
+    // Admin kayıt tarihi
+    @Column(name = "registered_at", nullable = false, updatable = false)
+    private LocalDateTime registeredAt;
+
+    // Son başarılı giriş zamanı
+    @Column(name = "last_login_at")
+    private LocalDateTime lastLoginAt;
+    private boolean isActive;
+    private boolean isDeleted;
+
+
+
+    @PrePersist
+    protected void onCreate() {
+        this.registeredAt = LocalDateTime.now();
+    }
+
+
 }

@@ -13,7 +13,10 @@ import akin.city_card.user.exceptions.InvalidPhoneNumberFormatException;
 import akin.city_card.user.exceptions.PhoneNumberAlreadyExistsException;
 import akin.city_card.user.exceptions.PhoneNumberRequiredException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
+import akin.city_card.user.model.TwoFactorAuth;
 import akin.city_card.user.model.User;
+import akin.city_card.user.model.VerificationMethod;
+import akin.city_card.user.repository.TwoFactorAuthRepository;
 import akin.city_card.user.repository.UserRepository;
 import akin.city_card.user.rules.UserRules;
 import akin.city_card.user.service.abstracts.UserService;
@@ -50,6 +53,7 @@ public class UserManager implements UserService {
     private final MediaUploadService mediaUploadService;
     private final UserRules userRules;
     private final VerificationCodeRepository verificationCodeRepository;
+    private final TwoFactorAuthRepository twoFactorAuthRepository;
 
 
     @Override
@@ -60,20 +64,22 @@ public class UserManager implements UserService {
             InvalidPhoneNumberFormatException {
 
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(request.getTelephone());
-        request.setTelephone(normalizedPhone); // Güncellenmiş haliyle devam et
+        request.setTelephone(normalizedPhone);
 
         userRules.checkPhoneIsUnique(request.getTelephone());
 
-        // 2. Kullanıcıyı isteğe göre oluştur (userConverter üzerinden)
         User user = userConverter.convertUserToCreateUser(request);
+        TwoFactorAuth twoFactorAuth = new TwoFactorAuth();
+        twoFactorAuth.setUser(user);
+        twoFactorAuth.setEnabled(false);
+        user.setTwoFactorAuth(twoFactorAuth);
 
-        // 3. Veritabanına kaydet
+        twoFactorAuthRepository.save(twoFactorAuth);
         userRepository.save(user);
 
-        // 4. Doğrulama kodu oluştur
+
         String code = randomSixDigit();
 
-        // 5. SMS gönderimi
         SmsRequest smsRequest = new SmsRequest();
         smsRequest.setTo(request.getTelephone());
         smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code +
@@ -93,7 +99,7 @@ public class UserManager implements UserService {
         verificationCode.setUsed(false);
         verificationCode.setIpAddress(request.getIpAddress());
         verificationCode.setUserAgent(request.getUserAgent());
-        if(user.getVerificationCodes()==null){
+        if (user.getVerificationCodes() == null) {
             user.setVerificationCodes(new ArrayList<>());
             user.getVerificationCodes().add(verificationCode);
         }
@@ -154,8 +160,6 @@ public class UserManager implements UserService {
     }
 
 
-
-
     @Override
     public UserDTO getProfile(String username) throws UserNotFoundException {
         return userConverter.convertUserToDTO(userRepository.findByUserNumber(username));
@@ -164,19 +168,16 @@ public class UserManager implements UserService {
     @Override
     @Transactional
     public ResponseMessage updateProfile(String username, UpdateProfileRequest updateProfileRequest) throws UserNotFoundException {
-        // 1. Kullanıcıyı bul
         User user = userRepository.findByUserNumber(username);
 
         boolean isUpdated = false;
 
-        // 2. Ad kontrolü ve güncellemesi
         if (updateProfileRequest.getName() != null &&
                 !updateProfileRequest.getName().equals(user.getName())) {
             user.setName(updateProfileRequest.getName());
             isUpdated = true;
         }
 
-        // 3. Soyad kontrolü ve güncellemesi
         if (updateProfileRequest.getSurname() != null &&
                 !updateProfileRequest.getSurname().equals(user.getSurname())) {
             user.setSurname(updateProfileRequest.getSurname());
@@ -219,14 +220,11 @@ public class UserManager implements UserService {
         User user = userRepository.findByUserNumber(username);
 
         try {
-            // 2. Fotoğrafı yükle ve optimize et (asenkron)
             CompletableFuture<String> futureUrl = mediaUploadService.uploadAndOptimizeImage(file);
             String imageUrl = futureUrl.get(); // blocking get
 
-            // 3. Kullanıcıya ata
             user.setProfilePicture(imageUrl);
 
-            // 4. Güncelle
             userRepository.save(user);
 
             return new ResponseMessage("Profil fotoğrafı başarıyla güncellendi.", true);
@@ -264,13 +262,37 @@ public class UserManager implements UserService {
     }
 
     @Override
-    public ResponseMessage enableTwoFactor(String username) {
-        return null;
+    public ResponseMessage enableTwoFactor(String username) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+        if (!user.getTwoFactorAuth().isEnabled()) {
+            user.getTwoFactorAuth().setEnabled(true);
+        }
+        if (user.isPhoneVerified() && !user.isEmailVerified()) {
+            user.getTwoFactorAuth().setTarget(user.getUserNumber());
+            user.getTwoFactorAuth().setMethod(VerificationMethod.PHONE);
+
+        }
+        if (user.isEmailVerified() && !user.isPhoneVerified()) {
+            user.getTwoFactorAuth().setTarget(user.getEmail());
+            user.getTwoFactorAuth().setMethod(VerificationMethod.EMAIL);
+
+        }
+        if (user.isEmailVerified() && user.isPhoneVerified()) {//email ve teelfon doğrulama açıksa
+            user.getTwoFactorAuth().setTarget(user.getUserNumber());
+            user.getTwoFactorAuth().setMethod(VerificationMethod.PHONE);
+
+        }
+        user.getTwoFactorAuth().setIsCreate(LocalDateTime.now());
+        userRepository.save(user);
+        return new ResponseMessage("İki faktorölü doğrulama açıldı", true);
     }
 
     @Override
-    public ResponseMessage disableTwoFactor(String username) {
-        return null;
+    public ResponseMessage disableTwoFactor(String username) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+        user.getTwoFactorAuth().setEnabled(false);
+        userRepository.save(user);
+        return new ResponseMessage("iki faktörlü doğrulama kapandı", true);
     }
 
     @Override

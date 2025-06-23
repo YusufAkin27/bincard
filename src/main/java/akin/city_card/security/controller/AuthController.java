@@ -28,10 +28,12 @@ public class AuthController {
     public TokenResponseDTO login(@RequestBody LoginRequestDTO loginRequestDTO) throws UserNotActiveException, UserRoleNotAssignedException, UserDeletedException, NotFoundUserException, IncorrectPasswordException, UnrecognizedDeviceException, PhoneNotVerifiedException {
         return authService.login(loginRequestDTO);
     }
+
     @PostMapping("/refresh")
     public ResponseEntity<?> updateAccessToken(@RequestBody UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) throws TokenIsExpiredException, TokenNotFoundException {
         return authService.updateAccessToken(updateAccessTokenRequestDTO);
     }
+
     @PostMapping("logout")
     public ResponseMessage logout(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
       return authService.logout(userDetails.getUsername());

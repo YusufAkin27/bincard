@@ -3,6 +3,7 @@ package akin.city_card.user.core.converter;
 import akin.city_card.security.entity.Role;
 import akin.city_card.user.core.request.CreateUserRequest;
 import akin.city_card.user.core.response.UserDTO;
+import akin.city_card.user.model.TwoFactorAuth;
 import akin.city_card.user.model.User;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.user.service.concretes.PhoneNumberFormatter;
