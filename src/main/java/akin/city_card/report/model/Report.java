@@ -2,9 +2,7 @@ package akin.city_card.report.model;
 
 import akin.city_card.user.model.User;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
@@ -14,6 +12,7 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Table(name = "reports")
 public class Report {
 
@@ -26,7 +25,7 @@ public class Report {
     @JoinColumn(name = "user_id")
     private User user;
 
-    // Kategori enum olabilir
+    // Rapor kategorisi
     @Enumerated(EnumType.STRING)
     @Column(length = 50, nullable = false)
     private ReportCategory category;
@@ -35,19 +34,29 @@ public class Report {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String message;
 
-    // Fotoğraflar (isteğe bağlı, birden fazla olabilir)
+    // Fotoğraflar
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ReportPhoto> photos;
+
+    // Yanıtlar (çoklu yanıt desteği)
+    @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReportResponse> responses;
+
+    // Raporun durumu
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private ReportStatus status = ReportStatus.OPEN;
 
     // Raporun oluşturulma zamanı
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    // Yanıt/inceleme durumu
-    private boolean resolved = false;
+    // Son güncelleme zamanı (manuel kontrol gerekebilir)
+    private LocalDateTime updatedAt;
 
-    // (Opsiyonel) admin notu veya cevabı
-    @Column(length = 1000)
-    private String adminNote;
+    @PreUpdate
+    public void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

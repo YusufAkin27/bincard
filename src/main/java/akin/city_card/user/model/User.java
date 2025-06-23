@@ -1,6 +1,8 @@
 package akin.city_card.user.model;
 
 import akin.city_card.buscard.model.BusCard;
+import akin.city_card.news.model.NewsLike;
+import akin.city_card.news.model.NewsViewHistory;
 import akin.city_card.notification.model.NotificationPreferences;
 import akin.city_card.route.model.Route;
 import akin.city_card.security.entity.SecurityUser;
@@ -37,7 +39,7 @@ public class User extends SecurityUser {
     // Kullanıcı aktif mi? (soft delete için kullanılabilir)
     private boolean active = true;
 
-    // Telefon doğrulandı mı?
+    // Telefon doğrulandı mı?x
     private boolean phoneVerified = false;
 
     // Telefon doğrulandı mı?
@@ -48,6 +50,12 @@ public class User extends SecurityUser {
 
     private String email;
 
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<NewsLike> likedNews;//beğendiği haberler
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<NewsViewHistory> viewedNews;
 
 
     // Kimlik numarası (isteğe bağlı, sadece cüzdan aktifleştirildiğinde doldurulur)
