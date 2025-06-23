@@ -170,4 +170,8 @@ public class User extends SecurityUser {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SearchHistory> searchHistory;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private TwoFactorAuth twoFactorAuth;
+
+
 }

@@ -41,9 +41,9 @@ public interface UserService {
 
     ResponseMessage changePassword(String username, ChangePasswordRequest request);
 
-    ResponseMessage enableTwoFactor(String username);
+    ResponseMessage enableTwoFactor(String username) throws UserNotFoundException;
 
-    ResponseMessage disableTwoFactor(String username);
+    ResponseMessage disableTwoFactor(String username) throws UserNotFoundException;
 
     ResponseMessage resendPhoneVerificationCode(ResendPhoneVerificationRequest request) throws UserNotFoundException;
 
