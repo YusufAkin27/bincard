@@ -55,6 +55,12 @@ public class Report {
     // Son güncelleme zamanı (manuel kontrol gerekebilir)
     private LocalDateTime updatedAt;
 
+    @Column(nullable = false)
+    private boolean deleted = false;
+
+    @Column(nullable = false)
+    private boolean isActive = true;
+
     @PreUpdate
     public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
