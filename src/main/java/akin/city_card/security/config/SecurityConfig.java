@@ -83,8 +83,13 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Sadece localhost:3000 adresine izin veriliyor
-        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
+        // Flutter emülatörleri ve tarayıcıdan gelen istekler için izin verilen origin'ler
+        configuration.setAllowedOrigins(List.of(
+                "http://localhost:3000",     // Web uygulamaları için
+                "http://127.0.0.1:3000",     // Alternatif localhost
+                "http://10.0.2.2:3000",      // Android emülatörü (localhost yönlendirmesi)
+                "http://10.0.3.2:3000"       // Genymotion emülatörü (bazı durumlarda)
+        ));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
@@ -94,5 +99,6 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 
 }
