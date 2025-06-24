@@ -1,5 +1,6 @@
 package akin.city_card.report.service;
 
+import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
 import akin.city_card.report.core.request.AddReportRequest;
@@ -47,7 +48,7 @@ public class ReportManager implements ReportService{
     }
 
     @Override
-    public List<Report> getAllReport(String username) throws AdminNotFoundExecption {
+    public List<Report> getAllReport(String username) throws AdminNotFoundExecption, AdminNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
         if (admin == null){
             throw new AdminNotFoundExecption();
@@ -56,7 +57,7 @@ public class ReportManager implements ReportService{
     }
 
     @Override
-    public List<Report> getUserReport(String username) throws UserNotFoundException {
+    public List<Report> getUserReport(String username) throws UserNotFoundException, AdminNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
         if (admin == null){
             throw new UserNotFoundException();

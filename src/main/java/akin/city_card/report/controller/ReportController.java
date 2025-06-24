@@ -1,5 +1,6 @@
 package akin.city_card.report.controller;
 
+import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.report.core.request.AddReportRequest;
 import akin.city_card.report.exceptions.AdminNotFoundExecption;
 import akin.city_card.report.exceptions.ReportAlreadyDeletedException;
@@ -39,12 +40,12 @@ public class ReportController {
     }
 
     @GetMapping("/getAllReport")
-    public List<Report> getAllReport(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundExecption {
+    public List<Report> getAllReport(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundExecption, AdminNotFoundException {
         return reportService.getAllReport(userDetails.getUsername());
     }
 
     @GetMapping("/getUserReport")
-    public List<Report> getUserReport(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+    public List<Report> getUserReport(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException, AdminNotFoundException {
         return reportService.getUserReport(userDetails.getUsername());
     }
 
