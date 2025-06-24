@@ -1,48 +1,72 @@
-package akin.city_card.report.service;
+package akin.city_card.report.service.concretes;
 
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
+import akin.city_card.cloudinary.MediaUploadService;
 import akin.city_card.report.core.request.AddReportRequest;
 import akin.city_card.report.exceptions.*;
 import akin.city_card.report.model.Report;
 import akin.city_card.report.model.ReportCategory;
+import akin.city_card.report.model.ReportPhoto;
 import akin.city_card.report.model.ReportStatus;
 import akin.city_card.report.repository.ReportRepository;
+import akin.city_card.report.service.abstracts.ReportService;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
-import jdk.jfr.Category;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.concurrent.CompletableFuture;
 
 @RequiredArgsConstructor
 @Service
-public class ReportManager implements ReportService{
+public class ReportManager implements ReportService {
 
     public final ReportRepository reportRepository;
     public final AdminRepository adminRepository;
     public final UserRepository userRepository;
+    private final MediaUploadService mediaUploadService;
+
     @Override
-    public ResponseMessage addReport(AddReportRequest addReportRequest, String userName) throws AddReportRequestNullException, UserNotFoundException {
-        User user = userRepository.findByUserNumber(userName);
-        if (user == null){
-            throw new UserNotFoundException();
-        }
-        if (addReportRequest == null){
+    public ResponseMessage addReport(AddReportRequest addReportRequest, List<MultipartFile> photos, String username)
+            throws AddReportRequestNullException, UserNotFoundException, PhotoSizeLargerException, IOException {
+
+        if (addReportRequest == null) {
             throw new AddReportRequestNullException();
         }
+
+        User user = userRepository.findByUserNumber(username);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+
+        List<ReportPhoto> reportPhotos = new ArrayList<>();
+
+        if (photos != null && !photos.isEmpty()) {
+            for (MultipartFile photo : photos) {
+                String photoUrl = String.valueOf(mediaUploadService.uploadAndOptimizeImage(photo));
+                ReportPhoto reportPhoto = new ReportPhoto();
+                reportPhoto.setImageUrl(photoUrl);
+                reportPhoto.setUploadedAt(LocalDateTime.now());
+                reportPhoto.setReport(null); // İlişki daha sonra kurulabilir
+                reportPhotos.add(reportPhoto);
+            }
+        }
+
         Report report = new Report();
         report.setUser(user);
         report.setCategory(addReportRequest.getCategory());
         report.setMessage(addReportRequest.getMessage());
-        report.setPhotos(addReportRequest.getPhotos());
+        report.setPhotos(reportPhotos);
         report.setStatus(ReportStatus.OPEN);
         report.setCreatedAt(LocalDateTime.now());
         report.setUpdatedAt(LocalDateTime.now());
@@ -50,8 +74,10 @@ public class ReportManager implements ReportService{
         report.setActive(true);
 
         reportRepository.save(report);
-        return new ResponseMessage("Rapor kaydı başarıyla oluşturuldu.", true);
+
+        return new ResponseMessage("Rapor başarıyla oluşturuldu", true);
     }
+
 
     @Override
     public ResponseMessage deleteReport(Long reportId) throws ReportNotFoundException, ReportAlreadyDeletedException, ReportNotActiveException {
@@ -61,10 +87,10 @@ public class ReportManager implements ReportService{
         if (report == null) {
             throw new ReportNotFoundException();
         }
-        if(report.isDeleted()){
+        if (report.isDeleted()) {
             throw new ReportAlreadyDeletedException();
         }
-        if(!report.isActive()){
+        if (!report.isActive()) {
             throw new ReportNotActiveException();
         }
 
@@ -75,17 +101,14 @@ public class ReportManager implements ReportService{
 
     @Override
     public List<Report> getAllReport(String username) throws AdminNotFoundException {
-        Admin admin = adminRepository.findByUserNumber(username);
-        if (admin == null){
-            throw new AdminNotFoundException();
-        }
+
         return reportRepository.findAll();
     }
 
     @Override
-    public List<Report> getUserReport(String username) throws UserNotFoundException{
+    public List<Report> getUserReport(String username) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
-        if (user == null){
+        if (user == null) {
             throw new UserNotFoundException();
         }
         return reportRepository.findByUser(user);
@@ -95,16 +118,15 @@ public class ReportManager implements ReportService{
     public List<Report> getReportByCategory(ReportCategory category, String username) throws UserNotFoundException, CategoryNotFoundExecption, AdminNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
         User user = userRepository.findByUserNumber(username);
-        if (admin != null){
+        if (admin != null) {
             return reportRepository.findAllByCategory(category);
-        }
-        else if (user == null){
+        } else if (user == null) {
             throw new UserNotFoundException();
         }
-        if (category == null){
+        if (category == null) {
             throw new CategoryNotFoundExecption();
         }
-        return reportRepository.findAllByCategoryAndUser(category,user);
+        return reportRepository.findAllByCategoryAndUser(category, user);
     }
 
 }

@@ -5,15 +5,19 @@ import akin.city_card.report.core.request.AddReportRequest;
 import akin.city_card.report.exceptions.*;
 import akin.city_card.report.model.Report;
 import akin.city_card.report.model.ReportCategory;
-import akin.city_card.report.service.ReportService;
+import akin.city_card.report.service.abstracts.ReportService;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -23,10 +27,21 @@ public class ReportController {
 
     private final ReportService reportService;
 
-    @PostMapping("/addReport")
-    public ResponseMessage addReport(@Valid @RequestBody AddReportRequest addReportRequest, @AuthenticationPrincipal UserDetails userDetails) throws AddReportRequestNullException, UserNotFoundException {
-        return reportService.addReport(addReportRequest,userDetails.getUsername());
+    @PostMapping(value = "/addReport", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseMessage addReport(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam("category") ReportCategory category,
+            @RequestParam("message") String message,
+            @RequestParam(value = "photos", required = false) List<MultipartFile> photos) throws AddReportRequestNullException, UserNotFoundException, PhotoSizeLargerException, IOException {
+
+        AddReportRequest request = AddReportRequest.builder()
+                .category(category)
+                .message(message)
+                .build();
+
+        return reportService.addReport(request, photos, userDetails.getUsername());
     }
+
     @DeleteMapping("/{reportId}")
     public ResponseMessage deleteReport(@PathVariable Long reportId) throws ReportNotActiveException, ReportNotFoundException, ReportAlreadyDeletedException {
         return reportService.deleteReport(reportId);

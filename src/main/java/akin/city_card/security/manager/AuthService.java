@@ -19,7 +19,7 @@ public interface AuthService {
 
     ResponseEntity<?> updateAccessToken(UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) throws TokenIsExpiredException, TokenNotFoundException;
 
-    ResponseMessage logout(String username) throws UserNotFoundException;
+    ResponseMessage logout(String username) throws UserNotFoundException, TokenNotFoundException;
 
     TokenResponseDTO phoneVerify(LoginPhoneVerifyCodeRequest phoneVerifyCode) throws ExpiredVerificationCodeException;
 }

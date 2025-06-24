@@ -41,7 +41,7 @@ public class AuthController {
     }
 
     @PostMapping("logout")
-    public ResponseMessage logout(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+    public ResponseMessage logout(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException, TokenNotFoundException {
         return authService.logout(userDetails.getUsername());
     }
 

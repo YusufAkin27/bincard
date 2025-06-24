@@ -91,7 +91,8 @@ public class UserController {
     //profil fotoğrafı yükleme
     @PutMapping("/profile/photo")
     public ResponseMessage uploadProfilePhoto(@AuthenticationPrincipal UserDetails userDetails,
-                                              @RequestParam("photo") MultipartFile file) throws UserNotFoundException, PhotoSizeLargerException, IOException {
+                                              @RequestParam("photo")
+                                              MultipartFile file) throws UserNotFoundException, PhotoSizeLargerException, IOException {
         return userService.updateProfilePhoto(userDetails.getUsername(), file);
     }
 

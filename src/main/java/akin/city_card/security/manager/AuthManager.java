@@ -6,6 +6,7 @@ import akin.city_card.admin.repository.AdminRepository;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.dto.*;
 import akin.city_card.security.entity.SecurityUser;
+import akin.city_card.security.entity.Token;
 import akin.city_card.security.exception.*;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.security.repository.TokenRepository;
@@ -29,6 +30,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Random;
 
 @Service
@@ -46,10 +48,20 @@ public class AuthManager implements AuthService {
 
     @Override
     @Transactional
-    public ResponseMessage logout(String username) throws UserNotFoundException {
-        User student = userRepository.findByUserNumber(username);
-        tokenRepository.deleteAllBySecurityUser_Id(student.getId());
+    public ResponseMessage logout(String username) throws UserNotFoundException, TokenNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
 
+        // Token kontrolü
+        List<Token> tokens = tokenRepository.findAllBySecurityUserId(user.getId());
+        if (tokens == null || tokens.isEmpty()) {
+            throw new TokenNotFoundException();
+        }
+
+        // Token'ları sil
+        tokenRepository.deleteAll(tokens);
 
         return new ResponseMessage("Çıkış başarılı", true);
     }
