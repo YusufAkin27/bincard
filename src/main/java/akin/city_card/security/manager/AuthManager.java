@@ -4,10 +4,7 @@ package akin.city_card.security.manager;
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
 import akin.city_card.response.ResponseMessage;
-import akin.city_card.security.dto.AccessTokenResponse;
-import akin.city_card.security.dto.LoginRequestDTO;
-import akin.city_card.security.dto.TokenResponseDTO;
-import akin.city_card.security.dto.UpdateAccessTokenRequestDTO;
+import akin.city_card.security.dto.*;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.*;
 import akin.city_card.security.repository.SecurityUserRepository;
@@ -19,6 +16,7 @@ import akin.city_card.user.exceptions.UserIsNotPhoneVerifyException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
 import akin.city_card.user.service.concretes.PhoneNumberFormatter;
+import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
 import akin.city_card.verification.model.VerificationChannel;
 import akin.city_card.verification.model.VerificationCode;
 import akin.city_card.verification.model.VerificationPurpose;
@@ -55,6 +53,39 @@ public class AuthManager implements AuthService {
 
         return new ResponseMessage("Çıkış başarılı", true);
     }
+
+    @Override
+    @Transactional
+    public TokenResponseDTO phoneVerify(LoginPhoneVerifyCodeRequest phoneVerifyCode) throws ExpiredVerificationCodeException {
+        VerificationCode verificationCode = verificationCodeRepository
+                .findTopByCodeAndCancelledFalseAndUsedFalseOrderByCreatedAtDesc(phoneVerifyCode.getCode());
+
+        if (verificationCode == null || verificationCode.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new ExpiredVerificationCodeException();
+        }
+
+        verificationCode.setUsed(true);
+        verificationCodeRepository.save(verificationCode);
+
+        User user = verificationCode.getUser();
+        tokenRepository.deleteBySecurityUserId(user.getId());
+
+        // 🔐 Yeni cihaz/IP artık doğrulanmış sayılıyor → Güncelle
+        user.setLastLoginDevice(phoneVerifyCode.getDeviceInfo());
+        user.setLastLoginAt(LocalDateTime.now());
+        user.setLastLoginIp(phoneVerifyCode.getIpAddress());
+        user.setLastLoginAppVersion(phoneVerifyCode.getAppVersion());
+        user.setLastLoginPlatform(phoneVerifyCode.getPlatform());
+        userRepository.save(user);
+
+        tokenRepository.deleteBySecurityUserId(user.getId());
+
+        String accessToken = jwtService.generateAccessToken(user, phoneVerifyCode.getIpAddress(), phoneVerifyCode.getDeviceInfo());
+        String refreshToken = jwtService.generateRefreshToken(user, phoneVerifyCode.getIpAddress(), phoneVerifyCode.getDeviceInfo());
+
+        return new TokenResponseDTO(accessToken, refreshToken);
+    }
+
 
     @Override
     @Transactional
@@ -168,12 +199,15 @@ public class AuthManager implements AuthService {
                 .build();
 
         verificationCodeRepository.save(verificationCode);
-
+        System.out.println("Gönderilen kod :" + code);
         // SMS gönder
+        /*
         SmsRequest smsRequest = new SmsRequest();
         smsRequest.setTo(user.getUserNumber());
         smsRequest.setMessage("City Card - Giriş için doğrulama kodunuz: " + code + ". Kod 3 dakika geçerlidir.");
         smsService.sendSms(smsRequest);
+
+         */
     }
 
 

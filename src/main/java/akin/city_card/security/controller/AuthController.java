@@ -1,13 +1,14 @@
 package akin.city_card.security.controller;
 
 
-
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.dto.LoginPhoneVerifyCodeRequest;
 import akin.city_card.security.dto.LoginRequestDTO;
 import akin.city_card.security.dto.TokenResponseDTO;
 import akin.city_card.security.dto.UpdateAccessTokenRequestDTO;
 import akin.city_card.security.exception.*;
 import akin.city_card.security.manager.AuthService;
+import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
@@ -29,6 +30,11 @@ public class AuthController {
         return authService.login(loginRequestDTO);
     }
 
+    @PostMapping("/phone-verify")
+    public TokenResponseDTO phoneVerify(@RequestBody LoginPhoneVerifyCodeRequest phoneVerifyCode) throws ExpiredVerificationCodeException {
+        return authService.phoneVerify(phoneVerifyCode);
+    }
+
     @PostMapping("/refresh")
     public ResponseEntity<?> updateAccessToken(@RequestBody UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) throws TokenIsExpiredException, TokenNotFoundException {
         return authService.updateAccessToken(updateAccessTokenRequestDTO);
@@ -36,7 +42,7 @@ public class AuthController {
 
     @PostMapping("logout")
     public ResponseMessage logout(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-      return authService.logout(userDetails.getUsername());
+        return authService.logout(userDetails.getUsername());
     }
 
 }

@@ -35,10 +35,10 @@ public class ReportManager implements ReportService{
         if (report == null) {
             throw new ReportNotFoundException();
         }
-        if(report.isDeleted() == true){
+        if(report.isDeleted()){
             throw new ReportAlreadyDeletedException();
         }
-        if(report.isActive() == false){
+        if(!report.isActive()){
             throw new ReportNotActiveException();
         }
 

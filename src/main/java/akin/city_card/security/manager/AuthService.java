@@ -4,10 +4,12 @@ package akin.city_card.security.manager;
 
 
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.dto.LoginPhoneVerifyCodeRequest;
 import akin.city_card.security.dto.LoginRequestDTO;
 import akin.city_card.security.dto.TokenResponseDTO;
 import akin.city_card.security.dto.UpdateAccessTokenRequestDTO;
 import akin.city_card.security.exception.*;
+import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
 import org.springframework.http.ResponseEntity;
 
 public interface AuthService {
@@ -18,4 +20,6 @@ public interface AuthService {
     ResponseEntity<?> updateAccessToken(UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) throws TokenIsExpiredException, TokenNotFoundException;
 
     ResponseMessage logout(String username) throws UserNotFoundException;
+
+    TokenResponseDTO phoneVerify(LoginPhoneVerifyCodeRequest phoneVerifyCode) throws ExpiredVerificationCodeException;
 }
