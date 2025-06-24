@@ -30,7 +30,6 @@ public class AdminManager implements AdminService {
     private final PasswordEncoder passwordEncoder;
     private final SmsService smsService;
 
-    private final VerificationCodeRepository  verificationCodeRepository;
     @Override
     public ResponseMessage signUp(CreateAdminRequest adminRequest) {
         // Telefon normalizasyonu
