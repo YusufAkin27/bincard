@@ -17,12 +17,12 @@ public class NewsStatistics {
 
     private String title;
 
-    private int viewCount;
+    private int totalViewCount;
+    private int totalLikeCount;
 
-    private int likeCount;
+    private int viewCountThisMonth;
+    private int likeCountThisMonth;
 
     private LocalDateTime firstPublishedDate;
-
     private LocalDateTime lastUpdatedDate;
-
 }
