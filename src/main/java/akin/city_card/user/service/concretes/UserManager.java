@@ -56,12 +56,12 @@ public class UserManager implements UserService {
             throws PhoneNumberRequiredException,
             PhoneNumberAlreadyExistsException,
             InvalidPhoneNumberFormatException {
-
+/*
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(request.getTelephone());
         request.setTelephone(normalizedPhone);
 
         userRules.checkPhoneIsUnique(request.getTelephone());
-
+*/
         User user = userConverter.convertUserToCreateUser(request);
 
 
