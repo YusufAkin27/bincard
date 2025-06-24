@@ -357,7 +357,7 @@ public class NewsManager implements NewsService {
 
     @Override
     public DataResponseMessage<List<NewsStatistics>> getMonthlyNewsStatistics(String username) throws AdminNotFoundException {
-        Admin admin = adminRepository.finByUserNumber(username);
+        Admin admin = adminRepository.findByUserNumber(username);
         if (admin == null || !admin.getRoles().contains(Role.ADMIN)) {
             return new DataResponseMessage<>("Yetkisiz erişim", false, null);
         }

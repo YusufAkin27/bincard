@@ -45,10 +45,10 @@ public class AdminManager implements AdminService {
                 .password(passwordEncoder.encode(adminRequest.getPassword()))
                 .ipAddress(adminRequest.getIpAddress())
                 .isDeleted(false)
-                .isActive(false)
+                .isActive(true)
                 .userNumber(adminRequest.getTelephone())
                 .deviceUuid(adminRequest.getDeviceUuid())
-                .superAdminApproved(false) // onaylanmamış başvuru
+                .superAdminApproved(true) // onaylanmamış başvuru
                 .build();
 
         // Kayıt

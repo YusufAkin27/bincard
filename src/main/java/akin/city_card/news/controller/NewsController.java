@@ -117,7 +117,7 @@ public class NewsController {
     }
 
     @GetMapping("/personalized")
-    public DataResponseMessage<List<UserNewsDTO>> getPersonalizedNews(@AuthenticationPrincipal UserDetails userDetails) {
+    public DataResponseMessage<List<UserNewsDTO>> getPersonalizedNews(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
         return newsService.getPersonalizedNews(userDetails.getUsername());
     }
 
