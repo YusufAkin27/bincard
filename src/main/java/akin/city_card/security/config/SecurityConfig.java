@@ -42,6 +42,7 @@ public class SecurityConfig {
                 "/v1/api/user/password/reset/**",
                 "/v1/api/admin/sign-up",
                 "/v1/api/user/password/verify-code",
+                "/v1/api/auth/phone-verify",
                 "/v1/api/user/password/reset",
 
                 "/v1/api/user/active/**",              // aktif etme işlemleri varsa
