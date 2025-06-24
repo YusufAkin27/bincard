@@ -6,15 +6,13 @@ import akin.city_card.news.core.response.AdminNewsDTO;
 import akin.city_card.news.core.response.NewsHistoryDTO;
 import akin.city_card.news.core.response.NewsStatistics;
 import akin.city_card.news.core.response.UserNewsDTO;
-import akin.city_card.news.exceptions.NewsIsAlreadyActiveException;
-import akin.city_card.news.exceptions.NewsIsNotActiveException;
-import akin.city_card.news.exceptions.NewsNotFoundException;
-import akin.city_card.news.exceptions.OutDatedNewsException;
+import akin.city_card.news.exceptions.*;
 import akin.city_card.news.model.NewsType;
 import akin.city_card.news.model.PlatformType;
 import akin.city_card.news.service.abstracts.NewsService;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.entity.Role;
 import akin.city_card.security.exception.UserNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,7 +40,11 @@ public class NewsController {
 
     @PostMapping("/create")
     public ResponseMessage createNews(@AuthenticationPrincipal UserDetails userDetails,
-                                      @Valid @RequestBody CreateNewsRequest news) throws AdminNotFoundException {
+                                      @Valid @RequestBody CreateNewsRequest news) throws AdminNotFoundException, UnauthorizedAreaException {
+        if (userDetails.getAuthorities().stream()
+                .noneMatch(auth -> auth.getAuthority().equals(Role.ADMIN.getAuthority()))) {
+            throw new UnauthorizedAreaException();
+        }
         return newsService.createNews(userDetails.getUsername(), news);
     }
 

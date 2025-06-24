@@ -1,6 +1,8 @@
 package akin.city_card.security.manager;
 
 
+import akin.city_card.admin.model.Admin;
+import akin.city_card.admin.repository.AdminRepository;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.dto.AccessTokenResponse;
 import akin.city_card.security.dto.LoginRequestDTO;
@@ -41,6 +43,8 @@ public class AuthManager implements AuthService {
     private final UserRepository userRepository;
     private final VerificationCodeRepository verificationCodeRepository;
     private final SmsService smsService;
+    private final AdminRepository adminRepository;
+
 
     @Override
     @Transactional
@@ -52,41 +56,42 @@ public class AuthManager implements AuthService {
         return new ResponseMessage("Çıkış başarılı", true);
     }
 
-        @Override
-        @Transactional
-        public TokenResponseDTO login(LoginRequestDTO loginRequestDTO)
-                throws NotFoundUserException, UserDeletedException, UserNotActiveException,
-                IncorrectPasswordException, UserRoleNotAssignedException, PhoneNotVerifiedException, UnrecognizedDeviceException {
+    @Override
+    @Transactional
+    public TokenResponseDTO login(LoginRequestDTO loginRequestDTO)
+            throws NotFoundUserException, UserDeletedException, UserNotActiveException,
+            IncorrectPasswordException, UserRoleNotAssignedException, PhoneNotVerifiedException, UnrecognizedDeviceException {
 
-            String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
-            loginRequestDTO.setTelephone(normalizedPhone);
+        String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
+        loginRequestDTO.setTelephone(normalizedPhone);
 
-            SecurityUser securityUser = securityUserRepository.findByUserNumber(loginRequestDTO.getTelephone())
-                    .orElseThrow(NotFoundUserException::new);
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(normalizedPhone)
+                .orElseThrow(NotFoundUserException::new);
 
-            if (!(securityUser instanceof User user)) {
-                throw new NotFoundUserException(); // login yapan kullanıcı CityUser değilse
-            }
+        // Şifre kontrolü
+        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), securityUser.getPassword())) {
+            throw new IncorrectPasswordException();
+        }
 
+        // Roller kontrolü
+        if (securityUser.getRoles() == null || securityUser.getRoles().isEmpty()) {
+            throw new UserRoleNotAssignedException();
+        }
+
+        // Kullanıcı tipi ayırımı
+        if (securityUser instanceof User user) {
+            // Kullanıcı aktif mi?
             if (!user.isActive()) {
                 throw new UserNotActiveException();
             }
 
-            if (!passwordEncoder.matches(loginRequestDTO.getPassword(), user.getPassword())) {
-                throw new IncorrectPasswordException();
-            }
-
-            if (user.getRoles() == null || user.getRoles().isEmpty()) {
-                throw new UserRoleNotAssignedException();
-            }
-
-            // ✅ Telefon doğrulama kontrolü
+            // Telefon doğrulandı mı?
             if (!user.isPhoneVerified()) {
                 sendLoginVerificationCode(user, loginRequestDTO);
                 throw new PhoneNotVerifiedException();
             }
 
-            // ✅ Cihaz doğrulama kontrolü (IP değil, sadece deviceInfo)
+            // Cihaz kontrolü
             String currentDevice = loginRequestDTO.getDeviceInfo();
             String lastDevice = user.getLastLoginDevice();
 
@@ -94,22 +99,51 @@ public class AuthManager implements AuthService {
                 sendLoginVerificationCode(user, loginRequestDTO);
                 throw new UnrecognizedDeviceException();
             }
+
+            // Token sil ve oluştur
             tokenRepository.deleteBySecurityUserId(user.getId());
 
-            // ✅ Token oluşturuluyor
-            String accessToken = jwtService.generateAccessToken(user, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
-            String refreshToken = jwtService.generateRefreshToken(user, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
+            String accessToken = jwtService.generateAccessToken(user, loginRequestDTO.getIpAddress(), currentDevice);
+            String refreshToken = jwtService.generateRefreshToken(user, loginRequestDTO.getIpAddress(), currentDevice);
 
-            // Cihazı güvenli olarak işaretle
             user.setLastLoginDevice(currentDevice);
             user.setLastLoginAt(LocalDateTime.now());
             user.setLastLoginIp(loginRequestDTO.getIpAddress());
-            user.setLastLoginAppVersion(loginRequestDTO.getAppVersion());  // appVersion getter ekle DTO'ya
+            user.setLastLoginAppVersion(loginRequestDTO.getAppVersion());
             user.setLastLoginPlatform(loginRequestDTO.getPlatform());
+
             userRepository.save(user);
 
             return new TokenResponseDTO(accessToken, refreshToken);
+
+        } else if (securityUser instanceof Admin admin) {
+            // Admin silinmiş mi?
+            if (admin.isDeleted()) {
+                throw new UserDeletedException();
+            }
+
+            // Admin aktif mi?
+            if (!admin.isActive()) {
+                throw new UserNotActiveException();
+            }
+
+            // Token sil ve oluştur
+            tokenRepository.deleteBySecurityUserId(admin.getId());
+
+            String accessToken = jwtService.generateAccessToken(admin, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
+            String refreshToken = jwtService.generateRefreshToken(admin, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
+
+            admin.setLastLoginAt(LocalDateTime.now());
+            admin.setIpAddress(loginRequestDTO.getIpAddress());
+            admin.setDeviceUuid(loginRequestDTO.getDeviceInfo());
+
+            adminRepository.save(admin);
+
+            return new TokenResponseDTO(accessToken, refreshToken);
         }
+
+        throw new NotFoundUserException(); // Ne User ne Admin değilse
+    }
 
 
     private void sendLoginVerificationCode(User user, LoginRequestDTO request) {
