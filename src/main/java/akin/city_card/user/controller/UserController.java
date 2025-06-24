@@ -7,6 +7,8 @@ import akin.city_card.user.core.request.*;
 import akin.city_card.user.core.response.UserDTO;
 import akin.city_card.user.exceptions.*;
 import akin.city_card.user.service.abstracts.UserService;
+import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
+import akin.city_card.verification.exceptions.InvalidOrUsedVerificationCodeException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -16,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/v1/api/user")
@@ -36,15 +39,22 @@ public class UserController {
         return userService.verifyPhone(verificationCodeRequest);
     }
 
-
-
+    // 📲 Adım 1: Şifremi unuttum -> Telefon numarasına kod gönder
     @PostMapping("/password/forgot")
-    public ResponseMessage sendResetCode(@RequestParam("emailOrPhone") String emailOrPhone) {
-        return userService.sendPasswordResetCode(emailOrPhone);
+    public ResponseMessage sendResetCode(@RequestParam("phone") String phone) throws UserNotFoundException {
+        return userService.sendPasswordResetCode(phone);
     }
 
+    // ✅ Adım 2: Telefon numarasını doğrulama (kod girilerek)
+    @PostMapping("/password/verify-code")
+    public UUID verifyResetCode(@RequestBody VerificationCodeRequest verificationCodeRequest)
+            throws UserNotFoundException, ExpiredVerificationCodeException, InvalidOrUsedVerificationCodeException {
+        return userService.verifyPhoneForPasswordReset(verificationCodeRequest);
+    }
+
+    // 🔐 Adım 3: Yeni şifre belirleme
     @PostMapping("/password/reset")
-    public ResponseMessage resetPassword(@RequestBody PasswordResetRequest request) {
+    public ResponseMessage resetPassword(@RequestBody PasswordResetRequest request) throws SamePasswordException, PasswordTooShortException, PasswordResetTokenNotFoundException, PasswordResetTokenExpiredException, PasswordResetTokenIsUsedException {
         return userService.resetPassword(request);
     }
 
@@ -59,14 +69,6 @@ public class UserController {
     public ResponseMessage resendPhoneVerification(@RequestBody ResendPhoneVerificationRequest request) throws UserNotFoundException {
         return userService.resendPhoneVerificationCode(request);
     }
-
-    // Email için yeniden doğrulama linki gönderme
-    @PostMapping("/verify/email/resend")
-    public ResponseMessage resendEmailVerification(@RequestParam String email) {
-        return userService.resendEmailVerificationLink(email);
-    }
-
-
 
     @PostMapping("/collective-sign-up")
     public List<ResponseMessage> collectiveSignUp(@Valid @RequestBody CreateUserRequestList createUserRequestList) throws PhoneNumberRequiredException, InvalidPhoneNumberFormatException, PhoneNumberAlreadyExistsException {

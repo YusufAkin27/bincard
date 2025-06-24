@@ -41,6 +41,9 @@ public class SecurityConfig {
                 "/v1/api/user/password/forgot/**",    // şifre sıfırlama kodu gönderme
                 "/v1/api/user/password/reset/**",
                 "/v1/api/admin/sign-up",
+                "/v1/api/user/password/verify-code",
+                "/v1/api/user/password/reset",
+
                 "/v1/api/user/active/**",              // aktif etme işlemleri varsa
                 // Diğer izin verilenler (örnek: token yenileme)
                 "/v1/api/token/**",

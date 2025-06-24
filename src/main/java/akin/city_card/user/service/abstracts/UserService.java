@@ -6,11 +6,14 @@ import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.core.request.*;
 import akin.city_card.user.core.response.UserDTO;
 import akin.city_card.user.exceptions.*;
+import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
+import akin.city_card.verification.exceptions.InvalidOrUsedVerificationCodeException;
 import jakarta.validation.Valid;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 public interface UserService {
 
@@ -30,14 +33,14 @@ public interface UserService {
     ResponseMessage verifyPhone( VerificationCodeRequest request) throws UserNotFoundException;
 
 
-    ResponseMessage sendPasswordResetCode(String emailOrPhone);
+    ResponseMessage sendPasswordResetCode(String phone) throws UserNotFoundException;
 
-    ResponseMessage resetPassword(PasswordResetRequest request);
+    ResponseMessage resetPassword(PasswordResetRequest request) throws PasswordResetTokenNotFoundException, PasswordResetTokenExpiredException, PasswordResetTokenIsUsedException, PasswordTooShortException, SamePasswordException;
 
     ResponseMessage changePassword(String username, ChangePasswordRequest request) throws UserIsDeletedException, UserNotActiveException, UserNotFoundException, PasswordsDoNotMatchException, InvalidNewPasswordException, IncorrectCurrentPasswordException, SamePasswordException;
 
 
     ResponseMessage resendPhoneVerificationCode(ResendPhoneVerificationRequest request) throws UserNotFoundException;
 
-    ResponseMessage resendEmailVerificationLink(String email);
+    UUID verifyPhoneForPasswordReset(VerificationCodeRequest verificationCodeRequest) throws InvalidOrUsedVerificationCodeException, ExpiredVerificationCodeException;
 }

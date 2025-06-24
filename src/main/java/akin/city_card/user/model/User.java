@@ -40,6 +40,9 @@ public class User extends SecurityUser {
     private boolean active = true;
     private boolean deleted = false;
 
+    @OneToOne(cascade = CascadeType.ALL)
+    private PasswordResetToken resetToken;
+
     // Telefon doğrulandı mı?x
     private boolean phoneVerified = false;
 
@@ -47,7 +50,7 @@ public class User extends SecurityUser {
     @Column(name = "email_verified")
     private boolean emailVerified = false;
 
-    private String profilePicture="https://w7.pngwing.com/pngs/177/551/png-transparent-user-interface-design-computer-icons-default-stephen-salazar-graphy-user-interface-design-computer-wallpaper-sphere-thumbnail.png";
+    private String profilePicture = "https://w7.pngwing.com/pngs/177/551/png-transparent-user-interface-design-computer-icons-default-stephen-salazar-graphy-user-interface-design-computer-wallpaper-sphere-thumbnail.png";
 
     private String email;
 
@@ -170,8 +173,6 @@ public class User extends SecurityUser {
     // Kullanıcının yaptığı geçmiş aramalar
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SearchHistory> searchHistory;
-
-
 
 
 }

@@ -18,42 +18,6 @@
 					"response": []
 				},
 				{
-					"name": "login",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"telephone\":\"5366543798\",\r\n    \"password\":\"123456\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "http://localhost:8080/v1/api/auth/login"
-					},
-					"response": []
-				},
-				{
-					"name": "token yenileme",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiI1MzM2MzYwMDc5IiwiaWF0IjoxNzQ5MTY0NjcwLCJleHAiOjE3ODA3MDA2NzB9.CKYo7XjTk4JLHkQwekwp5UQY_TSazv2_B-8zN8DZIs2kTnUpJETNsNOkVNktPooW\"\r\n    \r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": "http://localhost:8080/v1/api/auth/refresh"
-					},
-					"response": []
-				},
-				{
 					"name": "toplu kullanıcı ekleme",
 					"request": {
 						"method": "GET",
@@ -113,6 +77,167 @@
 						"url": "http://localhost:8080/v1/api/user/profile"
 					},
 					"response": []
+				},
+				{
+					"name": "şifremi unuttum",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"telephone\":\"5366543798\",\r\n    \"password\":\"123456\"\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/password/forgot?phone=5336360079",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"password",
+								"forgot"
+							],
+							"query": [
+								{
+									"key": "phone",
+									"value": "5336360079"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "şifremi unuttum doğrulama",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\":\"665666\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/user/password/verify-code"
+					},
+					"response": []
+				},
+				{
+					"name": "şifre sıfırlama",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"resetToken\":\" \",\r\n    \"newPassword\":\"123456\"\r\n  \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/user/password/reset"
+					},
+					"response": []
+				},
+				{
+					"name": "şifre değiştir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDc0NTA5OTAxIiwiaWF0IjoxNzUwNzgzNzg5LCJleHAiOjE3ODIzMTk3ODksInVzZXJOdW1iZXIiOiIrOTA1MDc0NTA5OTAxIiwicm9sZSI6WyJVU0VSIl19.36zgatzQNTpO0PZAk4Ln5IioBwoqoXCAkTLgriLiFWhGWRMz6cYTir6bnzLK2zEi"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"currentPassword\":\"654211\",\r\n    \"newPassword\":\"123456\"\r\n  \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/user/password/change"
+					},
+					"response": []
+				},
+				{
+					"name": "profil güncelleme",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTk5IiwiaWF0IjoxNzUwNzY2MzYyLCJleHAiOjE3ODIzMDIzNjIsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTk5Iiwicm9sZSI6WyJBRE1JTiJdfQ.ie6u5YKe348amRfhvPYcfSDl6Fd4PBI9boulE42IkrCMTPHMi0GT0vJ9ATY6kz3n"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"yusuf\",\r\n    \"surname\":\"akin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/user/profile"
+					},
+					"response": []
+				},
+				{
+					"name": "profil fotoğrafı koy",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTk5IiwiaWF0IjoxNzUwNzY2MzYyLCJleHAiOjE3ODIzMDIzNjIsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTk5Iiwicm9sZSI6WyJBRE1JTiJdfQ.ie6u5YKe348amRfhvPYcfSDl6Fd4PBI9boulE42IkrCMTPHMi0GT0vJ9ATY6kz3n"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/user/profile/photo"
+					},
+					"response": []
+				},
+				{
+					"name": "hesabımı sil",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTk5IiwiaWF0IjoxNzUwNzY2MzYyLCJleHAiOjE3ODIzMDIzNjIsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTk5Iiwicm9sZSI6WyJBRE1JTiJdfQ.ie6u5YKe348amRfhvPYcfSDl6Fd4PBI9boulE42IkrCMTPHMi0GT0vJ9ATY6kz3n"
+							}
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"telephone\":\"5366543798\",\r\n    \"password\":\"123456\"\r\n}"
+						},
+						"url": "http://localhost:8080/v1/api/user/deactivate"
+					},
+					"response": []
 				}
 			]
 		},
@@ -163,6 +288,47 @@
 							}
 						},
 						"url": "http://localhost:8080/v1/api/news/create"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"telephone\":\"5366543798\",\r\n    \"password\":\"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/auth/login"
+					},
+					"response": []
+				},
+				{
+					"name": "token yenileme",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiI1MzM2MzYwMDc5IiwiaWF0IjoxNzQ5MTY0NjcwLCJleHAiOjE3ODA3MDA2NzB9.CKYo7XjTk4JLHkQwekwp5UQY_TSazv2_B-8zN8DZIs2kTnUpJETNsNOkVNktPooW\"\r\n    \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/auth/refresh"
 					},
 					"response": []
 				}

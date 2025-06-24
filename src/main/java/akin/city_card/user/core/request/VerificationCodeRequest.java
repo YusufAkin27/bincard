@@ -11,6 +11,5 @@ import lombok.NoArgsConstructor;
 @Builder
 public class VerificationCodeRequest {
     private String code;
-    private String ipAddress;
-    private String userAgent;
+
 }

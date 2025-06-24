@@ -11,11 +11,15 @@ import akin.city_card.user.core.converter.UserConverter;
 import akin.city_card.user.core.request.*;
 import akin.city_card.user.core.response.UserDTO;
 import akin.city_card.user.exceptions.*;
+import akin.city_card.user.model.PasswordResetToken;
 import akin.city_card.user.model.User;
 import akin.city_card.user.model.VerificationMethod;
+import akin.city_card.user.repository.PasswordResetTokenRepository;
 import akin.city_card.user.repository.UserRepository;
 import akin.city_card.user.rules.UserRules;
 import akin.city_card.user.service.abstracts.UserService;
+import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
+import akin.city_card.verification.exceptions.InvalidOrUsedVerificationCodeException;
 import akin.city_card.verification.model.VerificationChannel;
 import akin.city_card.verification.model.VerificationCode;
 import akin.city_card.verification.model.VerificationPurpose;
@@ -28,9 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
@@ -45,6 +47,7 @@ public class UserManager implements UserService {
     private final UserRules userRules;
     private final VerificationCodeRepository verificationCodeRepository;
     private final PasswordEncoder passwordEncoder;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
 
 
     @Override
@@ -141,8 +144,6 @@ public class UserManager implements UserService {
         userRepository.save(user);
 
         verificationCode.setUsed(true);
-        verificationCode.setUserAgent(request.getUserAgent());
-        verificationCode.setIpAddress(request.getIpAddress());
         verificationCodeRepository.save(verificationCode);
 
         return new ResponseMessage("Telefon numarası başarıyla doğrulandı.", true);
@@ -227,14 +228,76 @@ public class UserManager implements UserService {
 
 
     @Override
-    public ResponseMessage sendPasswordResetCode(String emailOrPhone) {
-        return null;
+    public ResponseMessage sendPasswordResetCode(String phone) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(PhoneNumberFormatter.normalizeTurkishPhoneNumber(phone));
+
+        // 6 haneli rastgele kod üret
+        String code = randomSixDigit();
+        System.out.println("Doğrulama kodu: " + code);
+
+        // VerificationCode nesnesi oluştur
+        VerificationCode verificationCode = VerificationCode.builder()
+                .user(user)
+                .code(code)
+                .channel(VerificationChannel.SMS)
+                .purpose(VerificationPurpose.RESET_PASSWORD)
+                .expiresAt(LocalDateTime.now().plusMinutes(3))
+                .build();
+
+        // Veritabanına kaydet
+        verificationCodeRepository.save(verificationCode);
+
+        // SMS gönder
+        /*
+        SmsRequest smsRequest = new SmsRequest();
+        smsRequest.setTo(phone);
+        smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code +
+                ". Kod 3 dakika boyunca geçerlidir.");
+        smsService.sendSms(smsRequest);
+
+         */
+        return new ResponseMessage("Doğrulama kodu gönderildi.", true);
     }
 
     @Override
-    public ResponseMessage resetPassword(PasswordResetRequest request) {
-        return null;
+    public ResponseMessage resetPassword(PasswordResetRequest request)
+            throws PasswordResetTokenNotFoundException,
+            PasswordResetTokenExpiredException,
+            PasswordResetTokenIsUsedException, PasswordTooShortException, SamePasswordException {
+
+        PasswordResetToken passwordResetToken = passwordResetTokenRepository
+                .findByToken(request.getResetToken())
+                .orElseThrow(PasswordResetTokenNotFoundException::new);
+
+        if (passwordResetToken.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new PasswordResetTokenExpiredException();
+        }
+
+        if (passwordResetToken.isUsed()) {
+            throw new PasswordResetTokenIsUsedException();
+        }
+
+        User user = passwordResetToken.getUser();
+        String newPassword = request.getNewPassword();
+
+        if (newPassword.length() < 6) {
+            throw new SamePasswordException();
+        }
+
+        if (passwordEncoder.matches(newPassword, user.getPassword())) {
+            throw new SamePasswordException();
+        }
+
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
+        userRepository.save(user);
+
+        passwordResetToken.setUsed(true);
+        passwordResetTokenRepository.save(passwordResetToken);
+
+        return new ResponseMessage("Şifreniz başarıyla sıfırlandı.", true);
     }
+
 
     @Override
     public ResponseMessage changePassword(String username, ChangePasswordRequest request)
@@ -288,12 +351,14 @@ public class UserManager implements UserService {
 
         String code = randomSixDigit();
 
-        // SMS gönderimi
+        /*// SMS gönderimi
         SmsRequest smsRequest = new SmsRequest();
         smsRequest.setTo(resendPhoneVerification.getTelephone());
         smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code +
                 ". Kod 3 dakika boyunca geçerlidir.");
         smsService.sendSms(smsRequest);
+
+         */
 
         // Doğrulama kodu bilgisi oluştur ve kaydet
         VerificationCode verificationCode = new VerificationCode();
@@ -321,14 +386,42 @@ public class UserManager implements UserService {
         return new ResponseMessage("Yeniden doğrulama kodu gönderildi.", true);
     }
 
+    @Override
+    @Transactional
+    public UUID verifyPhoneForPasswordReset(VerificationCodeRequest verificationCodeRequest) throws InvalidOrUsedVerificationCodeException, ExpiredVerificationCodeException {
+        String code = verificationCodeRequest.getCode();
+
+        VerificationCode verificationCode = verificationCodeRepository
+                .findFirstByCodeAndUsedFalseAndCancelledFalseOrderByCreatedAtDesc(code)
+                .orElseThrow(InvalidOrUsedVerificationCodeException::new);
+
+        if (verificationCode.getExpiresAt().isBefore(LocalDateTime.now())) {
+            throw new ExpiredVerificationCodeException();
+        }
+
+        User user = verificationCode.getUser();
+
+        verificationCode.setUsed(true);
+        verificationCodeRepository.save(verificationCode);
+
+        UUID resetTokenUUID = UUID.randomUUID();
+
+        PasswordResetToken passwordResetToken = new PasswordResetToken();
+        passwordResetToken.setToken(resetTokenUUID.toString());
+        passwordResetToken.setExpiresAt(LocalDateTime.now().plusMinutes(5)); // 5 dakika geçerli
+        passwordResetToken.setUsed(false);
+        passwordResetToken.setUser(user);
+
+        passwordResetTokenRepository.save(passwordResetToken);
+
+        return resetTokenUUID;
+    }
+
+
     public String randomSixDigit() {
         Random random = new Random();
         return String.format("%06d", random.nextInt(1000000)); // 000000 ile 999999 arasında 6 hane
     }
 
-    @Override
-    public ResponseMessage resendEmailVerificationLink(String email) {
-        return null;
-    }
 
 }

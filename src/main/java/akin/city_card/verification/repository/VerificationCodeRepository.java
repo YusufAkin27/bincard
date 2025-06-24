@@ -23,4 +23,5 @@ public interface VerificationCodeRepository extends JpaRepository<VerificationCo
     @Query("DELETE FROM VerificationCode v WHERE v.expiresAt < CURRENT_TIMESTAMP")
     void deleteExpiredCodes();
 
+    Optional<VerificationCode> findFirstByCodeAndUsedFalseAndCancelledFalseOrderByCreatedAtDesc(String code);
 }
