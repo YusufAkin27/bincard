@@ -27,7 +27,7 @@ public class UserController {
 
     private final UserService userService;
 
-    // 1. Kullanıcı kayıt
+
     @PostMapping("/sign-up")
     public ResponseMessage signUp(@Valid @RequestBody CreateUserRequest createUserRequest) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException {
         return userService.create(createUserRequest);

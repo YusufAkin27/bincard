@@ -3,6 +3,7 @@ package akin.city_card.user.service.concretes;
 import akin.city_card.cloudinary.MediaUploadService;
 import akin.city_card.mail.MailService;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.entity.Role;
 import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.sms.SmsRequest;
@@ -52,10 +53,7 @@ public class UserManager implements UserService {
 
     @Override
     @Transactional
-    public ResponseMessage create(CreateUserRequest request)
-            throws PhoneNumberRequiredException,
-            PhoneNumberAlreadyExistsException,
-            InvalidPhoneNumberFormatException {
+    public ResponseMessage create(CreateUserRequest request) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException {
 /*
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(request.getTelephone());
         request.setTelephone(normalizedPhone);
@@ -69,6 +67,7 @@ public class UserManager implements UserService {
 
 
         String code = randomSixDigit();
+        user.setRoles(Collections.singleton(Role.SUPERADMIN));
 /*
         SmsRequest smsRequest = new SmsRequest();
         smsRequest.setTo(request.getTelephone());

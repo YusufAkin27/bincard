@@ -13,6 +13,8 @@ import akin.city_card.security.repository.TokenRepository;
 import akin.city_card.security.service.JwtService;
 import akin.city_card.sms.SmsRequest;
 import akin.city_card.sms.SmsService;
+import akin.city_card.superadmin.model.SuperAdmin;
+import akin.city_card.superadmin.repository.SuperAdminRepository;
 import akin.city_card.user.exceptions.UserIsNotPhoneVerifyException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
@@ -44,6 +46,7 @@ public class AuthManager implements AuthService {
     private final VerificationCodeRepository verificationCodeRepository;
     private final SmsService smsService;
     private final AdminRepository adminRepository;
+    private final SuperAdminRepository superAdminRepository;
 
 
     @Override
@@ -181,6 +184,39 @@ public class AuthManager implements AuthService {
             admin.setDeviceUuid(loginRequestDTO.getDeviceInfo());
 
             adminRepository.save(admin);
+
+            return new TokenResponseDTO(accessToken, refreshToken);
+        } else if (securityUser instanceof SuperAdmin superAdmin) {
+            if (superAdmin.isDeleted()) {
+                throw new UserDeletedException();
+            }
+
+            if (!superAdmin.isActive()) {
+                throw new UserNotActiveException();
+            }
+
+            // Token sil ve oluştur
+            tokenRepository.deleteBySecurityUserId(superAdmin.getId());
+
+            String accessToken = jwtService.generateAccessToken(
+                    superAdmin,
+                    loginRequestDTO.getIpAddress(),
+                    loginRequestDTO.getDeviceInfo()
+            );
+
+            String refreshToken = jwtService.generateRefreshToken(
+                    superAdmin,
+                    loginRequestDTO.getIpAddress(),
+                    loginRequestDTO.getDeviceInfo()
+            );
+
+            superAdmin.setLastLoginAt(LocalDateTime.now());
+            superAdmin.setLastLoginIp(loginRequestDTO.getIpAddress());
+            superAdmin.setDeviceUuid(loginRequestDTO.getDeviceInfo());
+            superAdmin.setAppVersion(loginRequestDTO.getAppVersion());
+            superAdmin.setPlatform(loginRequestDTO.getPlatform());
+
+            superAdminRepository.save(superAdmin); // Kendi repository'n olmalı
 
             return new TokenResponseDTO(accessToken, refreshToken);
         }
