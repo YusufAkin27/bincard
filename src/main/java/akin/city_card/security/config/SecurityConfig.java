@@ -39,7 +39,8 @@ public class SecurityConfig {
                 "/v1/api/user/verify/email/send",
                 "/v1/api/user/verify/phone/resend/**",// email doğrulama linki gönderme
                 "/v1/api/user/password/forgot/**",    // şifre sıfırlama kodu gönderme
-                "/v1/api/user/password/reset/**",     // şifre sıfırlama
+                "/v1/api/user/password/reset/**",
+                "/v1/api/admin/sign-up/**",// şifre sıfırlama
                 "/v1/api/user/active/**",              // aktif etme işlemleri varsa
                 // Diğer izin verilenler (örnek: token yenileme)
                 "/v1/api/token/**",
@@ -81,8 +82,9 @@ public class SecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("*"
-        ));
+
+        // Sadece localhost:3000 adresine izin veriliyor
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
 
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));

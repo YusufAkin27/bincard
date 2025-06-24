@@ -5,9 +5,14 @@ import akin.city_card.user.model.User;
 import akin.city_card.news.model.News;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.List;
 
 public interface NewsViewHistoryRepository extends JpaRepository<NewsViewHistory, Long> {
+
+    boolean existsByUserAndNews(User user, News news);
+
+    List<NewsViewHistory> findByViewedAtAfter(LocalDateTime startOfMonth);
 
 }
