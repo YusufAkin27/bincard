@@ -91,6 +91,80 @@
 						"url": "http://localhost:8080/v1/api/user/verify/phone/resend"
 					},
 					"response": []
+				},
+				{
+					"name": "profilim",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYwMDc5IiwiaWF0IjoxNzUwNzEzNTIwLCJleHAiOjE3ODIyNDk1MjAsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYwMDc5Iiwicm9sZSI6WyJVU0VSIl19.4gA_SEO6QQM0vhb2rggDOrcLWFn9G-a-UO8qAF-nHOnWZbETzNPgVtbsoKLKxEfu"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"telephone\":\"5366543798\",\r\n    \"password\":\"123456\"\r\n}"
+						},
+						"url": "http://localhost:8080/v1/api/user/profile"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "admin",
+			"item": [
+				{
+					"name": "admin kayıt ol",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"telephone\":\"5366543798\",\r\n    \"password\":\"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/admin/sign-up"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "haberler",
+			"item": [
+				{
+					"name": "haber oluştur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTk5IiwiaWF0IjoxNzUwNzY1OTQ3LCJleHAiOjE3ODIzMDE5NDcsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTk5Iiwicm9sZSI6WyJBRE1JTiJdfQ.u2SyjOqHcLor3T5oBpaEgqNOCnFuaOzcuK2HREXgBhdU4vnwiEl_je0uFREa8fPR"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"title\": \"Toplu Taşımada Yeni Dönem Başlıyor\",\r\n  \"content\": \"Yeni alınan kararlarla birlikte otobüs sefer saatlerinde değişiklik yapılacaktır. Detaylar için lütfen web sitemizi ziyaret ediniz.\",\r\n  \"image\": \"https://example.com/images/news-bus-update.png\",\r\n  \"startDate\": \"2025-06-25T09:00:00\",\r\n  \"endDate\": \"2025-07-01T23:59:59\",\r\n  \"platform\": \"ALL\",\r\n  \"priority\": \"HIGH\",\r\n  \"type\": \"ANNOUNCEMENT\",\r\n  \"allowFeedback\": true\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/news/create"
+					},
+					"response": []
 				}
 			]
 		}
