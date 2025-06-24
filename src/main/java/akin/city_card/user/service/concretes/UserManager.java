@@ -3,20 +3,16 @@ package akin.city_card.user.service.concretes;
 import akin.city_card.cloudinary.MediaUploadService;
 import akin.city_card.mail.MailService;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.sms.SmsRequest;
 import akin.city_card.sms.SmsService;
 import akin.city_card.user.core.converter.UserConverter;
 import akin.city_card.user.core.request.*;
 import akin.city_card.user.core.response.UserDTO;
-import akin.city_card.user.exceptions.InvalidPhoneNumberFormatException;
-import akin.city_card.user.exceptions.PhoneNumberAlreadyExistsException;
-import akin.city_card.user.exceptions.PhoneNumberRequiredException;
-import akin.city_card.user.exceptions.PhotoSizeLargerException;
-import akin.city_card.user.model.TwoFactorAuth;
+import akin.city_card.user.exceptions.*;
 import akin.city_card.user.model.User;
 import akin.city_card.user.model.VerificationMethod;
-import akin.city_card.user.repository.TwoFactorAuthRepository;
 import akin.city_card.user.repository.UserRepository;
 import akin.city_card.user.rules.UserRules;
 import akin.city_card.user.service.abstracts.UserService;
@@ -24,18 +20,13 @@ import akin.city_card.verification.model.VerificationChannel;
 import akin.city_card.verification.model.VerificationCode;
 import akin.city_card.verification.model.VerificationPurpose;
 import akin.city_card.verification.repository.VerificationCodeRepository;
-import akin.city_card.wallet.model.Currency;
-import akin.city_card.wallet.model.Wallet;
-import akin.city_card.wallet.model.WalletStatus;
-import akin.city_card.wallet.repository.WalletRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.beans.Transient;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,7 +44,7 @@ public class UserManager implements UserService {
     private final MediaUploadService mediaUploadService;
     private final UserRules userRules;
     private final VerificationCodeRepository verificationCodeRepository;
-    private final TwoFactorAuthRepository twoFactorAuthRepository;
+    private final PasswordEncoder passwordEncoder;
 
 
     @Override
@@ -69,23 +60,22 @@ public class UserManager implements UserService {
         userRules.checkPhoneIsUnique(request.getTelephone());
 
         User user = userConverter.convertUserToCreateUser(request);
-        TwoFactorAuth twoFactorAuth = new TwoFactorAuth();
-        twoFactorAuth.setUser(user);
-        twoFactorAuth.setEnabled(false);
-        user.setTwoFactorAuth(twoFactorAuth);
 
-        twoFactorAuthRepository.save(twoFactorAuth);
+
         userRepository.save(user);
 
 
         String code = randomSixDigit();
-
+/*
         SmsRequest smsRequest = new SmsRequest();
         smsRequest.setTo(request.getTelephone());
         smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code +
                 ". Kod 3 dakika boyunca geçerlidir.");
         smsService.sendSms(smsRequest);
 
+
+ */
+        System.out.println(code);
         // 6. Doğrulama kodu bilgisi oluştur ve kaydet
         VerificationCode verificationCode = new VerificationCode();
         verificationCode.setCode(code);
@@ -106,7 +96,6 @@ public class UserManager implements UserService {
 
         verificationCodeRepository.save(verificationCode);
 
-        // 7. Geri dönüş
         return new ResponseMessage("Kullanıcı başarıyla oluşturuldu. Doğrulama kodu SMS olarak gönderildi.", true);
     }
 
@@ -197,6 +186,7 @@ public class UserManager implements UserService {
     public ResponseMessage deactivateUser(String username) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
         user.setActive(false);
+        user.setDeleted(true);
         return new ResponseMessage("Kullanıcı hesabı silindi.", true);
     }
 
@@ -237,16 +227,6 @@ public class UserManager implements UserService {
 
 
     @Override
-    public ResponseMessage sendEmailVerificationLink(String username) {
-        return null;
-    }
-
-    @Override
-    public ResponseMessage verifyEmail(String token) {
-        return null;
-    }
-
-    @Override
     public ResponseMessage sendPasswordResetCode(String emailOrPhone) {
         return null;
     }
@@ -257,43 +237,44 @@ public class UserManager implements UserService {
     }
 
     @Override
-    public ResponseMessage changePassword(String username, ChangePasswordRequest request) {
-        return null;
-    }
+    public ResponseMessage changePassword(String username, ChangePasswordRequest request)
+            throws UserIsDeletedException, UserNotActiveException, UserNotFoundException, PasswordsDoNotMatchException, InvalidNewPasswordException, IncorrectCurrentPasswordException, SamePasswordException {
 
-    @Override
-    public ResponseMessage enableTwoFactor(String username) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
-        if (!user.getTwoFactorAuth().isEnabled()) {
-            user.getTwoFactorAuth().setEnabled(true);
+        if (user == null) {
+            throw new UserNotFoundException();
         }
-        if (user.isPhoneVerified() && !user.isEmailVerified()) {
-            user.getTwoFactorAuth().setTarget(user.getUserNumber());
-            user.getTwoFactorAuth().setMethod(VerificationMethod.PHONE);
 
+        if (!user.isActive()) {
+            throw new UserNotActiveException();
         }
-        if (user.isEmailVerified() && !user.isPhoneVerified()) {
-            user.getTwoFactorAuth().setTarget(user.getEmail());
-            user.getTwoFactorAuth().setMethod(VerificationMethod.EMAIL);
 
+        if (user.isDeleted()) {
+            throw new UserIsDeletedException();
         }
-        if (user.isEmailVerified() && user.isPhoneVerified()) {//email ve teelfon doğrulama açıksa
-            user.getTwoFactorAuth().setTarget(user.getUserNumber());
-            user.getTwoFactorAuth().setMethod(VerificationMethod.PHONE);
 
+        // Mevcut şifre doğru mu?
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new IncorrectCurrentPasswordException();
         }
-        user.getTwoFactorAuth().setIsCreate(LocalDateTime.now());
+
+        // Yeni şifre en az 6 karakter mi?
+        if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
+            throw new InvalidNewPasswordException();
+        }
+
+        // Yeni şifre mevcut şifre ile aynı mı?
+        if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
+            throw new SamePasswordException();
+        }
+
+        // Şifreyi güncelle
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
-        return new ResponseMessage("İki faktorölü doğrulama açıldı", true);
+
+        return new ResponseMessage("Şifre başarıyla güncellendi.", true);
     }
 
-    @Override
-    public ResponseMessage disableTwoFactor(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
-        user.getTwoFactorAuth().setEnabled(false);
-        userRepository.save(user);
-        return new ResponseMessage("iki faktörlü doğrulama kapandı", true);
-    }
 
     @Override
     public ResponseMessage resendPhoneVerificationCode(ResendPhoneVerificationRequest resendPhoneVerification) throws UserNotFoundException {

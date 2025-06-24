@@ -1,13 +1,11 @@
 package akin.city_card.user.service.abstracts;
 
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.core.request.*;
 import akin.city_card.user.core.response.UserDTO;
-import akin.city_card.user.exceptions.InvalidPhoneNumberFormatException;
-import akin.city_card.user.exceptions.PhoneNumberAlreadyExistsException;
-import akin.city_card.user.exceptions.PhoneNumberRequiredException;
-import akin.city_card.user.exceptions.PhotoSizeLargerException;
+import akin.city_card.user.exceptions.*;
 import jakarta.validation.Valid;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,19 +29,13 @@ public interface UserService {
 
     ResponseMessage verifyPhone( VerificationCodeRequest request) throws UserNotFoundException;
 
-    ResponseMessage sendEmailVerificationLink(String username);
-
-    ResponseMessage verifyEmail(String token);
 
     ResponseMessage sendPasswordResetCode(String emailOrPhone);
 
     ResponseMessage resetPassword(PasswordResetRequest request);
 
-    ResponseMessage changePassword(String username, ChangePasswordRequest request);
+    ResponseMessage changePassword(String username, ChangePasswordRequest request) throws UserIsDeletedException, UserNotActiveException, UserNotFoundException, PasswordsDoNotMatchException, InvalidNewPasswordException, IncorrectCurrentPasswordException, SamePasswordException;
 
-    ResponseMessage enableTwoFactor(String username) throws UserNotFoundException;
-
-    ResponseMessage disableTwoFactor(String username) throws UserNotFoundException;
 
     ResponseMessage resendPhoneVerificationCode(ResendPhoneVerificationRequest request) throws UserNotFoundException;
 

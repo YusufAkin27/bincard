@@ -30,24 +30,23 @@ public class AdminManager implements AdminService {
     private final PasswordEncoder passwordEncoder;
     private final SmsService smsService;
 
+    private final VerificationCodeRepository  verificationCodeRepository;
     @Override
     public ResponseMessage signUp(CreateAdminRequest adminRequest) {
-        // Telefon normalizasyonu
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(adminRequest.getTelephone());
         adminRequest.setTelephone(normalizedPhone);
 
 
 
-        // Yeni admin nesnesi oluşturuluyor
         Admin admin = Admin.builder()
                 .roles(Collections.singleton(Role.ADMIN))
                 .password(passwordEncoder.encode(adminRequest.getPassword()))
                 .ipAddress(adminRequest.getIpAddress())
                 .isDeleted(false)
-                .isActive(true)
+                .isActive(false)
                 .userNumber(adminRequest.getTelephone())
                 .deviceUuid(adminRequest.getDeviceUuid())
-                .superAdminApproved(true) // onaylanmamış başvuru
+                .superAdminApproved(false) // onaylanmamış başvuru
                 .build();
 
         // Kayıt

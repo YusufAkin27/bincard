@@ -1,13 +1,11 @@
 package akin.city_card.user.controller;
 
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.core.request.*;
 import akin.city_card.user.core.response.UserDTO;
-import akin.city_card.user.exceptions.InvalidPhoneNumberFormatException;
-import akin.city_card.user.exceptions.PhoneNumberAlreadyExistsException;
-import akin.city_card.user.exceptions.PhoneNumberRequiredException;
-import akin.city_card.user.exceptions.PhotoSizeLargerException;
+import akin.city_card.user.exceptions.*;
 import akin.city_card.user.service.abstracts.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -31,32 +29,31 @@ public class UserController {
     public ResponseMessage signUp(@Valid @RequestBody CreateUserRequest createUserRequest) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException {
         return userService.create(createUserRequest);
     }
+
     //sms doğrulama
     @PostMapping("/verify/phone")
     public ResponseMessage verifyPhone(@RequestBody VerificationCodeRequest verificationCodeRequest) throws UserNotFoundException {
-        return userService.verifyPhone( verificationCodeRequest);
+        return userService.verifyPhone(verificationCodeRequest);
     }
-    @PostMapping("/verify/email/send")
-    public ResponseMessage sendEmailVerification(@AuthenticationPrincipal UserDetails userDetails) {
-        return userService.sendEmailVerificationLink(userDetails.getUsername());
-    }
-    @GetMapping("/verify/email")
-    public ResponseMessage verifyEmail(@RequestParam("token") String token) {
-        return userService.verifyEmail(token);
-    }
+
+
+
     @PostMapping("/password/forgot")
     public ResponseMessage sendResetCode(@RequestParam("emailOrPhone") String emailOrPhone) {
         return userService.sendPasswordResetCode(emailOrPhone);
     }
+
     @PostMapping("/password/reset")
     public ResponseMessage resetPassword(@RequestBody PasswordResetRequest request) {
         return userService.resetPassword(request);
     }
+
     @PutMapping("/password/change")
     public ResponseMessage changePassword(@AuthenticationPrincipal UserDetails userDetails,
-                                          @RequestBody ChangePasswordRequest request) {
+                                          @RequestBody ChangePasswordRequest request) throws UserNotFoundException, PasswordsDoNotMatchException, IncorrectCurrentPasswordException, UserNotActiveException, InvalidNewPasswordException, SamePasswordException, UserIsDeletedException {
         return userService.changePassword(userDetails.getUsername(), request);
     }
+
     // Telefon için yeniden doğrulama kodu gönderme
     @PostMapping("/verify/phone/resend")
     public ResponseMessage resendPhoneVerification(@RequestBody ResendPhoneVerificationRequest request) throws UserNotFoundException {
@@ -68,14 +65,8 @@ public class UserController {
     public ResponseMessage resendEmailVerification(@RequestParam String email) {
         return userService.resendEmailVerificationLink(email);
     }
-    @PostMapping("/2fa/enable")
-    public ResponseMessage enable2FA(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-        return userService.enableTwoFactor(userDetails.getUsername());
-    }
-    @DeleteMapping("/2fa/disable")
-    public ResponseMessage disable2FA(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-        return userService.disableTwoFactor(userDetails.getUsername());
-    }
+
+
 
     @PostMapping("/collective-sign-up")
     public List<ResponseMessage> collectiveSignUp(@Valid @RequestBody CreateUserRequestList createUserRequestList) throws PhoneNumberRequiredException, InvalidPhoneNumberFormatException, PhoneNumberAlreadyExistsException {

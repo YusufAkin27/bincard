@@ -38,6 +38,7 @@ public class User extends SecurityUser {
 
     // Kullanıcı aktif mi? (soft delete için kullanılabilir)
     private boolean active = true;
+    private boolean deleted = false;
 
     // Telefon doğrulandı mı?x
     private boolean phoneVerified = false;
@@ -170,8 +171,7 @@ public class User extends SecurityUser {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SearchHistory> searchHistory;
 
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private TwoFactorAuth twoFactorAuth;
+
 
 
 }
