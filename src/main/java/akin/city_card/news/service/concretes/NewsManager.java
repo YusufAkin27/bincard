@@ -52,9 +52,13 @@ public class NewsManager implements NewsService {
 
 
     @Override
-    public DataResponseMessage<List<AdminNewsDTO>> getAllForAdmin(String username) throws AdminNotFoundException {
-        List<AdminNewsDTO> adminNewsDTOS = newsRepository.findAll().stream().map(newsConverter::toAdminDTO).toList();
-        return new DataResponseMessage<>(" tüm haberler listelendi", true, adminNewsDTOS);
+    public DataResponseMessage<List<AdminNewsDTO>> getAllForAdmin(String username, PlatformType platform) throws AdminNotFoundException {
+        List<AdminNewsDTO> adminNewsDTOS = newsRepository.findAll().stream()
+                .filter(news -> platform == null || news.getPlatform().equals(platform))
+                .map(newsConverter::toAdminDTO)
+                .toList();
+
+        return new DataResponseMessage<>("Tüm haberler listelendi", true, adminNewsDTOS);
     }
 
 
@@ -234,7 +238,7 @@ public class NewsManager implements NewsService {
 
 
     @Override
-    public DataResponseMessage<List<AdminNewsDTO>> getNewsBetweenDates(String username, LocalDateTime start, LocalDateTime end) throws AdminNotFoundException {
+    public DataResponseMessage<List<AdminNewsDTO>> getNewsBetweenDates(String username, LocalDateTime start, LocalDateTime end, PlatformType platform) throws AdminNotFoundException {
 
         if (start == null || end == null) {
             return new DataResponseMessage<>("Başlangıç ve bitiş tarihleri zorunludur", false, null);
@@ -242,6 +246,7 @@ public class NewsManager implements NewsService {
 
         List<News> newsBetweenDates = newsRepository.findAll().stream()
                 .filter(news -> news.getStartDate() != null)
+                .filter(news -> platform == null || news.getPlatform().equals(platform))
                 .filter(news -> !news.getStartDate().isBefore(start) && !news.getStartDate().isAfter(end))
                 .toList();
 
@@ -320,7 +325,7 @@ public class NewsManager implements NewsService {
 
 
     @Override
-    public DataResponseMessage<List<UserNewsDTO>> getPersonalizedNews(String username) throws UserNotFoundException {
+    public DataResponseMessage<List<UserNewsDTO>> getPersonalizedNews(String username, PlatformType platform) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
         if (user == null) {
             return new DataResponseMessage<>("Kullanıcı bulunamadı", false, null);
@@ -348,6 +353,7 @@ public class NewsManager implements NewsService {
         // Aktif ve süresi dolmamış haberleri filtrele
         List<News> activeNews = newsRepository.findAll().stream()
                 .filter(News::isActive)
+                .filter(news -> platform == null || news.getPlatform().equals(platform))
                 .filter(news -> news.getEndDate() == null || news.getEndDate().isAfter(now))
                 .toList();
 
@@ -401,10 +407,11 @@ public class NewsManager implements NewsService {
 
 
     @Override
-    public DataResponseMessage<List<?>> getNewsByCategoryForAdmin(String username, NewsType category) {
+    public DataResponseMessage<List<?>> getNewsByCategoryForAdmin(String username, NewsType category, PlatformType platform) {
         List<News> newsList = newsRepository.findByTypeAndActiveTrue(category);
 
         List<AdminNewsDTO> adminNewsDTOS = newsList.stream()
+                .filter(news -> platform == null || news.getPlatform().equals(platform))
                 .map(newsConverter::toAdminDTO)
                 .toList();
 
@@ -412,7 +419,7 @@ public class NewsManager implements NewsService {
     }
 
     @Override
-    public DataResponseMessage<List<?>> getNewsByCategoryForUser(String username, NewsType category) throws UserNotFoundException {
+    public DataResponseMessage<List<?>> getNewsByCategoryForUser(String username, NewsType category, PlatformType platform) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
         if (user == null) {
             return new DataResponseMessage<>("Kullanıcı bulunamadı", false, null);
@@ -425,6 +432,7 @@ public class NewsManager implements NewsService {
                 .collect(Collectors.toSet());
 
         List<UserNewsDTO> userNewsDTOS = newsList.stream()
+                .filter(news -> platform == null || news.getPlatform().equals(platform))
                 .map(news -> {
                     boolean liked = likedNewsIds.contains(news.getId());
                     boolean viewed = newsViewHistoryRepository.existsByUserAndNews(user, news);

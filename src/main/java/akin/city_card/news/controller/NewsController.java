@@ -37,12 +37,14 @@ public class NewsController {
     private final NewsService newsService;
 
     @GetMapping("/")
-    public DataResponseMessage<List<AdminNewsDTO>> getAll(@AuthenticationPrincipal UserDetails userDetails)
+    public DataResponseMessage<List<AdminNewsDTO>> getAll(@AuthenticationPrincipal UserDetails userDetails,
+                                                          @RequestParam(name = "platform", required = false) PlatformType platform
+    )
             throws AdminNotFoundException, UnauthorizedAreaException {
         if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
             throw new UnauthorizedAreaException();
 
-        return newsService.getAllForAdmin(userDetails.getUsername());
+        return newsService.getAllForAdmin(userDetails.getUsername(), platform);
     }
 
 
@@ -67,13 +69,13 @@ public class NewsController {
 
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseMessage updateNews(@AuthenticationPrincipal UserDetails userDetails,
-                                     @Valid @ModelAttribute UpdateNewsRequest request)
+                                      @Valid @ModelAttribute UpdateNewsRequest request)
             throws NewsNotFoundException, AdminNotFoundException, UnauthorizedAreaException, NewsIsNotActiveException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException {
 
         if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
             throw new UnauthorizedAreaException();
 
-       return newsService.updateNews(userDetails.getUsername(), request);
+        return newsService.updateNews(userDetails.getUsername(), request);
     }
 
     @GetMapping("/{id}")
@@ -119,7 +121,9 @@ public class NewsController {
     public DataResponseMessage<List<AdminNewsDTO>> getNewsBetweenDates(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) throws AdminNotFoundException, UnauthorizedAreaException {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
+            @RequestParam(name = "platform", required = false) PlatformType platform
+    ) throws AdminNotFoundException, UnauthorizedAreaException {
 
         if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
             throw new UnauthorizedAreaException();
@@ -128,7 +132,7 @@ public class NewsController {
             end = LocalDateTime.now();
         }
 
-        return newsService.getNewsBetweenDates(userDetails.getUsername(), start, end);
+        return newsService.getNewsBetweenDates(userDetails.getUsername(), start, end, platform);
     }
 
     @GetMapping("/liked")
@@ -147,8 +151,9 @@ public class NewsController {
     }
 
     @GetMapping("/personalized")
-    public DataResponseMessage<List<UserNewsDTO>> getPersonalizedNews(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-        return newsService.getPersonalizedNews(userDetails.getUsername());
+    public DataResponseMessage<List<UserNewsDTO>> getPersonalizedNews(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "platform", required = false) PlatformType platform
+    ) throws UserNotFoundException {
+        return newsService.getPersonalizedNews(userDetails.getUsername(), platform);
     }
 
 
@@ -162,18 +167,21 @@ public class NewsController {
 
     // Kategoriye göre haber listeleme
     @GetMapping("/by-category")
-    public DataResponseMessage<List<?>> getNewsByCategory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam NewsType category) throws UserNotFoundException {
+    public DataResponseMessage<List<?>> getNewsByCategory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam NewsType category,
+                                                          @RequestParam(name = "platform", required = false) PlatformType platform
+    ) throws UserNotFoundException {
         boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
         if (isAdmin) {
-            return newsService.getNewsByCategoryForAdmin(userDetails.getUsername(), category);
+            return newsService.getNewsByCategoryForAdmin(userDetails.getUsername(), category, platform);
         }
-        return newsService.getNewsByCategoryForUser(userDetails.getUsername(), category);
+        return newsService.getNewsByCategoryForUser(userDetails.getUsername(), category, platform);
 
     }
 
     // Kullanıcı haber geçmişi (kim ne zaman neyi okudu)
     @GetMapping("/view-history")
-    public DataResponseMessage<List<NewsHistoryDTO>> getNewsViewHistory(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+    public DataResponseMessage<List<NewsHistoryDTO>> getNewsViewHistory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "platform", required = false) PlatformType platform
+    ) throws UserNotFoundException {
         return newsService.getNewsViewHistory(userDetails.getUsername());
     }
 
