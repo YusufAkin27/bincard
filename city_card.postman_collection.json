@@ -290,6 +290,381 @@
 						"url": "http://localhost:8080/v1/api/news/create"
 					},
 					"response": []
+				},
+				{
+					"name": "tüm haberler admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTkwIiwiaWF0IjoxNzUwODM4Nzk1LCJleHAiOjE3ODIzNzQ3OTUsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTkwIiwicm9sZSI6WyJBRE1JTiJdfQ.p5wO7wbg-pOo1kivFlmiKPfZLmal4rnMF77I6p86DRFaJTZeZl8Xm9OJq_BdBgJH"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/news/"
+					},
+					"response": []
+				},
+				{
+					"name": "soft delete admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTkwIiwiaWF0IjoxNzUwODM4Nzk1LCJleHAiOjE3ODIzNzQ3OTUsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTkwIiwicm9sZSI6WyJBRE1JTiJdfQ.p5wO7wbg-pOo1kivFlmiKPfZLmal4rnMF77I6p86DRFaJTZeZl8Xm9OJq_BdBgJH"
+							}
+						},
+						"method": "PUT",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/news/1/soft-delete"
+					},
+					"response": []
+				},
+				{
+					"name": "haber güncelle admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTkwIiwiaWF0IjoxNzUwODM4Nzk1LCJleHAiOjE3ODIzNzQ3OTUsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTkwIiwicm9sZSI6WyJBRE1JTiJdfQ.p5wO7wbg-pOo1kivFlmiKPfZLmal4rnMF77I6p86DRFaJTZeZl8Xm9OJq_BdBgJH"
+							}
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/289638FD-C6DA-47EF-AC65-0559F67F3359.jpg"
+								},
+								{
+									"key": "id",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/news/update"
+					},
+					"response": []
+				},
+				{
+					"name": "id li haber getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTkwIiwiaWF0IjoxNzUwODM4Nzk1LCJleHAiOjE3ODIzNzQ3OTUsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTkwIiwicm9sZSI6WyJBRE1JTiJdfQ.p5wO7wbg-pOo1kivFlmiKPfZLmal4rnMF77I6p86DRFaJTZeZl8Xm9OJq_BdBgJH"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/289638FD-C6DA-47EF-AC65-0559F67F3359.jpg"
+								},
+								{
+									"key": "id",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/news/1"
+					},
+					"response": []
+				},
+				{
+					"name": "aktif haberler",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTkwIiwiaWF0IjoxNzUwODM4Nzk1LCJleHAiOjE3ODIzNzQ3OTUsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTkwIiwicm9sZSI6WyJBRE1JTiJdfQ.p5wO7wbg-pOo1kivFlmiKPfZLmal4rnMF77I6p86DRFaJTZeZl8Xm9OJq_BdBgJH"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/289638FD-C6DA-47EF-AC65-0559F67F3359.jpg"
+								},
+								{
+									"key": "id",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/news/active"
+					},
+					"response": []
+				},
+				{
+					"name": "haberi aktif yap",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTkwIiwiaWF0IjoxNzUwODM4Nzk1LCJleHAiOjE3ODIzNzQ3OTUsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTkwIiwicm9sZSI6WyJBRE1JTiJdfQ.p5wO7wbg-pOo1kivFlmiKPfZLmal4rnMF77I6p86DRFaJTZeZl8Xm9OJq_BdBgJH"
+							}
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/289638FD-C6DA-47EF-AC65-0559F67F3359.jpg"
+								},
+								{
+									"key": "id",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/news/1/activate"
+					},
+					"response": []
+				},
+				{
+					"name": "tarihleri  arasındaki haberler",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTkwIiwiaWF0IjoxNzUwODM4Nzk1LCJleHAiOjE3ODIzNzQ3OTUsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTkwIiwicm9sZSI6WyJBRE1JTiJdfQ.p5wO7wbg-pOo1kivFlmiKPfZLmal4rnMF77I6p86DRFaJTZeZl8Xm9OJq_BdBgJH"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/289638FD-C6DA-47EF-AC65-0559F67F3359.jpg"
+								},
+								{
+									"key": "id",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/between-dates?start=2025-06-20T08:30:00&end=2025-06-25T18:45:00",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"between-dates"
+							],
+							"query": [
+								{
+									"key": "start",
+									"value": "2025-06-20T08:30:00"
+								},
+								{
+									"key": "end",
+									"value": "2025-06-25T18:45:00"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "beğendiğim haberler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MTc0NTE5OTEyIiwiaWF0IjoxNzUwODM5OTcyLCJleHAiOjE3ODIzNzU5NzIsInVzZXJOdW1iZXIiOiIrOTA1MTc0NTE5OTEyIiwicm9sZSI6WyJVU0VSIl19.dQcieCVjXHjDL_MXwzwcG9dvdXCXH3fjoImBbft6lFCOUIKlYL2-P2JKo5yh_SU9"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/news/liked"
+					},
+					"response": []
+				},
+				{
+					"name": "haber beğen",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MTc0NTE5OTEyIiwiaWF0IjoxNzUwODM5OTcyLCJleHAiOjE3ODIzNzU5NzIsInVzZXJOdW1iZXIiOiIrOTA1MTc0NTE5OTEyIiwicm9sZSI6WyJVU0VSIl19.dQcieCVjXHjDL_MXwzwcG9dvdXCXH3fjoImBbft6lFCOUIKlYL2-P2JKo5yh_SU9"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/news/1/like"
+					},
+					"response": []
+				},
+				{
+					"name": "kişiye özel haberler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MTc0NTE5OTEyIiwiaWF0IjoxNzUwODM5OTcyLCJleHAiOjE3ODIzNzU5NzIsInVzZXJOdW1iZXIiOiIrOTA1MTc0NTE5OTEyIiwicm9sZSI6WyJVU0VSIl19.dQcieCVjXHjDL_MXwzwcG9dvdXCXH3fjoImBbft6lFCOUIKlYL2-P2JKo5yh_SU9"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/news/personalized"
+					},
+					"response": []
+				},
+				{
+					"name": "haber istatistikleri",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTkwIiwiaWF0IjoxNzUwODM4Nzk1LCJleHAiOjE3ODIzNzQ3OTUsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTkwIiwicm9sZSI6WyJBRE1JTiJdfQ.p5wO7wbg-pOo1kivFlmiKPfZLmal4rnMF77I6p86DRFaJTZeZl8Xm9OJq_BdBgJH"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/news/statistics"
+					},
+					"response": []
+				},
+				{
+					"name": "kategoriye göre getir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MTc0NTE5OTEyIiwiaWF0IjoxNzUwODM5OTcyLCJleHAiOjE3ODIzNzU5NzIsInVzZXJOdW1iZXIiOiIrOTA1MTc0NTE5OTEyIiwicm9sZSI6WyJVU0VSIl19.dQcieCVjXHjDL_MXwzwcG9dvdXCXH3fjoImBbft6lFCOUIKlYL2-P2JKo5yh_SU9"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/by-category?category=ANNOUNCEMENT",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"by-category"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "ANNOUNCEMENT"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kategoriye göre haberler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MTc0NTE5OTEyIiwiaWF0IjoxNzUwODM5OTcyLCJleHAiOjE3ODIzNzU5NzIsInVzZXJOdW1iZXIiOiIrOTA1MTc0NTE5OTEyIiwicm9sZSI6WyJVU0VSIl19.dQcieCVjXHjDL_MXwzwcG9dvdXCXH3fjoImBbft6lFCOUIKlYL2-P2JKo5yh_SU9"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/suggested?platform=MOBILE",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"suggested"
+							],
+							"query": [
+								{
+									"key": "platform",
+									"value": "MOBILE"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		},
@@ -329,6 +704,93 @@
 							}
 						},
 						"url": "http://localhost:8080/v1/api/auth/refresh"
+					},
+					"response": []
+				},
+				{
+					"name": "login sms doğrulama",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTk5IiwiaWF0IjoxNzUwNzY2MzYyLCJleHAiOjE3ODIzMDIzNjIsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTk5Iiwicm9sZSI6WyJBRE1JTiJdfQ.ie6u5YKe348amRfhvPYcfSDl6Fd4PBI9boulE42IkrCMTPHMi0GT0vJ9ATY6kz3n"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"yusuf\",\r\n    \"surname\":\"akin\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/auth/phone-verify"
+					},
+					"response": []
+				},
+				{
+					"name": "çıkış yap",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "report",
+			"item": [
+				{
+					"name": "rapor ekle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDc0NTA5OTAxIiwiaWF0IjoxNzUwNzkzMjU5LCJleHAiOjE3ODIzMjkyNTksInVzZXJOdW1iZXIiOiIrOTA1MDc0NTA5OTAxIiwicm9sZSI6WyJVU0VSIl19.kExXuAG-q2-s8-X4UJ7OYBAZAPLPlZghgYKiAdKBLIW4Rf8RzGc_QqLrzFFKWUTD"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "category",
+									"value": "OTHER",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "dsadassds",
+									"type": "text"
+								},
+								{
+									"key": "photos",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/report/addReport"
+					},
+					"response": []
+				},
+				{
+					"name": "tüm raporlar",
+					"request": {
+						"method": "GET",
+						"header": []
 					},
 					"response": []
 				}
