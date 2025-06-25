@@ -15,30 +15,38 @@ import java.time.LocalDateTime;
 @Table(name = "admins")
 public class Admin extends SecurityUser {
 
-    // Super admin bu kişiyi onayladı mı
     @Column(name = "super_admin_approved", nullable = false)
     private boolean superAdminApproved;
 
-    // Onay tarihi (nullable olabilir)
     @Column(name = "approved_at")
     private LocalDateTime approvedAt;
 
-    // Admin kayıt tarihi
     @Column(name = "registered_at", nullable = false, updatable = false)
     private LocalDateTime registeredAt;
 
-    // Son başarılı giriş zamanı
+    @Column(name = "last_login_ip", length = 45)
+    private String lastLoginIp;
+
+    @Column(name = "last_login_device")
+    private String lastLoginDevice;
+
+    @Column(name = "last_login_platform")
+    private String lastLoginPlatform;
+
+    @Column(name = "last_login_app_version")
+    private String lastLoginAppVersion;
+
     @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
-    private boolean isActive;
-    private boolean isDeleted;
 
+    @Column(nullable = false)
+    private boolean isActive = false;
 
+    @Column(nullable = false)
+    private boolean isDeleted = false;
 
     @PrePersist
     protected void onCreate() {
         this.registeredAt = LocalDateTime.now();
     }
-
-
 }

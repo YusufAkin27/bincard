@@ -1,10 +1,6 @@
 package akin.city_card.superadmin.model;
 
 import akin.city_card.security.entity.SecurityUser;
-import jakarta.persistence.Entity;
-
-
-import akin.city_card.security.entity.SecurityUser;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import lombok.Getter;
@@ -17,20 +13,24 @@ import java.time.LocalDateTime;
 @Setter
 public class SuperAdmin extends SecurityUser {
 
-    @Column
+    @Column(name = "last_login_ip", length = 45)
     private String lastLoginIp;
 
-    @Column
-    private String deviceUuid;
+    @Column(name = "last_login_device")
+    private String lastLoginDevice;
 
-    @Column
-    private String appVersion;
+    @Column(name = "last_login_platform")
+    private String lastLoginPlatform;
 
-    @Column
-    private String platform;
-    private boolean isDeleted;
-    private boolean isActive;
+    @Column(name = "last_login_app_version")
+    private String lastLoginAppVersion;
 
-    @Column
+    @Column(name = "last_login_at")
     private LocalDateTime lastLoginAt;
+
+    @Column(nullable = false)
+    private boolean isActive = true;
+
+    @Column(nullable = false)
+    private boolean isDeleted = false;
 }

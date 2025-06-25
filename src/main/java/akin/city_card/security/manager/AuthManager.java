@@ -3,10 +3,13 @@ package akin.city_card.security.manager;
 
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
+import akin.city_card.driver.model.Driver;
+import akin.city_card.driver.repository.DriverRepository;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.dto.*;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.entity.Token;
+import akin.city_card.security.entity.enums.TokenType;
 import akin.city_card.security.exception.*;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.security.repository.TokenRepository;
@@ -47,6 +50,7 @@ public class AuthManager implements AuthService {
     private final SmsService smsService;
     private final AdminRepository adminRepository;
     private final SuperAdminRepository superAdminRepository;
+    private final DriverRepository driverRepository;
 
 
     @Override
@@ -95,10 +99,35 @@ public class AuthManager implements AuthService {
 
         tokenRepository.deleteBySecurityUserId(user.getId());
 
-        String accessToken = jwtService.generateAccessToken(user, phoneVerifyCode.getIpAddress(), phoneVerifyCode.getDeviceInfo());
-        String refreshToken = jwtService.generateRefreshToken(user, phoneVerifyCode.getIpAddress(), phoneVerifyCode.getDeviceInfo());
+        String accessTokenValue = jwtService.generateAccessToken(user, phoneVerifyCode.getIpAddress(), phoneVerifyCode.getDeviceInfo());
+        String refreshTokenValue = jwtService.generateRefreshToken(user, phoneVerifyCode.getIpAddress(), phoneVerifyCode.getDeviceInfo());
+
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime accessExpiry = now.plusMinutes(15); // örnek süre
+        LocalDateTime refreshExpiry = now.plusDays(7);    // örnek süre
+
+        TokenDTO accessToken = new TokenDTO(
+                accessTokenValue,
+                accessExpiry,
+                now,
+                now,
+                phoneVerifyCode.getIpAddress(),
+                phoneVerifyCode.getDeviceInfo(),
+                TokenType.ACCESS
+        );
+
+        TokenDTO refreshToken = new TokenDTO(
+                refreshTokenValue,
+                refreshExpiry,
+                now,
+                now,
+                phoneVerifyCode.getIpAddress(),
+                phoneVerifyCode.getDeviceInfo(),
+                TokenType.REFRESH
+        );
 
         return new TokenResponseDTO(accessToken, refreshToken);
+
     }
 
 
@@ -147,11 +176,10 @@ public class AuthManager implements AuthService {
             }
 
             // Token sil ve oluştur
-            tokenRepository.deleteBySecurityUserId(user.getId());
+            TokenResponseDTO tokenResponseDTO = generateTokenResponse(user, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
 
-            String accessToken = jwtService.generateAccessToken(user, loginRequestDTO.getIpAddress(), currentDevice);
-            String refreshToken = jwtService.generateRefreshToken(user, loginRequestDTO.getIpAddress(), currentDevice);
 
+            // Kullanıcı login bilgileri güncelleniyor
             user.setLastLoginDevice(currentDevice);
             user.setLastLoginAt(LocalDateTime.now());
             user.setLastLoginIp(loginRequestDTO.getIpAddress());
@@ -160,8 +188,7 @@ public class AuthManager implements AuthService {
 
             userRepository.save(user);
 
-            return new TokenResponseDTO(accessToken, refreshToken);
-
+            return tokenResponseDTO;
         } else if (securityUser instanceof Admin admin) {
             // Admin silinmiş mi?
             if (admin.isDeleted()) {
@@ -173,22 +200,98 @@ public class AuthManager implements AuthService {
                 throw new UserNotActiveException();
             }
 
-            // Token sil ve oluştur
-            tokenRepository.deleteBySecurityUserId(admin.getId());
+            TokenResponseDTO tokenResponseDTO = generateTokenResponse(admin, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
 
-            String accessToken = jwtService.generateAccessToken(admin, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
-            String refreshToken = jwtService.generateRefreshToken(admin, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
-
+            // Admin güncelle
             admin.setLastLoginAt(LocalDateTime.now());
             admin.setIpAddress(loginRequestDTO.getIpAddress());
             admin.setDeviceUuid(loginRequestDTO.getDeviceInfo());
 
             adminRepository.save(admin);
 
-            return new TokenResponseDTO(accessToken, refreshToken);
+            return tokenResponseDTO;
+
+        } else if (securityUser instanceof SuperAdmin superAdmin) {
+            // SuperAdmin silinmiş mi?
+            if (superAdmin.isDeleted()) {
+                throw new UserDeletedException();
+            }
+
+            // SuperAdmin aktif mi?
+            if (!superAdmin.isActive()) {
+                throw new UserNotActiveException();
+            }
+
+            // Token sil ve oluştur
+            TokenResponseDTO tokenResponseDTO = generateTokenResponse(superAdmin, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
+
+
+            // SuperAdmin güncelle
+            superAdmin.setLastLoginAt(LocalDateTime.now());
+            superAdmin.setLastLoginIp(loginRequestDTO.getIpAddress());
+            superAdmin.setDeviceUuid(loginRequestDTO.getDeviceInfo());
+
+            superAdminRepository.save(superAdmin);
+
+            return tokenResponseDTO;
+        } else if (securityUser instanceof Driver driver) {
+            // Şoför silinmiş mi?
+            if (!driver.isActive()) {
+                throw new UserNotActiveException(); // Varsa ayrı DriverNotActiveException da olabilir
+            }
+
+            // Token sil ve oluştur
+            TokenResponseDTO tokenResponseDTO = generateTokenResponse(driver, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
+            // Şoför login bilgilerini güncelle (SecurityUser'dan gelen alanlar)
+            driver.setLastLoginAt(LocalDateTime.now());
+            driver.setIpAddress(loginRequestDTO.getIpAddress());
+            driver.setDeviceUuid(loginRequestDTO.getDeviceInfo());
+
+            driverRepository.save(driver);
+
+            return tokenResponseDTO;
         }
 
+
         throw new NotFoundUserException(); // Ne User ne Admin değilse
+    }
+
+    public TokenResponseDTO generateTokenResponse(SecurityUser user, String ipAddress, String deviceInfo) {
+        // Token sil
+        tokenRepository.deleteBySecurityUserId(user.getId());
+
+        // Token üret
+        String accessTokenValue = jwtService.generateAccessToken(user, ipAddress, deviceInfo);
+        String refreshTokenValue = jwtService.generateRefreshToken(user, ipAddress, deviceInfo);
+
+        // Zaman bilgisi
+        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime accessExpiry = now.plusMinutes(15);
+        LocalDateTime refreshExpiry = now.plusDays(7);
+
+        // TokenDTO’ları oluştur
+        TokenDTO accessToken = new TokenDTO(
+                accessTokenValue,
+                accessExpiry,
+                now,
+                now,
+                ipAddress,
+                deviceInfo,
+                TokenType.ACCESS
+        );
+
+        TokenDTO refreshToken = new TokenDTO(
+                refreshTokenValue,
+                refreshExpiry,
+                now,
+                now,
+                ipAddress,
+                deviceInfo,
+                TokenType.REFRESH
+        );
+
+        // Dönüş
+        return new TokenResponseDTO(accessToken, refreshToken);
     }
 
 

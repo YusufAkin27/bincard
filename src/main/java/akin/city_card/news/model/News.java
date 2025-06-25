@@ -44,7 +44,7 @@ public class News {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private NewsType type = NewsType.INFORMATION; // BİLGİ, DUYURU, BAKIM, KAMPANYA vs.
+    private NewsType type = NewsType.BILGILENDIRME; // BİLGİ, DUYURU, BAKIM, KAMPANYA vs.
 
     private int viewCount = 0; // Kaç kişi okudu
 

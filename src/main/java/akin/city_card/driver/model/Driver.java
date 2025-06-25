@@ -7,6 +7,7 @@ import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -41,6 +42,7 @@ public class Driver extends SecurityUser {
     // Doğum tarihi
     @Column(nullable = false)
     private LocalDate dateOfBirth;
+    private LocalDateTime lastLoginAt;
 
     // İşe başlama tarihi
     private LocalDate employmentDate;
