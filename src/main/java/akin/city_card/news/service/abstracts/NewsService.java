@@ -1,6 +1,7 @@
 package akin.city_card.news.service.abstracts;
 
 import akin.city_card.admin.exceptions.AdminNotFoundException;
+import akin.city_card.admin.model.Admin;
 import akin.city_card.news.core.request.CreateNewsRequest;
 import akin.city_card.news.core.request.UpdateNewsRequest;
 import akin.city_card.news.core.response.AdminNewsDTO;
@@ -16,20 +17,23 @@ import akin.city_card.news.model.PlatformType;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import jakarta.validation.Valid;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public interface NewsService {
-    DataResponseMessage<?> getAllForAdmin(String username) throws AdminNotFoundException;
+    DataResponseMessage<List<AdminNewsDTO>> getAllForAdmin(String username) throws AdminNotFoundException;
 
 
-    ResponseMessage createNews(String username, @Valid CreateNewsRequest news) throws AdminNotFoundException;
+    ResponseMessage createNews(String username, @Valid CreateNewsRequest news) throws AdminNotFoundException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException;
 
     ResponseMessage softDeleteNews(String username, Long id) throws NewsNotFoundException, AdminNotFoundException;
 
-    ResponseMessage updateNews(String username, UpdateNewsRequest updatedNews) throws AdminNotFoundException, NewsNotFoundException, NewsIsNotActiveException;
+    ResponseMessage updateNews(String username, UpdateNewsRequest updatedNews) throws AdminNotFoundException, NewsNotFoundException, NewsIsNotActiveException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException;
 
     DataResponseMessage<?> getNewsByIdForAdmin(String username, Long id) throws NewsIsNotActiveException, NewsNotFoundException, AdminNotFoundException;
 

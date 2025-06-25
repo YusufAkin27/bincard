@@ -3,6 +3,7 @@ package akin.city_card.news.service.concretes;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
+import akin.city_card.cloudinary.MediaUploadService;
 import akin.city_card.news.core.converter.NewsConverter;
 import akin.city_card.news.core.request.CreateNewsRequest;
 import akin.city_card.news.core.request.UpdateNewsRequest;
@@ -23,14 +24,17 @@ import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.Role;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
@@ -44,18 +48,28 @@ public class NewsManager implements NewsService {
     private final NewsConverter newsConverter;
     private final AdminRepository adminRepository;
     private final UserRepository userRepository;
+    private final MediaUploadService mediaUploadService;
 
 
     @Override
-    public DataResponseMessage<?> getAllForAdmin(String username) throws AdminNotFoundException {
+    public DataResponseMessage<List<AdminNewsDTO>> getAllForAdmin(String username) throws AdminNotFoundException {
         List<AdminNewsDTO> adminNewsDTOS = newsRepository.findAll().stream().map(newsConverter::toAdminDTO).toList();
         return new DataResponseMessage<>(" tüm haberler listelendi", true, adminNewsDTOS);
     }
 
 
     @Override
-    public ResponseMessage createNews(String username, CreateNewsRequest createNewsRequest) throws AdminNotFoundException {
+    @Transactional
+    public ResponseMessage createNews(String username, CreateNewsRequest createNewsRequest)
+            throws AdminNotFoundException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException {
+
         News news = newsConverter.fromCreateRequest(createNewsRequest);
+
+        if (createNewsRequest.getImage() != null && !createNewsRequest.getImage().isEmpty()) {
+            String imageUrl = mediaUploadService.uploadAndOptimizeImage(createNewsRequest.getImage()).get();
+            news.setImage(imageUrl);
+        }
+
         newsRepository.save(news);
         return new ResponseMessage("haber eklendi", true);
     }
@@ -69,7 +83,7 @@ public class NewsManager implements NewsService {
     }
 
     @Override
-    public ResponseMessage updateNews(String username, UpdateNewsRequest updatedNews) throws AdminNotFoundException, NewsNotFoundException, NewsIsNotActiveException {
+    public ResponseMessage updateNews(String username, UpdateNewsRequest updatedNews) throws AdminNotFoundException, NewsNotFoundException, NewsIsNotActiveException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException {
         News news = newsRepository.findById(updatedNews.getId())
                 .orElseThrow(NewsNotFoundException::new);
 
@@ -78,6 +92,13 @@ public class NewsManager implements NewsService {
         }
 
         newsConverter.updateEntityFromDTO(news, updatedNews);
+
+
+        if (updatedNews.getImage() != null && !updatedNews.getImage().isEmpty()) {
+            String imageUrl = mediaUploadService.uploadAndOptimizeImage(updatedNews.getImage()).get();
+            news.setImage(imageUrl);
+        }
+
 
         newsRepository.save(news);
 
@@ -235,7 +256,9 @@ public class NewsManager implements NewsService {
     @Override
     public DataResponseMessage<List<UserNewsDTO>> getLikedNewsByUser(String username) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
-
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
 
         List<NewsLike> newsLikes = user.getLikedNews();
         LocalDateTime now = LocalDateTime.now();
@@ -375,7 +398,6 @@ public class NewsManager implements NewsService {
 
         return new DataResponseMessage<>("Bu ayın haber istatistikleri", true, stats);
     }
-
 
 
     @Override

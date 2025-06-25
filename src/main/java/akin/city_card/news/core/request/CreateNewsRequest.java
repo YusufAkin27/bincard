@@ -9,6 +9,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 
@@ -22,7 +23,7 @@ public class CreateNewsRequest {
     @NotBlank(message = "Haber içeriği boş olamaz")
     private String content;
 
-    private String image; // opsiyonel: URL ya da base64 image olabilir
+    private MultipartFile image; // opsiyonel: URL ya da base64 image olabilir
 
     @NotNull(message = "Başlangıç tarihi zorunludur")
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)

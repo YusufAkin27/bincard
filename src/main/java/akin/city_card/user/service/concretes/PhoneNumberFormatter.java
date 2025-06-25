@@ -2,22 +2,38 @@ package akin.city_card.user.service.concretes;
 
 public class PhoneNumberFormatter {
 
+    /**
+     * Türk telefon numaralarını normalize eder.
+     * @param rawPhone Kullanıcının girdiği telefon numarası (örn: "0532 123 12 12", "+90 532 1231212")
+     * @return Normalized hali (örn: "+905321231212") ya da geçersizse null
+     */
     public static String normalizeTurkishPhoneNumber(String rawPhone) {
         if (rawPhone == null) return null;
 
-        // 1. Boşlukları, tireleri, parantezleri temizle
-        String cleaned = rawPhone.replaceAll("[^0-9]", "");
+        // 1. Sadece rakamları al (örn: "0532 123 12 12" => "05321231212")
+        String digitsOnly = rawPhone.replaceAll("[^0-9]", "");
 
-        // 2. Eğer başında 0 varsa kaldır (örn: 0533...)
-        if (cleaned.startsWith("0")) {
-            cleaned = cleaned.substring(1);
+        // 2. Eğer 11 haneli ve 0 ile başlıyorsa (örn: 05XXXXXXXXX)
+        if (digitsOnly.length() == 11 && digitsOnly.startsWith("0")) {
+            digitsOnly = digitsOnly.substring(1); // baştaki 0'ı at => 5XXXXXXXXX
         }
 
-        // 3. Eğer +90 yoksa başına +90 ekle
-        if (!cleaned.startsWith("90")) {
-            cleaned = "90" + cleaned;
+        // 3. Eğer 10 haneli ise (örn: 5XXXXXXXXX)
+        if (digitsOnly.length() == 10) {
+            return "+90" + digitsOnly;
         }
 
-        return "+" + cleaned;
+        // 4. Eğer 12 haneli ve 90 ile başlıyorsa
+        if (digitsOnly.length() == 12 && digitsOnly.startsWith("90")) {
+            return "+" + digitsOnly;
+        }
+
+        // 5. Eğer 13 haneli ve +90 ile başlıyorsa zaten normalize edilmiş
+        if (rawPhone.startsWith("+90") && digitsOnly.length() == 12) {
+            return "+90" + digitsOnly.substring(2); // rawPhone zaten uygun olabilir
+        }
+
+        // Geçersiz telefon numarası (log atmak istersen buraya koyabilirsin)
+        return null;
     }
 }

@@ -186,39 +186,6 @@ public class AuthManager implements AuthService {
             adminRepository.save(admin);
 
             return new TokenResponseDTO(accessToken, refreshToken);
-        } else if (securityUser instanceof SuperAdmin superAdmin) {
-            if (superAdmin.isDeleted()) {
-                throw new UserDeletedException();
-            }
-
-            if (!superAdmin.isActive()) {
-                throw new UserNotActiveException();
-            }
-
-            // Token sil ve oluştur
-            tokenRepository.deleteBySecurityUserId(superAdmin.getId());
-
-            String accessToken = jwtService.generateAccessToken(
-                    superAdmin,
-                    loginRequestDTO.getIpAddress(),
-                    loginRequestDTO.getDeviceInfo()
-            );
-
-            String refreshToken = jwtService.generateRefreshToken(
-                    superAdmin,
-                    loginRequestDTO.getIpAddress(),
-                    loginRequestDTO.getDeviceInfo()
-            );
-
-            superAdmin.setLastLoginAt(LocalDateTime.now());
-            superAdmin.setLastLoginIp(loginRequestDTO.getIpAddress());
-            superAdmin.setDeviceUuid(loginRequestDTO.getDeviceInfo());
-            superAdmin.setAppVersion(loginRequestDTO.getAppVersion());
-            superAdmin.setPlatform(loginRequestDTO.getPlatform());
-
-            superAdminRepository.save(superAdmin); // Kendi repository'n olmalı
-
-            return new TokenResponseDTO(accessToken, refreshToken);
         }
 
         throw new NotFoundUserException(); // Ne User ne Admin değilse

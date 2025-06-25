@@ -79,7 +79,6 @@ public class NewsConverterImpl implements NewsConverter {
         return News.builder()
                 .title(request.getTitle())
                 .content(request.getContent())
-                .image(request.getImage())
                 .startDate(request.getStartDate())
                 .endDate(request.getEndDate())
                 .platform(request.getPlatform())
@@ -102,9 +101,6 @@ public class NewsConverterImpl implements NewsConverter {
             news.setContent(dto.getContent());
         }
 
-        if (dto.getImage() != null && !dto.getImage().equals(news.getImage())) {
-            news.setImage(dto.getImage());
-        }
 
         if (dto.getStartDate() != null && !dto.getStartDate().equals(news.getStartDate())) {
             news.setStartDate(dto.getStartDate());

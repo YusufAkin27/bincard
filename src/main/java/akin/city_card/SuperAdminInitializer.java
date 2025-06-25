@@ -20,8 +20,8 @@ public class SuperAdminInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        String defaultPhone = "5550000000";
-        String defaultPassword = "superadmin";
+        String defaultPhone = "+905550000000";
+        String defaultPassword = "123456";
 
         boolean exists = superAdminRepository.findByUserNumber(defaultPhone).isPresent();
 
@@ -33,7 +33,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
         SuperAdmin superAdmin = new SuperAdmin();
         superAdmin.setUserNumber(defaultPhone);
         superAdmin.setPassword(passwordEncoder.encode(defaultPassword));
-        superAdmin.setRoles(Set.of(Role.SUPERADMIN)); // Enum içeriği varsa
+        superAdmin.setRoles(Set.of(Role.SUPERADMIN,Role.ADMIN)); // Enum içeriği varsa
         superAdmin.setActive(true);
         superAdmin.setDeleted(false);
 

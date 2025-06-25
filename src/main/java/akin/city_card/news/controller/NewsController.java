@@ -14,16 +14,20 @@ import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.Role;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @RequestMapping("/v1/api/news")
@@ -33,30 +37,43 @@ public class NewsController {
     private final NewsService newsService;
 
     @GetMapping("/")
-    public DataResponseMessage<?> getAll(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException, AdminNotFoundException {
-            return newsService.getAllForAdmin(userDetails.getUsername()); // AdminNewsDTO listesi
+    public DataResponseMessage<List<AdminNewsDTO>> getAll(@AuthenticationPrincipal UserDetails userDetails)
+            throws AdminNotFoundException, UnauthorizedAreaException {
+        if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
+            throw new UnauthorizedAreaException();
+
+        return newsService.getAllForAdmin(userDetails.getUsername());
     }
 
 
-    @PostMapping("/create")
+    @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseMessage createNews(@AuthenticationPrincipal UserDetails userDetails,
-                                      @Valid @RequestBody CreateNewsRequest news) throws AdminNotFoundException, UnauthorizedAreaException {
-        if (userDetails.getAuthorities().stream()
-                .noneMatch(auth -> auth.getAuthority().equals(Role.ADMIN.getAuthority()))) {
+                                      @Valid @ModelAttribute CreateNewsRequest news)
+            throws AdminNotFoundException, UnauthorizedAreaException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException {
+
+        if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
             throw new UnauthorizedAreaException();
-        }
         return newsService.createNews(userDetails.getUsername(), news);
     }
 
+
     @PutMapping("/{id}/soft-delete")
-    public ResponseMessage softDeleteNews(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long id) throws NewsNotFoundException, AdminNotFoundException {
+    public ResponseMessage softDeleteNews(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long id) throws NewsNotFoundException, AdminNotFoundException, UnauthorizedAreaException {
+
+        if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
+            throw new UnauthorizedAreaException();
         return newsService.softDeleteNews(userDetails.getUsername(), id);
     }
 
-    @PutMapping("/{id}/update")
+    @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseMessage updateNews(@AuthenticationPrincipal UserDetails userDetails,
-                                      @RequestBody UpdateNewsRequest updatedNews) throws NewsNotFoundException, AdminNotFoundException, NewsIsNotActiveException {
-        return newsService.updateNews(userDetails.getUsername(), updatedNews);
+                                     @Valid @ModelAttribute UpdateNewsRequest request)
+            throws NewsNotFoundException, AdminNotFoundException, UnauthorizedAreaException, NewsIsNotActiveException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException {
+
+        if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
+            throw new UnauthorizedAreaException();
+
+       return newsService.updateNews(userDetails.getUsername(), request);
     }
 
     @GetMapping("/{id}")
@@ -80,7 +97,7 @@ public class NewsController {
                                                 @RequestParam(required = false) NewsType type) throws UserNotFoundException, AdminNotFoundException {
 
         boolean isAdmin = userDetails.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(auth -> auth.getAuthority().equals(Role.ADMIN.getAuthority()));
 
         if (isAdmin) {
             return newsService.getActiveNewsForAdmin(platform, type, userDetails.getUsername()); // List<AdminNewsDTO>
@@ -91,7 +108,10 @@ public class NewsController {
 
 
     @PutMapping("/{id}/activate")
-    public ResponseMessage activateNews(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long id) throws NewsNotFoundException, AdminNotFoundException, NewsIsAlreadyActiveException {
+    public ResponseMessage activateNews(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long id) throws NewsNotFoundException, AdminNotFoundException, NewsIsAlreadyActiveException, UnauthorizedAreaException {
+
+        if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
+            throw new UnauthorizedAreaException();
         return newsService.activateNews(userDetails.getUsername(), id);
     }
 
@@ -99,7 +119,15 @@ public class NewsController {
     public DataResponseMessage<List<AdminNewsDTO>> getNewsBetweenDates(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) throws AdminNotFoundException {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) throws AdminNotFoundException, UnauthorizedAreaException {
+
+        if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
+            throw new UnauthorizedAreaException();
+
+        if (end == null) {
+            end = LocalDateTime.now();
+        }
+
         return newsService.getNewsBetweenDates(userDetails.getUsername(), start, end);
     }
 
@@ -125,7 +153,10 @@ public class NewsController {
 
 
     @GetMapping("/statistics")
-    public DataResponseMessage<List<NewsStatistics>> getMonthlyNewsStatistics(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundException {
+    public DataResponseMessage<List<NewsStatistics>> getMonthlyNewsStatistics(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundException, UnauthorizedAreaException {
+
+        if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
+            throw new UnauthorizedAreaException();
         return newsService.getMonthlyNewsStatistics(userDetails.getUsername());
     }
 
@@ -149,7 +180,7 @@ public class NewsController {
     // Haber görüntülendiğinde otomatik olarak history kaydı yapılması (genellikle frontend'de tetiklenir)
     @PostMapping("/{newsId}/view")
     public void viewNews(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long newsId) throws UserNotFoundException, NewsNotFoundException, NewsIsNotActiveException {
-         newsService.recordNewsView(userDetails.getUsername(), newsId);
+        newsService.recordNewsView(userDetails.getUsername(), newsId);
     }
 
     // Önerilen haberler (kategorilere göre kullanıcıya özel)

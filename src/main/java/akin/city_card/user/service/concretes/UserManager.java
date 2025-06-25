@@ -54,12 +54,12 @@ public class UserManager implements UserService {
     @Override
     @Transactional
     public ResponseMessage create(CreateUserRequest request) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException {
-/*
+
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(request.getTelephone());
         request.setTelephone(normalizedPhone);
 
         userRules.checkPhoneIsUnique(request.getTelephone());
-*/
+
         User user = userConverter.convertUserToCreateUser(request);
 
 
@@ -67,7 +67,6 @@ public class UserManager implements UserService {
 
 
         String code = randomSixDigit();
-        user.setRoles(Collections.singleton(Role.SUPERADMIN));
 /*
         SmsRequest smsRequest = new SmsRequest();
         smsRequest.setTo(request.getTelephone());
