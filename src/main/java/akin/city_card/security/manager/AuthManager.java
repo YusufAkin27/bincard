@@ -97,36 +97,7 @@ public class AuthManager implements AuthService {
         user.setLastLoginPlatform(phoneVerifyCode.getPlatform());
         userRepository.save(user);
 
-        tokenRepository.deleteBySecurityUserId(user.getId());
-
-        String accessTokenValue = jwtService.generateAccessToken(user, phoneVerifyCode.getIpAddress(), phoneVerifyCode.getDeviceInfo());
-        String refreshTokenValue = jwtService.generateRefreshToken(user, phoneVerifyCode.getIpAddress(), phoneVerifyCode.getDeviceInfo());
-
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime accessExpiry = now.plusMinutes(15); // örnek süre
-        LocalDateTime refreshExpiry = now.plusDays(7);    // örnek süre
-
-        TokenDTO accessToken = new TokenDTO(
-                accessTokenValue,
-                accessExpiry,
-                now,
-                now,
-                phoneVerifyCode.getIpAddress(),
-                phoneVerifyCode.getDeviceInfo(),
-                TokenType.ACCESS
-        );
-
-        TokenDTO refreshToken = new TokenDTO(
-                refreshTokenValue,
-                refreshExpiry,
-                now,
-                now,
-                phoneVerifyCode.getIpAddress(),
-                phoneVerifyCode.getDeviceInfo(),
-                TokenType.REFRESH
-        );
-
-        return new TokenResponseDTO(accessToken, refreshToken);
+        return  generateTokenResponse(user, verificationCode.getIpAddress(), verificationCode.getUserAgent());
 
     }
 
