@@ -94,7 +94,7 @@ public class AuthManager implements AuthService {
         user.setLastLoginPlatform(phoneVerifyCode.getPlatform());
         userRepository.save(user);
 
-        return  generateTokenResponse(user, verificationCode.getIpAddress(), verificationCode.getUserAgent());
+        return generateTokenResponse(user, verificationCode.getIpAddress(), verificationCode.getUserAgent());
 
     }
 
@@ -213,7 +213,7 @@ public class AuthManager implements AuthService {
         String refreshTokenValue = jwtService.generateRefreshToken(user, ipAddress, deviceInfo);
 
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime accessExpiry = now.plusMinutes(15);
+        LocalDateTime accessExpiry = now.plusMinutes(5);
         LocalDateTime refreshExpiry = now.plusDays(7);
 
         TokenDTO accessToken = new TokenDTO(
@@ -280,21 +280,26 @@ public class AuthManager implements AuthService {
     @Override
     public ResponseEntity<?> updateAccessToken(UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) {
         try {
+            // Refresh token geçerliliğini kontrol et
             if (!jwtService.validateRefreshToken(updateAccessTokenRequestDTO.getRefreshToken())) {
                 throw new InvalidRefreshTokenException();
             }
 
+            // Token'dan kullanıcı numarasını al
             String userNumber = jwtService.getRefreshTokenClaims(updateAccessTokenRequestDTO.getRefreshToken()).getSubject();
+
+            // Kullanıcıyı getir
             User user = userRepository.findByUserNumber(userNumber);
+            if (user == null) {
+                throw new UserNotFoundException();
+            }
 
+            // Yeni access token üret
+            String newAccessToken = jwtService.generateAccessToken(user, updateAccessTokenRequestDTO.getIpAddress(), updateAccessTokenRequestDTO.getDeviceInfo());
 
-            String ipAddress = updateAccessTokenRequestDTO.getIpAddress();
-            String deviceInfo = updateAccessTokenRequestDTO.getDeviceInfo();
-            String newAccessToken = jwtService.generateAccessToken(user, ipAddress, deviceInfo);
-
+            // Access token yanıtı dön
             return ResponseEntity.ok(new AccessTokenResponse(newAccessToken));
-        } catch (TokenNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Token bulunamadı: " + e.getMessage());
+
         } catch (InvalidRefreshTokenException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Refresh token geçersiz: " + e.getMessage());
         } catch (UserNotFoundException e) {
@@ -303,6 +308,7 @@ public class AuthManager implements AuthService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Bir hata meydana geldi: " + e.getMessage());
         }
     }
+
 
 
 }
