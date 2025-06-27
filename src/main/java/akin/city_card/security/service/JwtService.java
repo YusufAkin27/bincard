@@ -25,7 +25,7 @@ public class JwtService {
     private final String accessSecret = "fdkjlsjfkldsjfkldafhliehdjkshgajkjkfincvxkjuvzimfjnvxivoinerji432jkisdfvcxio4";
     private final String refreshSecret = "fajsdfkljslnzufhugeqyewqwiopeoiqueyuyzIOyz786e786wrtwfgyiyzyuiyzuiunewrwrsxg";
 
-    private Long accessExpirationTimeInMs = 15 * 60 * 1000L; // 15 dakika
+    private Long accessExpirationTimeInMs = 5 * 60 * 1000L; // 15 dakika
 
     private Long refreshExpirationTimeInMs = 7 * 24 * 60 * 60 * 1000L; // 7 gün
 
