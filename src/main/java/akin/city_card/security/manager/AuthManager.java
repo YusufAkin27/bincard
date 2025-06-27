@@ -207,20 +207,24 @@ public class AuthManager implements AuthService {
     }
 
     public TokenResponseDTO generateTokenResponse(SecurityUser user, String ipAddress, String deviceInfo) {
+        // Mevcut tokenları sil
         tokenRepository.deleteBySecurityUserId(user.getId());
 
-        String accessTokenValue = jwtService.generateAccessToken(user, ipAddress, deviceInfo);
-        String refreshTokenValue = jwtService.generateRefreshToken(user, ipAddress, deviceInfo);
+        // Sabit zaman belirleniyor
+        LocalDateTime issuedAt = LocalDateTime.now();
+        LocalDateTime accessExpiry = issuedAt.plusMinutes(5);
+        LocalDateTime refreshExpiry = issuedAt.plusDays(7);
 
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime accessExpiry = now.plusMinutes(5);
-        LocalDateTime refreshExpiry = now.plusDays(7);
+        // Token'ları oluştur
+        String accessTokenValue = jwtService.generateAccessToken(user, ipAddress, deviceInfo,  accessExpiry);
+        String refreshTokenValue = jwtService.generateRefreshToken(user, ipAddress, deviceInfo, refreshExpiry);
 
+        // Token nesneleri oluşturuluyor
         TokenDTO accessToken = new TokenDTO(
                 accessTokenValue,
+                issuedAt,
                 accessExpiry,
-                now,
-                now,
+                issuedAt,
                 ipAddress,
                 deviceInfo,
                 TokenType.ACCESS
@@ -228,9 +232,9 @@ public class AuthManager implements AuthService {
 
         TokenDTO refreshToken = new TokenDTO(
                 refreshTokenValue,
+                issuedAt,
                 refreshExpiry,
-                now,
-                now,
+                issuedAt,
                 ipAddress,
                 deviceInfo,
                 TokenType.REFRESH
@@ -238,6 +242,7 @@ public class AuthManager implements AuthService {
 
         return new TokenResponseDTO(accessToken, refreshToken);
     }
+
 
 
     private void sendLoginVerificationCode(User user, LoginRequestDTO request) {
@@ -294,10 +299,18 @@ public class AuthManager implements AuthService {
                 throw new UserNotFoundException();
             }
 
-            // Yeni access token üret
-            String newAccessToken = jwtService.generateAccessToken(user, updateAccessTokenRequestDTO.getIpAddress(), updateAccessTokenRequestDTO.getDeviceInfo());
+            // Access token süresi belirle (örneğin 5 dakika)
+            LocalDateTime accessExpiry = LocalDateTime.now().plusMinutes(5);
 
-            // Access token yanıtı dön
+            // Yeni access token üret
+            String newAccessToken = jwtService.generateAccessToken(
+                    user,
+                    updateAccessTokenRequestDTO.getIpAddress(),
+                    updateAccessTokenRequestDTO.getDeviceInfo(),
+                    accessExpiry
+            );
+
+            // Yeni access token'ı response ile döndür
             return ResponseEntity.ok(new AccessTokenResponse(newAccessToken));
 
         } catch (InvalidRefreshTokenException e) {
@@ -308,6 +321,7 @@ public class AuthManager implements AuthService {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Bir hata meydana geldi: " + e.getMessage());
         }
     }
+
 
 
 

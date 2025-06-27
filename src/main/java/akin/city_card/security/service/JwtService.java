@@ -16,42 +16,42 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Date;
 import java.util.Optional;
-
 @Service
 public class JwtService {
 
     private final String accessSecret = "fdkjlsjfkldsjfkldafhliehdjkshgajkjkfincvxkjuvzimfjnvxivoinerji432jkisdfvcxio4";
     private final String refreshSecret = "fajsdfkljslnzufhugeqyewqwiopeoiqueyuyzIOyz786e786wrtwfgyiyzyuiyzuiunewrwrsxg";
 
-    private Long accessExpirationTimeInMs = 5 * 60 * 1000L; // 15 dakika
-
-    private Long refreshExpirationTimeInMs = 7 * 24 * 60 * 60 * 1000L; // 7 gün
-
-
     @Autowired
     private TokenRepository tokenRepository;
 
-    public String generateAccessToken(SecurityUser user, String ipAddress, String deviceInfo) {
-        String accessToken = generateToken(user, accessSecret, accessExpirationTimeInMs, true);
-        saveToken(user, accessToken, accessExpirationTimeInMs, TokenType.ACCESS, ipAddress, deviceInfo);
+    public String generateAccessToken(SecurityUser user, String ipAddress, String deviceInfo, LocalDateTime expiresAt) {
+        LocalDateTime issuedAt = LocalDateTime.now(); // tek bir kaynak
+        String accessToken = generateToken(user, accessSecret, issuedAt, expiresAt, true);
+        saveToken(user, accessToken, issuedAt, expiresAt, TokenType.ACCESS, ipAddress, deviceInfo);
         return accessToken;
     }
 
-    public String generateRefreshToken(SecurityUser user, String ipAddress, String deviceInfo) {
-        String refreshToken = generateToken(user, refreshSecret, refreshExpirationTimeInMs, false);
-        saveToken(user, refreshToken, refreshExpirationTimeInMs, TokenType.REFRESH, ipAddress, deviceInfo);
+    public String generateRefreshToken(SecurityUser user, String ipAddress, String deviceInfo, LocalDateTime expiresAt) {
+        LocalDateTime issuedAt = LocalDateTime.now();
+        String refreshToken = generateToken(user, refreshSecret, issuedAt, expiresAt, false);
+        saveToken(user, refreshToken, issuedAt, expiresAt, TokenType.REFRESH, ipAddress, deviceInfo);
         return refreshToken;
     }
 
 
-    private String generateToken(SecurityUser user, String secret, Long expirationTimeInMs, boolean includeClaims) {
+    private String generateToken(SecurityUser user, String secret, LocalDateTime issuedAt, LocalDateTime expiresAt, boolean includeClaims) {
+        Date issued = Date.from(issuedAt.atZone(ZoneId.systemDefault()).toInstant());
+        Date expiration = Date.from(expiresAt.atZone(ZoneId.systemDefault()).toInstant());
+
         JwtBuilder jwtBuilder = Jwts.builder()
-                .subject(user.getUsername())
-                .signWith(getSignSecretKey(secret))
-                .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + expirationTimeInMs));
+                .setSubject(user.getUsername())
+                .setIssuedAt(issued)
+                .setExpiration(expiration)
+                .signWith(getSignSecretKey(secret));
 
         if (includeClaims) {
             jwtBuilder.claim("userNumber", user.getUserNumber())
@@ -61,34 +61,29 @@ public class JwtService {
         return jwtBuilder.compact();
     }
 
+
     private SecretKey getSignSecretKey(String secret) {
         byte[] keyBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 
+    private void saveToken(SecurityUser user, String tokenValue, LocalDateTime issuedAt, LocalDateTime expiresAt, TokenType tokenType, String ipAddress, String deviceInfo) {
+        tokenRepository.findTokenBySecurityUser_IdAndTokenType(user.getId(), tokenType)
+                .ifPresent(tokenRepository::delete);
 
-    private void saveToken(SecurityUser user, String tokenValue, Long expirationTimeInMs, TokenType tokenType, String ipAddress, String deviceInfo) {
-        Optional<Token> existingToken = tokenRepository.findTokenBySecurityUser_IdAndTokenType(user.getId(), tokenType);
-
-        // Eğer varsa, mevcut token'ı sil
-        existingToken.ifPresent(token -> {
-            tokenRepository.delete(token);
-        });
-
-        // Yeni token kaydı oluştur
         Token token = new Token();
         token.setTokenValue(tokenValue);
         token.setSecurityUser(user);
         token.setTokenType(tokenType);
-        token.setIssuedAt(LocalDateTime.now());
-        token.setExpiresAt(LocalDateTime.now().plusSeconds(expirationTimeInMs / 1000)); // Milisaniyeyi saniyeye çevir
+        token.setIssuedAt(issuedAt);
+        token.setExpiresAt(expiresAt);
         token.setIpAddress(ipAddress);
         token.setDeviceInfo(deviceInfo);
         token.setValid(true);
 
         tokenRepository.save(token);
-
     }
+
 
 
     private boolean validateToken(String token, String secret) throws TokenIsExpiredException, TokenNotFoundException {
