@@ -4,77 +4,42 @@ import akin.city_card.card_visa.model.CardVisa;
 import akin.city_card.user.model.User;
 import jakarta.persistence.*;
 import lombok.Data;
-import akin.city_card.card_visa.model.VisaStatus; // bu gerekli!
 
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+
 @Entity
 @Data
+@Inheritance(strategy = InheritanceType.JOINED)
 public class BusCard {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
     private String cardNumber;
+
+    private String fullName;
 
     @Enumerated(EnumType.STRING)
     private CardType type;
 
-    private LocalDate validUntil;
-    private boolean active;
     @Enumerated(EnumType.STRING)
     private CardStatus status;
 
+    private boolean active;
 
-    private BigDecimal cardBalance = BigDecimal.ZERO;
-    private String cardAliasName;
-    private LocalDate issuedDate;
-    private String cardPhotoUrl;
+    private LocalDate issueDate;
+    private LocalDate expiryDate;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
     private User user;
 
     @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Activity> activityHistory;
+    private List<Activity> activities;
 
-    @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<CardVisa> visaHistory;
-
-
-    public boolean isVisaValid() {
-        return getActiveVisa() != null;
-    }
-
-    public CardVisa getActiveVisa() {
-        LocalDate today = LocalDate.now();
-        return visaHistory.stream()
-                .filter(v -> v.getStatus() == VisaStatus.VALID
-                        && !today.isBefore(v.getVisaStartDate())
-                        && !today.isAfter(v.getVisaEndDate()))
-                .findFirst()
-                .orElse(null);
-    }
-
-
-    public void checkAndUpdateValidity() {
-        if (this.active && this.validUntil != null && LocalDate.now().isAfter(this.validUntil)) {
-            this.type = CardType.TAM;
-            this.active = true;
-        }
-    }
-
-
-
-    public boolean hasSufficientBalance(BigDecimal amount) {
-        return this.cardBalance.compareTo(amount) >= 0;
-    }
-
-    public boolean isSubscriptionCard() {
-        return this.type == CardType.ABONMAN;
-    }
 }

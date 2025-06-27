@@ -87,12 +87,22 @@ public class User extends SecurityUser {
     private List<BusCard> busCards;
 
     // Kullanıcının favori kartı
-    @OneToOne
-    private BusCard favoriteCard;
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "user_favorite_cards",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "bus_card_id")
+    )
+    private List<BusCard> favoriteCards;
 
-    // Kullanıcının favori güzergahı
-    @OneToOne
-    private Route favoriteRoute;
+    @ManyToMany(cascade = CascadeType.ALL)
+    @JoinTable(
+            name = "user_favorite_routes",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "route_id")
+    )
+    private List<Route> favoriteRoutes;
+
 
     // Son bilinen enlem (kullanıcının konum takibi için)
     @Column(name = "last_known_lat")

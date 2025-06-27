@@ -4,12 +4,18 @@ import akin.city_card.buscard.model.CardType;
 import akin.city_card.driver.model.Driver;
 import akin.city_card.route.model.Route;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class Bus {
 
     @Id
@@ -64,12 +70,6 @@ public class Bus {
             case ÇOCUK: return fare * 0.3;
             case TURİST: return fare * 1.2;
             case ABONMAN: return 0.0;
-            case GECE: return fare * 1.5;
-            case PERSONEL: return fare * 0.3;
-            case VIP: return 0.0;
-            case AİLE: return fare * 0.65;
-            case GÜVENLİK: return fare * 0.2;
-            case TRANSFER: return 0.0;
             case TAM:
             default: return fare;
         }

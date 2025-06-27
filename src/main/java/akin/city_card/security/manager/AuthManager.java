@@ -61,13 +61,11 @@ public class AuthManager implements AuthService {
             throw new UserNotFoundException();
         }
 
-        // Token kontrolü
         List<Token> tokens = tokenRepository.findAllBySecurityUserId(user.getId());
         if (tokens == null || tokens.isEmpty()) {
             throw new TokenNotFoundException();
         }
 
-        // Token'ları sil
         tokenRepository.deleteAll(tokens);
 
         return new ResponseMessage("Çıkış başarılı", true);
@@ -89,7 +87,6 @@ public class AuthManager implements AuthService {
         User user = verificationCode.getUser();
         tokenRepository.deleteBySecurityUserId(user.getId());
 
-        // 🔐 Yeni cihaz/IP artık doğrulanmış sayılıyor → Güncelle
         user.setLastLoginDevice(phoneVerifyCode.getDeviceInfo());
         user.setLastLoginAt(LocalDateTime.now());
         user.setLastLoginIp(phoneVerifyCode.getIpAddress());
@@ -114,30 +111,24 @@ public class AuthManager implements AuthService {
         SecurityUser securityUser = securityUserRepository.findByUserNumber(normalizedPhone)
                 .orElseThrow(NotFoundUserException::new);
 
-        // Şifre kontrolü
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), securityUser.getPassword())) {
             throw new IncorrectPasswordException();
         }
 
-        // Roller kontrolü
         if (securityUser.getRoles() == null || securityUser.getRoles().isEmpty()) {
             throw new UserRoleNotAssignedException();
         }
 
-        // Kullanıcı tipi ayırımı
         if (securityUser instanceof User user) {
-            // Kullanıcı aktif mi?
             if (!user.isActive()) {
                 throw new UserNotActiveException();
             }
 
-            // Telefon doğrulandı mı?
             if (!user.isPhoneVerified()) {
                 sendLoginVerificationCode(user, loginRequestDTO);
                 throw new PhoneNotVerifiedException();
             }
 
-            // Cihaz kontrolü
             String currentDevice = loginRequestDTO.getDeviceInfo();
             String lastDevice = user.getLastLoginDevice();
 
@@ -146,11 +137,9 @@ public class AuthManager implements AuthService {
                 throw new UnrecognizedDeviceException();
             }
 
-            // Token sil ve oluştur
             TokenResponseDTO tokenResponseDTO = generateTokenResponse(user, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
 
 
-            // Kullanıcı login bilgileri güncelleniyor
             user.setLastLoginDevice(currentDevice);
             user.setLastLoginAt(LocalDateTime.now());
             user.setLastLoginIp(loginRequestDTO.getIpAddress());
@@ -161,19 +150,16 @@ public class AuthManager implements AuthService {
 
             return tokenResponseDTO;
         } else if (securityUser instanceof Admin admin) {
-            // Admin silinmiş mi?
             if (admin.isDeleted()) {
                 throw new UserDeletedException();
             }
 
-            // Admin aktif mi?
             if (!admin.isActive()) {
                 throw new UserNotActiveException();
             }
 
             TokenResponseDTO tokenResponseDTO = generateTokenResponse(admin, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
 
-            // Admin güncelle
             admin.setLastLoginAt(LocalDateTime.now());
             admin.setIpAddress(loginRequestDTO.getIpAddress());
             admin.setDeviceUuid(loginRequestDTO.getDeviceInfo());
@@ -183,21 +169,17 @@ public class AuthManager implements AuthService {
             return tokenResponseDTO;
 
         } else if (securityUser instanceof SuperAdmin superAdmin) {
-            // SuperAdmin silinmiş mi?
             if (superAdmin.isDeleted()) {
                 throw new UserDeletedException();
             }
 
-            // SuperAdmin aktif mi?
             if (!superAdmin.isActive()) {
                 throw new UserNotActiveException();
             }
 
-            // Token sil ve oluştur
             TokenResponseDTO tokenResponseDTO = generateTokenResponse(superAdmin, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
 
 
-            // SuperAdmin güncelle
             superAdmin.setLastLoginAt(LocalDateTime.now());
             superAdmin.setLastLoginIp(loginRequestDTO.getIpAddress());
             superAdmin.setDeviceUuid(loginRequestDTO.getDeviceInfo());
@@ -206,14 +188,11 @@ public class AuthManager implements AuthService {
 
             return tokenResponseDTO;
         } else if (securityUser instanceof Driver driver) {
-            // Şoför silinmiş mi?
             if (!driver.isActive()) {
-                throw new UserNotActiveException(); // Varsa ayrı DriverNotActiveException da olabilir
+                throw new UserNotActiveException();
             }
 
-            // Token sil ve oluştur
             TokenResponseDTO tokenResponseDTO = generateTokenResponse(driver, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
-            // Şoför login bilgilerini güncelle (SecurityUser'dan gelen alanlar)
             driver.setLastLoginAt(LocalDateTime.now());
             driver.setIpAddress(loginRequestDTO.getIpAddress());
             driver.setDeviceUuid(loginRequestDTO.getDeviceInfo());
@@ -224,23 +203,19 @@ public class AuthManager implements AuthService {
         }
 
 
-        throw new NotFoundUserException(); // Ne User ne Admin değilse
+        throw new NotFoundUserException();
     }
 
     public TokenResponseDTO generateTokenResponse(SecurityUser user, String ipAddress, String deviceInfo) {
-        // Token sil
         tokenRepository.deleteBySecurityUserId(user.getId());
 
-        // Token üret
         String accessTokenValue = jwtService.generateAccessToken(user, ipAddress, deviceInfo);
         String refreshTokenValue = jwtService.generateRefreshToken(user, ipAddress, deviceInfo);
 
-        // Zaman bilgisi
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime accessExpiry = now.plusMinutes(15);
         LocalDateTime refreshExpiry = now.plusDays(7);
 
-        // TokenDTO’ları oluştur
         TokenDTO accessToken = new TokenDTO(
                 accessTokenValue,
                 accessExpiry,
@@ -261,16 +236,13 @@ public class AuthManager implements AuthService {
                 TokenType.REFRESH
         );
 
-        // Dönüş
         return new TokenResponseDTO(accessToken, refreshToken);
     }
 
 
     private void sendLoginVerificationCode(User user, LoginRequestDTO request) {
-        // Eski kodları iptal et
         verificationCodeRepository.cancelAllActiveCodes(user.getId(), VerificationPurpose.LOGIN);
 
-        // Yeni kod oluştur
         String code = randomSixDigit();
 
         VerificationCode verificationCode = VerificationCode.builder()

@@ -9,10 +9,5 @@ public enum CardType {
     ÇOCUK,
     TURİST,
     ABONMAN,
-    GECE,
-    PERSONEL,
-    VIP,
-    AİLE,
-    GÜVENLİK,
-    TRANSFER
+
 }
