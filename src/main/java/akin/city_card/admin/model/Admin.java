@@ -14,6 +14,9 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Table(name = "admins")
 public class Admin extends SecurityUser {
+    private String name;
+    private String surname;
+
 
     @Column(name = "super_admin_approved", nullable = false)
     private boolean superAdminApproved;

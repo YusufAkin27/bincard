@@ -61,8 +61,15 @@ public class Report {
     @Column(nullable = false)
     private boolean isActive = true;
 
+    @Column(nullable = false)
+    private boolean archived = false;
+
+
+
+
     @PreUpdate
     public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
+
 }

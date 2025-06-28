@@ -53,6 +53,9 @@ public class ReportResponse {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime respondedAt;
+
+    @OneToMany(mappedBy = "response", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReportResponseRating> ratings;
 }
 /* örnek
 {

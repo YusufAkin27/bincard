@@ -1,9 +1,13 @@
 package akin.city_card.report.repository;
 
+import aj.org.objectweb.asm.commons.Remapper;
 import akin.city_card.report.model.Report;
 import akin.city_card.report.model.ReportCategory;
 import akin.city_card.user.model.User;
+import org.hibernate.query.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 
@@ -14,3 +18,5 @@ public interface ReportRepository extends JpaRepository<Report, Long> {
 
     List<Report> findAllByCategory(ReportCategory category);
 }
+
+

@@ -4,7 +4,11 @@ import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
 import akin.city_card.cloudinary.MediaUploadService;
+import akin.city_card.report.core.converter.ReportConverter;
 import akin.city_card.report.core.request.AddReportRequest;
+import akin.city_card.report.core.response.AdminReportDTO;
+import akin.city_card.report.core.response.ReportStatsDTO;
+import akin.city_card.report.core.response.UserReportDTO;
 import akin.city_card.report.exceptions.*;
 import akin.city_card.report.model.Report;
 import akin.city_card.report.model.ReportCategory;
@@ -18,14 +22,19 @@ import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.hibernate.query.Page;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+
+import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.Optional;
 
 @RequiredArgsConstructor
 @Service
@@ -35,6 +44,8 @@ public class ReportManager implements ReportService {
     public final AdminRepository adminRepository;
     public final UserRepository userRepository;
     private final MediaUploadService mediaUploadService;
+
+    private final ReportConverter reportConverter;
 
     @Override
     public ResponseMessage addReport(AddReportRequest addReportRequest, List<MultipartFile> photos, String username)
@@ -57,7 +68,7 @@ public class ReportManager implements ReportService {
                 ReportPhoto reportPhoto = new ReportPhoto();
                 reportPhoto.setImageUrl(photoUrl);
                 reportPhoto.setUploadedAt(LocalDateTime.now());
-                reportPhoto.setReport(null); // İlişki daha sonra kurulabilir
+                reportPhoto.setReport(null);
                 reportPhotos.add(reportPhoto);
             }
         }
@@ -80,7 +91,7 @@ public class ReportManager implements ReportService {
 
 
     @Override
-    public ResponseMessage deleteReport(Long reportId) throws ReportNotFoundException, ReportAlreadyDeletedException, ReportNotActiveException {
+    public ResponseMessage deleteReport(Long reportId,String username) throws ReportNotFoundException, ReportAlreadyDeletedException, ReportNotActiveException {
         Report report = reportRepository.findById(reportId)
                 .orElse(null);
 
@@ -99,11 +110,6 @@ public class ReportManager implements ReportService {
         return new ResponseMessage("Şikayet başarıyla silindi.", true);
     }
 
-    @Override
-    public List<Report> getAllReport(String username) throws AdminNotFoundException {
-
-        return reportRepository.findAll();
-    }
 
     @Override
     public List<Report> getUserReport(String username) throws UserNotFoundException {
@@ -127,6 +133,110 @@ public class ReportManager implements ReportService {
             throw new CategoryNotFoundExecption();
         }
         return reportRepository.findAllByCategoryAndUser(category, user);
+    }
+
+    public List<AdminReportDTO> getAllReportsForAdmin(String adminUsername, Pageable pageable) {
+        return List.of();
+
+    }
+
+    public List<UserReportDTO> getAllReportsForUser(String username, Pageable pageable) throws UserNotFoundException {
+    return List.of();
+    }
+
+    @Override
+    public List<AdminReportDTO> search(Optional<String> keyword, Optional<ReportCategory> category, Optional<ReportStatus> status, Pageable pageable) {
+        return null;
+    }
+
+    @Override
+    public ResponseMessage updateReport(Long reportId, String username, String message, List<MultipartFile> photos) {
+        return null;
+    }
+
+    @Override
+    public ResponseMessage changeStatus(Long reportId, ReportStatus status, String username) {
+        return null;
+    }
+
+    @Override
+    public ResponseMessage toggleDeleteReport(Long reportId, String username) {
+        return null;
+    }
+
+    @Override
+    public ResponseMessage replyToReportAsAdmin(Long reportId, String username, String message) {
+        return null;
+    }
+
+    @Override
+    public ResponseMessage replyToReportResponse(Long responseId, String username, String message) {
+        return null;
+    }
+
+    @Override
+    public ResponseMessage deleteResponse(Long responseId, String username) {
+        return null;
+    }
+
+    @Override
+    public ResponseMessage rateResponse(Long responseId, String username, int rating) {
+        return null;
+    }
+
+    @Override
+    public ResponseMessage updateRating(Long ratingId, String username, int rating) {
+        return null;
+    }
+
+    @Override
+    public ResponseMessage deleteRating(Long ratingId, String username) {
+        return null;
+    }
+
+    @Override
+    public List<?> getAllResponsesByUser(String username) {
+        return List.of();
+    }
+
+    @Override
+    public List<?> getReportResponses(Long reportId) {
+        return List.of();
+    }
+
+    @Override
+    public ResponseMessage batchToggleReports(List<Long> reportIds, boolean delete, String username) {
+        return null;
+    }
+
+    @Override
+    public ResponseMessage archiveReport(Long reportId, String username) {
+        return null;
+    }
+
+    @Override
+    public ReportStatsDTO getReportStats(String username) {
+        return null;
+    }
+
+    @Override
+    public Object getReportByIdAsAdmin(Long reportId) {
+        return null;
+    }
+
+    @Override
+    public Object getReportByIdAsUser(Long reportId, String username) {
+        return null;
+    }
+
+    @Override
+    public List<?> getReportsByCategoryUser(ReportCategory category, String username, Pageable pageable) {
+        return List.of();
+    }
+
+    @Override
+    public List<?> getReportsByCategoryAdmin(ReportCategory category, Pageable pageable) {
+        return List.of();
     }
 
 }

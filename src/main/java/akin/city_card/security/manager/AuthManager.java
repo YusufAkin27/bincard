@@ -207,19 +207,15 @@ public class AuthManager implements AuthService {
     }
 
     public TokenResponseDTO generateTokenResponse(SecurityUser user, String ipAddress, String deviceInfo) {
-        // Mevcut tokenları sil
         tokenRepository.deleteBySecurityUserId(user.getId());
 
-        // Sabit zaman belirleniyor
         LocalDateTime issuedAt = LocalDateTime.now();
         LocalDateTime accessExpiry = issuedAt.plusMinutes(5);
         LocalDateTime refreshExpiry = issuedAt.plusDays(7);
 
-        // Token'ları oluştur
         String accessTokenValue = jwtService.generateAccessToken(user, ipAddress, deviceInfo,  accessExpiry);
         String refreshTokenValue = jwtService.generateRefreshToken(user, ipAddress, deviceInfo, refreshExpiry);
 
-        // Token nesneleri oluşturuluyor
         TokenDTO accessToken = new TokenDTO(
                 accessTokenValue,
                 issuedAt,
@@ -285,24 +281,19 @@ public class AuthManager implements AuthService {
     @Override
     public ResponseEntity<?> updateAccessToken(UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) {
         try {
-            // Refresh token geçerliliğini kontrol et
             if (!jwtService.validateRefreshToken(updateAccessTokenRequestDTO.getRefreshToken())) {
                 throw new InvalidRefreshTokenException();
             }
 
-            // Token'dan kullanıcı numarasını al
             String userNumber = jwtService.getRefreshTokenClaims(updateAccessTokenRequestDTO.getRefreshToken()).getSubject();
 
-            // Kullanıcıyı getir
             User user = userRepository.findByUserNumber(userNumber);
             if (user == null) {
                 throw new UserNotFoundException();
             }
 
-            // Access token süresi belirle (örneğin 5 dakika)
             LocalDateTime accessExpiry = LocalDateTime.now().plusMinutes(5);
 
-            // Yeni access token üret
             String newAccessToken = jwtService.generateAccessToken(
                     user,
                     updateAccessTokenRequestDTO.getIpAddress(),
@@ -310,7 +301,6 @@ public class AuthManager implements AuthService {
                     accessExpiry
             );
 
-            // Yeni access token'ı response ile döndür
             return ResponseEntity.ok(new AccessTokenResponse(newAccessToken));
 
         } catch (InvalidRefreshTokenException e) {
