@@ -12,7 +12,6 @@ import akin.city_card.report.model.ReportStatus;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
-import org.springframework.data.domain.Page;
 import org.springframework.web.multipart.MultipartFile;
 
 import org.springframework.data.domain.Pageable;

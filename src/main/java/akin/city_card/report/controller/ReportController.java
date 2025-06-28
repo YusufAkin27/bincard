@@ -1,19 +1,17 @@
 package akin.city_card.report.controller;
 
+
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.report.core.request.AddReportRequest;
-import akin.city_card.report.core.response.AdminReportDTO;
 import akin.city_card.report.core.response.ReportStatsDTO;
 import akin.city_card.report.exceptions.*;
-import akin.city_card.report.model.Report;
 import akin.city_card.report.model.ReportCategory;
 import akin.city_card.report.model.ReportStatus;
 import akin.city_card.report.service.abstracts.ReportService;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
-import com.twilio.base.bearertoken.Page;
-import jakarta.validation.Valid;
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
@@ -28,7 +26,6 @@ import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/v1/api/report")

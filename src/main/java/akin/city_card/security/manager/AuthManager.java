@@ -214,7 +214,7 @@ public class AuthManager implements AuthService {
         tokenRepository.deleteBySecurityUserId(user.getId());
 
         LocalDateTime issuedAt = LocalDateTime.now();
-        LocalDateTime accessExpiry = issuedAt.plusMinutes(5);
+        LocalDateTime accessExpiry = issuedAt.plusMinutes(1);
         LocalDateTime refreshExpiry = issuedAt.plusDays(7);
 
         String accessTokenValue = jwtService.generateAccessToken(user, ipAddress, deviceInfo,  accessExpiry);
@@ -283,38 +283,39 @@ public class AuthManager implements AuthService {
     }
 
     @Override
-    public ResponseEntity<?> updateAccessToken(UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) {
-        try {
-            if (!jwtService.validateRefreshToken(updateAccessTokenRequestDTO.getRefreshToken())) {
-                throw new InvalidRefreshTokenException();
-            }
-
-            String userNumber = jwtService.getRefreshTokenClaims(updateAccessTokenRequestDTO.getRefreshToken()).getSubject();
-
-            User user = userRepository.findByUserNumber(userNumber);
-            if (user == null) {
-                throw new UserNotFoundException();
-            }
-
-            LocalDateTime accessExpiry = LocalDateTime.now().plusMinutes(5);
-
-            String newAccessToken = jwtService.generateAccessToken(
-                    user,
-                    updateAccessTokenRequestDTO.getIpAddress(),
-                    updateAccessTokenRequestDTO.getDeviceInfo(),
-                    accessExpiry
-            );
-
-            return ResponseEntity.ok(new AccessTokenResponse(newAccessToken));
-
-        } catch (InvalidRefreshTokenException e) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Refresh token geçersiz: " + e.getMessage());
-        } catch (UserNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Kullanıcı hatası: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Bir hata meydana geldi: " + e.getMessage());
+    public TokenDTO updateAccessToken(UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) throws UserNotFoundException, InvalidRefreshTokenException, TokenIsExpiredException, TokenNotFoundException {
+        if (!jwtService.validateRefreshToken(updateAccessTokenRequestDTO.getRefreshToken())) {
+            throw new InvalidRefreshTokenException();
         }
+
+        String userNumber = jwtService.getRefreshTokenClaims(updateAccessTokenRequestDTO.getRefreshToken()).getSubject();
+
+        User user = userRepository.findByUserNumber(userNumber);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+
+        LocalDateTime issuedAt = LocalDateTime.now();
+        LocalDateTime accessExpiry = issuedAt.plusMinutes(1);
+
+        String newAccessToken = jwtService.generateAccessToken(
+                user,
+                updateAccessTokenRequestDTO.getIpAddress(),
+                updateAccessTokenRequestDTO.getDeviceInfo(),
+                accessExpiry
+        );
+
+        return new TokenDTO(
+                newAccessToken,
+                issuedAt,
+                accessExpiry,
+                issuedAt,
+                updateAccessTokenRequestDTO.getIpAddress(),
+                updateAccessTokenRequestDTO.getDeviceInfo(),
+                TokenType.ACCESS
+        );
     }
+
 
 
 

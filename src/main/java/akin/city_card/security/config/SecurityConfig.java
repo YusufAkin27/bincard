@@ -44,6 +44,7 @@ public class SecurityConfig {
                 "/v1/api/user/password/verify-code",
                 "/v1/api/auth/phone-verify",
                 "/v1/api/user/password/reset",
+                "/v1/api/auth/refresh/**",
 
                 "/v1/api/user/active/**",              // aktif etme işlemleri varsa
                 // Diğer izin verilenler (örnek: token yenileme)
@@ -87,22 +88,16 @@ public class SecurityConfig {
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        // Flutter emülatörleri ve tarayıcıdan gelen istekler için izin verilen origin'ler
-        configuration.setAllowedOrigins(List.of(
-                "http://localhost:3000",     // Web uygulamaları için
-                "http://127.0.0.1:3000",     // Alternatif localhost
-                "http://10.0.2.2:3000",      // Android emülatörü (localhost yönlendirmesi)
-                "http://10.0.3.2:3000"       // Genymotion emülatörü (bazı durumlarda)
-        ));
-
+        configuration.setAllowedOriginPatterns(List.of("*")); // <- Tüm origin'ler
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
-        configuration.setAllowCredentials(true);
+        configuration.setAllowCredentials(false); // <- true ise wildcard kullanılamaz!
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
+
 
 
 }

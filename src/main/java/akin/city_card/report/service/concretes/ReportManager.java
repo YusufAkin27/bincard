@@ -1,5 +1,6 @@
 package akin.city_card.report.service.concretes;
 
+
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
@@ -22,8 +23,6 @@ import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.hibernate.query.Page;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -121,7 +120,7 @@ public class ReportManager implements ReportService {
     }
 
     @Override
-    public List<Report> getReportByCategory(ReportCategory category, String username) throws UserNotFoundException, CategoryNotFoundExecption, AdminNotFoundException {
+    public List<Report> getReportByCategory(ReportCategory category, String username) throws UserNotFoundException, CategoryNotFoundExecption, AdminNotFoundException, AdminNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
         User user = userRepository.findByUserNumber(username);
         if (admin != null) {
