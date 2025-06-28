@@ -1,6 +1,7 @@
 package akin.city_card.security.controller;
 
 
+import akin.city_card.admin.exceptions.AdminNotApprovedException;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.dto.LoginPhoneVerifyCodeRequest;
 import akin.city_card.security.dto.LoginRequestDTO;
@@ -26,7 +27,7 @@ public class AuthController {
 
 
     @PostMapping("/login")
-    public TokenResponseDTO login(@RequestBody LoginRequestDTO loginRequestDTO) throws UserNotActiveException, UserRoleNotAssignedException, UserDeletedException, NotFoundUserException, IncorrectPasswordException, UnrecognizedDeviceException, PhoneNotVerifiedException {
+    public TokenResponseDTO login(@RequestBody LoginRequestDTO loginRequestDTO) throws UserNotActiveException, UserRoleNotAssignedException, UserDeletedException, NotFoundUserException, IncorrectPasswordException, UnrecognizedDeviceException, PhoneNotVerifiedException, AdminNotApprovedException {
         return authService.login(loginRequestDTO);
     }
 
