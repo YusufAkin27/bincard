@@ -36,4 +36,33 @@ public class PhoneNumberFormatter {
         // Geçersiz telefon numarası (log atmak istersen buraya koyabilirsin)
         return null;
     }
+    public static boolean PhoneValid(String phoneNumber) {
+        if (phoneNumber == null) return false;
+
+        // Sadece rakamları al
+        String digitsOnly = phoneNumber.replaceAll("[^0-9]", "");
+
+        // 05XXXXXXXXX (11 haneli ve 0 ile başlıyorsa)
+        if (digitsOnly.length() == 11 && digitsOnly.startsWith("0")) {
+            return digitsOnly.matches("05[0-9]{9}");
+        }
+
+        // 5XXXXXXXXX (10 haneli)
+        if (digitsOnly.length() == 10 && digitsOnly.startsWith("5")) {
+            return digitsOnly.matches("5[0-9]{9}");
+        }
+
+        // 90 ile başlayan 12 haneli
+        if (digitsOnly.length() == 12 && digitsOnly.startsWith("90")) {
+            return digitsOnly.matches("90[5][0-9]{9}");
+        }
+
+        // +90 ile başlayan, toplam 13 karakterli bir string
+        if (phoneNumber.startsWith("+90") && digitsOnly.length() == 12) {
+            return digitsOnly.matches("90[5][0-9]{9}");
+        }
+
+        return false;
+    }
+
 }

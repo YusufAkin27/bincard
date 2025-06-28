@@ -6,5 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AdminRepository extends JpaRepository<Admin, Long> {
     Admin findByUserNumber(String username)throws AdminNotFoundException;
+    boolean existsByUserNumber(String telephone);
 
 }

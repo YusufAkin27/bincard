@@ -1,6 +1,7 @@
 package akin.city_card.security.manager;
 
 
+import akin.city_card.admin.exceptions.AdminNotApprovedException;
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
 import akin.city_card.driver.model.Driver;
@@ -103,7 +104,7 @@ public class AuthManager implements AuthService {
     @Transactional
     public TokenResponseDTO login(LoginRequestDTO loginRequestDTO)
             throws NotFoundUserException, UserDeletedException, UserNotActiveException,
-            IncorrectPasswordException, UserRoleNotAssignedException, PhoneNotVerifiedException, UnrecognizedDeviceException {
+            IncorrectPasswordException, UserRoleNotAssignedException, PhoneNotVerifiedException, UnrecognizedDeviceException, AdminNotApprovedException {
 
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
         loginRequestDTO.setTelephone(normalizedPhone);
@@ -152,6 +153,9 @@ public class AuthManager implements AuthService {
         } else if (securityUser instanceof Admin admin) {
             if (admin.isDeleted()) {
                 throw new UserDeletedException();
+            }
+            if (admin.isSuperAdminApproved()){
+                throw new AdminNotApprovedException();
             }
 
             if (!admin.isActive()) {
