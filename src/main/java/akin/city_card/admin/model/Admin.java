@@ -14,9 +14,6 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @Table(name = "admins")
 public class Admin extends SecurityUser {
-    private String name;
-    private String surname;
-
 
     @Column(name = "super_admin_approved", nullable = false)
     private boolean superAdminApproved;
@@ -26,27 +23,6 @@ public class Admin extends SecurityUser {
 
     @Column(name = "registered_at", nullable = false, updatable = false)
     private LocalDateTime registeredAt;
-
-    @Column(name = "last_login_ip", length = 45)
-    private String lastLoginIp;
-
-    @Column(name = "last_login_device")
-    private String lastLoginDevice;
-
-    @Column(name = "last_login_platform")
-    private String lastLoginPlatform;
-
-    @Column(name = "last_login_app_version")
-    private String lastLoginAppVersion;
-
-    @Column(name = "last_login_at")
-    private LocalDateTime lastLoginAt;
-
-    @Column(nullable = false)
-    private boolean isActive = false;
-
-    @Column(nullable = false)
-    private boolean isDeleted = false;
 
     @PrePersist
     protected void onCreate() {

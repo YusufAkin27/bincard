@@ -2,6 +2,7 @@ package akin.city_card.security.manager;
 
 
 import akin.city_card.admin.exceptions.AdminNotApprovedException;
+import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
 import akin.city_card.driver.model.Driver;
@@ -51,7 +52,6 @@ public class AuthManager implements AuthService {
     private final SmsService smsService;
     private final AdminRepository adminRepository;
     private final SuperAdminRepository superAdminRepository;
-    private final DriverRepository driverRepository;
 
 
     @Override
@@ -74,18 +74,35 @@ public class AuthManager implements AuthService {
 
     @Override
     @Transactional
-    public TokenResponseDTO phoneVerify(LoginPhoneVerifyCodeRequest phoneVerifyCode) throws ExpiredVerificationCodeException {
-        VerificationCode verificationCode = verificationCodeRepository
-                .findTopByCodeAndCancelledFalseAndUsedFalseOrderByCreatedAtDesc(phoneVerifyCode.getCode());
+    public TokenResponseDTO phoneVerify(LoginPhoneVerifyCodeRequest phoneVerifyCode)
+            throws InvalidVerificationCodeException,
+            ExpiredVerificationCodeException,
+            UsedVerificationCodeException,
+            CancelledVerificationCodeException {
 
-        if (verificationCode == null || verificationCode.getExpiresAt().isBefore(LocalDateTime.now())) {
+        VerificationCode verificationCode = verificationCodeRepository
+                .findTopByCodeAndCancelledFalseOrderByCreatedAtDesc(phoneVerifyCode.getCode());
+
+        if (verificationCode == null) {
+            throw new InvalidVerificationCodeException();
+        }
+
+        if (verificationCode.isUsed()) {
+            throw new UsedVerificationCodeException();
+        }
+
+        if (verificationCode.isCancelled()) {
+            throw new CancelledVerificationCodeException();
+        }
+
+        if (verificationCode.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new ExpiredVerificationCodeException();
         }
 
         verificationCode.setUsed(true);
         verificationCodeRepository.save(verificationCode);
 
-        User user = verificationCode.getUser();
+        SecurityUser user = verificationCode.getUser();
         tokenRepository.deleteBySecurityUserId(user.getId());
 
         user.setLastLoginDevice(phoneVerifyCode.getDeviceInfo());
@@ -93,11 +110,67 @@ public class AuthManager implements AuthService {
         user.setLastLoginIp(phoneVerifyCode.getIpAddress());
         user.setLastLoginAppVersion(phoneVerifyCode.getAppVersion());
         user.setLastLoginPlatform(phoneVerifyCode.getPlatform());
-        userRepository.save(user);
+        securityUserRepository.save(user);
 
         return generateTokenResponse(user, verificationCode.getIpAddress(), verificationCode.getUserAgent());
-
     }
+
+
+
+
+
+    @Override
+    public ResponseMessage adminLogin(LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserRoleNotAssignedException, UserDeletedException, AdminNotApprovedException, UserNotActiveException, AdminNotFoundException {
+        String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
+        loginRequestDTO.setTelephone(normalizedPhone);
+
+        Admin admin = adminRepository.findByUserNumber(normalizedPhone);
+
+        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), admin.getPassword())) {
+            throw new IncorrectPasswordException();
+        }
+
+        if (admin.getRoles() == null || admin.getRoles().isEmpty()) {
+            throw new UserRoleNotAssignedException();
+        }
+
+        if (admin != null) {
+            if (admin.isDeleted()) throw new UserDeletedException();
+            if (!admin.isSuperAdminApproved()) throw new AdminNotApprovedException();
+            if (!admin.isActive()) throw new UserNotActiveException();
+
+            sendLoginVerificationCode(admin, loginRequestDTO);
+        } else {
+            throw new AdminNotFoundException();
+        }
+        return new ResponseMessage("SMS gönderildi lütfen giriş için sms kodunu giriniz", true);
+    }
+
+
+    @Override
+    public ResponseMessage superadminLogin(LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserRoleNotAssignedException, UserNotActiveException, UserDeletedException, SuperAdminNotFoundException {
+        String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
+        loginRequestDTO.setTelephone(normalizedPhone);
+
+        SuperAdmin superAdmin = superAdminRepository.findByUserNumber(normalizedPhone);
+
+        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), superAdmin.getPassword())) {
+            throw new IncorrectPasswordException();
+        }
+
+        if (superAdmin.getRoles() == null || superAdmin.getRoles().isEmpty()) {
+            throw new UserRoleNotAssignedException();
+        }
+
+        if (superAdmin != null) {
+            if (superAdmin.isDeleted()) throw new UserDeletedException();
+            if (!superAdmin.isActive()) throw new UserNotActiveException();
+
+            sendLoginVerificationCode(superAdmin, loginRequestDTO);
+        } else {
+            throw new SuperAdminNotFoundException();
+        }
+        return new ResponseMessage("SMS gönderildi lütfen giriş için sms kodunu giriniz", true);    }
 
 
     @Override
@@ -150,60 +223,6 @@ public class AuthManager implements AuthService {
             userRepository.save(user);
 
             return tokenResponseDTO;
-        } else if (securityUser instanceof Admin admin) {
-            if (admin.isDeleted()) {
-                throw new UserDeletedException();
-            }
-            if (admin.isSuperAdminApproved()){
-                throw new AdminNotApprovedException();
-            }
-
-            if (!admin.isActive()) {
-                throw new UserNotActiveException();
-            }
-
-            TokenResponseDTO tokenResponseDTO = generateTokenResponse(admin, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
-
-            admin.setLastLoginAt(LocalDateTime.now());
-            admin.setIpAddress(loginRequestDTO.getIpAddress());
-            admin.setDeviceUuid(loginRequestDTO.getDeviceInfo());
-
-            adminRepository.save(admin);
-
-            return tokenResponseDTO;
-
-        } else if (securityUser instanceof SuperAdmin superAdmin) {
-            if (superAdmin.isDeleted()) {
-                throw new UserDeletedException();
-            }
-
-            if (!superAdmin.isActive()) {
-                throw new UserNotActiveException();
-            }
-
-            TokenResponseDTO tokenResponseDTO = generateTokenResponse(superAdmin, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
-
-
-            superAdmin.setLastLoginAt(LocalDateTime.now());
-            superAdmin.setLastLoginIp(loginRequestDTO.getIpAddress());
-            superAdmin.setDeviceUuid(loginRequestDTO.getDeviceInfo());
-
-            superAdminRepository.save(superAdmin);
-
-            return tokenResponseDTO;
-        } else if (securityUser instanceof Driver driver) {
-            if (!driver.isActive()) {
-                throw new UserNotActiveException();
-            }
-
-            TokenResponseDTO tokenResponseDTO = generateTokenResponse(driver, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
-            driver.setLastLoginAt(LocalDateTime.now());
-            driver.setIpAddress(loginRequestDTO.getIpAddress());
-            driver.setDeviceUuid(loginRequestDTO.getDeviceInfo());
-
-            driverRepository.save(driver);
-
-            return tokenResponseDTO;
         }
 
 
@@ -214,10 +233,10 @@ public class AuthManager implements AuthService {
         tokenRepository.deleteBySecurityUserId(user.getId());
 
         LocalDateTime issuedAt = LocalDateTime.now();
-        LocalDateTime accessExpiry = issuedAt.plusMinutes(1);
+        LocalDateTime accessExpiry = issuedAt.plusMinutes(5);
         LocalDateTime refreshExpiry = issuedAt.plusDays(7);
 
-        String accessTokenValue = jwtService.generateAccessToken(user, ipAddress, deviceInfo,  accessExpiry);
+        String accessTokenValue = jwtService.generateAccessToken(user, ipAddress, deviceInfo, accessExpiry);
         String refreshTokenValue = jwtService.generateRefreshToken(user, ipAddress, deviceInfo, refreshExpiry);
 
         TokenDTO accessToken = new TokenDTO(
@@ -244,8 +263,7 @@ public class AuthManager implements AuthService {
     }
 
 
-
-    private void sendLoginVerificationCode(User user, LoginRequestDTO request) {
+    private void sendLoginVerificationCode(SecurityUser user, LoginRequestDTO request) {
         verificationCodeRepository.cancelAllActiveCodes(user.getId(), VerificationPurpose.LOGIN);
 
         String code = randomSixDigit();
@@ -256,7 +274,6 @@ public class AuthManager implements AuthService {
                 .createdAt(LocalDateTime.now())
                 .expiresAt(LocalDateTime.now().plusMinutes(3))
                 .channel(VerificationChannel.SMS)
-                .attemptCount(0)
                 .used(false)
                 .cancelled(false)
                 .purpose(VerificationPurpose.LOGIN)
@@ -296,7 +313,7 @@ public class AuthManager implements AuthService {
         }
 
         LocalDateTime issuedAt = LocalDateTime.now();
-        LocalDateTime accessExpiry = issuedAt.plusMinutes(1);
+        LocalDateTime accessExpiry = issuedAt.plusMinutes(5);
 
         String newAccessToken = jwtService.generateAccessToken(
                 user,
@@ -315,9 +332,6 @@ public class AuthManager implements AuthService {
                 TokenType.ACCESS
         );
     }
-
-
-
 
 
 }

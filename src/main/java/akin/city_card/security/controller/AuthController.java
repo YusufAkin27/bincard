@@ -2,6 +2,7 @@ package akin.city_card.security.controller;
 
 
 import akin.city_card.admin.exceptions.AdminNotApprovedException;
+import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.dto.*;
 import akin.city_card.security.exception.*;
@@ -28,8 +29,19 @@ public class AuthController {
         return authService.login(loginRequestDTO);
     }
 
+    @PostMapping("/admin-login")
+    public ResponseMessage adminLogin(@RequestBody LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserNotActiveException, UserRoleNotAssignedException, UserDeletedException, AdminNotFoundException, AdminNotApprovedException, NotFoundUserException {
+      return    authService.adminLogin(loginRequestDTO);
+    }
+
+    @PostMapping("/superadmin-login")
+    public ResponseMessage superadminLogin(@RequestBody LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserNotActiveException, UserRoleNotAssignedException, UserDeletedException, SuperAdminNotFoundException {
+        return authService.superadminLogin(loginRequestDTO);
+    }
+
+
     @PostMapping("/phone-verify")
-    public TokenResponseDTO phoneVerify(@RequestBody LoginPhoneVerifyCodeRequest phoneVerifyCode) throws ExpiredVerificationCodeException {
+    public TokenResponseDTO phoneVerify(@RequestBody LoginPhoneVerifyCodeRequest phoneVerifyCode) throws ExpiredVerificationCodeException, CancelledVerificationCodeException, UsedVerificationCodeException, InvalidVerificationCodeException {
         return authService.phoneVerify(phoneVerifyCode);
     }
 

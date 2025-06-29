@@ -1,5 +1,6 @@
 package akin.city_card.verification.model;
 
+import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -27,9 +28,6 @@ public class VerificationCode {
     @Column(nullable = false)
     private boolean cancelled = false; // 5 hatalı denemeden sonra true olacak
 
-    @Column(nullable = false)
-    private int attemptCount = 0; // Hatalı giriş sayısı
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
     private VerificationChannel channel; // EMAIL / SMS
@@ -52,5 +50,5 @@ public class VerificationCode {
 
     @ManyToOne
     @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    private SecurityUser user;
 }

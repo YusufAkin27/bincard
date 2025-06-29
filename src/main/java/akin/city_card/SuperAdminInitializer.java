@@ -1,7 +1,6 @@
 package akin.city_card;
 
 import akin.city_card.security.entity.Role;
-
 import akin.city_card.superadmin.model.SuperAdmin;
 import akin.city_card.superadmin.repository.SuperAdminRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +22,9 @@ public class SuperAdminInitializer implements CommandLineRunner {
         String defaultPhone = "+905550000000";
         String defaultPassword = "123456";
 
-        boolean exists = superAdminRepository.findByUserNumber(defaultPhone).isPresent();
+        SuperAdmin exists = superAdminRepository.findByUserNumber(defaultPhone);
 
-        if (exists) {
+        if (exists != null) {
             System.out.println("✅ SuperAdmin zaten mevcut.");
             return;
         }
@@ -33,9 +32,18 @@ public class SuperAdminInitializer implements CommandLineRunner {
         SuperAdmin superAdmin = new SuperAdmin();
         superAdmin.setUserNumber(defaultPhone);
         superAdmin.setPassword(passwordEncoder.encode(defaultPassword));
-        superAdmin.setRoles(Set.of(Role.SUPERADMIN,Role.ADMIN)); // Enum içeriği varsa
+        superAdmin.setRoles(Set.of(Role.SUPERADMIN, Role.ADMIN, Role.USER, Role.DRVIER)); // Roller
         superAdmin.setActive(true);
         superAdmin.setDeleted(false);
+
+        // Zorunlu alanlar:
+        superAdmin.setName("Super");
+        superAdmin.setSurname("Admin");
+
+        // Opsiyonel ama varsa doldurulabilir:
+        superAdmin.setEmail("superadmin@example.com");
+        superAdmin.setEmailVerified(true);
+        superAdmin.setPhoneVerified(true);
 
         superAdminRepository.save(superAdmin);
 

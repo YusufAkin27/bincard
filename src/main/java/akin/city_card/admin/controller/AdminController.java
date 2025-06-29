@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminController {
 
     public final AdminService adminService;
-    // localhost:8008/v1/api/admin/sign-up
     // 1. Kullanıcı kayıt
     @PostMapping("/sign-up")
     public ResponseMessage signUp(@Valid @RequestBody CreateAdminRequest adminRequest) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException, PhoneIsNotValidException {

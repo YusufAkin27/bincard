@@ -4,6 +4,7 @@ import akin.city_card.admin.core.request.CreateAdminRequest;
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
 import akin.city_card.admin.service.abstracts.AdminService;
+import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.user.exceptions.PhoneIsNotValidException;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.Role;
@@ -20,22 +21,23 @@ import java.util.Collections;
 @Service
 @RequiredArgsConstructor
 public class AdminManager implements AdminService {
-    private final AdminRepository adminRepository;
+    private final SecurityUserRepository securityUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final SmsService smsService;
+    private final AdminRepository adminRepository;
 
-    private final VerificationCodeRepository  verificationCodeRepository;
+    private final VerificationCodeRepository verificationCodeRepository;
+
     @Override
     public ResponseMessage signUp(CreateAdminRequest adminRequest) throws PhoneIsNotValidException, PhoneNumberAlreadyExistsException {
-        if (!PhoneNumberFormatter.PhoneValid(adminRequest.getTelephone())){
+        if (!PhoneNumberFormatter.PhoneValid(adminRequest.getTelephone())) {
             throw new PhoneIsNotValidException();
         }
-        if (!adminRepository.existsByUserNumber(adminRequest.getTelephone())){
+        if (securityUserRepository.existsByUserNumber(adminRequest.getTelephone())) {
             throw new PhoneNumberAlreadyExistsException();
         }
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(adminRequest.getTelephone());
         adminRequest.setTelephone(normalizedPhone);
-
 
 
         Admin admin = Admin.builder()
@@ -54,7 +56,6 @@ public class AdminManager implements AdminService {
 
         return new ResponseMessage("Kayıt başarılı. Super admin onayı bekleniyor.", true);
     }
-
 
 
 }

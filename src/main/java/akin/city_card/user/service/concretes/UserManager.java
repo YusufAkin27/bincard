@@ -4,8 +4,10 @@ import akin.city_card.cloudinary.MediaUploadService;
 import akin.city_card.mail.MailService;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.Role;
+import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.sms.SmsRequest;
 import akin.city_card.sms.SmsService;
 import akin.city_card.user.core.converter.UserConverter;
@@ -49,6 +51,7 @@ public class UserManager implements UserService {
     private final VerificationCodeRepository verificationCodeRepository;
     private final PasswordEncoder passwordEncoder;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
+    private final SecurityUserRepository securityUserRepository;
 
 
     @Override
@@ -83,7 +86,6 @@ public class UserManager implements UserService {
         verificationCode.setCreatedAt(LocalDateTime.now());
         verificationCode.setUser(user);
         verificationCode.setChannel(VerificationChannel.SMS);
-        verificationCode.setAttemptCount(0);
         verificationCode.setExpiresAt(LocalDateTime.now().plusMinutes(3));
         verificationCode.setCancelled(false);
         verificationCode.setPurpose(VerificationPurpose.REGISTER);
@@ -117,29 +119,25 @@ public class UserManager implements UserService {
             return new ResponseMessage("Doğrulama kodunun süresi dolmuş.", false);
         }
 
-        // Çok fazla deneme yapılmışsa
-        if (verificationCode.getAttemptCount() >= 3) {
-            verificationCode.setCancelled(true);
-            verificationCodeRepository.save(verificationCode);
-            return new ResponseMessage("Bu doğrulama kodu çok fazla yanlış deneme nedeniyle iptal edildi.", false);
-        }
 
-        // Kod uyuşmuyorsa
+
         if (!verificationCode.getCode().equals(request.getCode())) {
-            verificationCode.setAttemptCount(verificationCode.getAttemptCount() + 1);
             verificationCodeRepository.save(verificationCode);
             return new ResponseMessage("Doğrulama kodu hatalı.", false);
         }
 
         // Başarılı doğrulama
-        User user = verificationCode.getUser();
-        if (user == null) {
+        SecurityUser securityUser = verificationCode.getUser();
+        if (securityUser instanceof User user) {
+            user.setPhoneVerified(true);
+            user.setActive(true);
+            userRepository.save(user);
+        }else {
             throw new UserNotFoundException();
+
         }
 
-        user.setPhoneVerified(true);
-        user.setActive(true);
-        userRepository.save(user);
+
 
         verificationCode.setUsed(true);
         verificationCodeRepository.save(verificationCode);
@@ -275,7 +273,7 @@ public class UserManager implements UserService {
             throw new PasswordResetTokenIsUsedException();
         }
 
-        User user = passwordResetToken.getUser();
+        SecurityUser user = passwordResetToken.getUser();
         String newPassword = request.getNewPassword();
 
         if (newPassword.length() < 6) {
@@ -288,7 +286,7 @@ public class UserManager implements UserService {
 
         String encodedPassword = passwordEncoder.encode(newPassword);
         user.setPassword(encodedPassword);
-        userRepository.save(user);
+        securityUserRepository.save(user);
 
         passwordResetToken.setUsed(true);
         passwordResetTokenRepository.save(passwordResetToken);
@@ -364,7 +362,6 @@ public class UserManager implements UserService {
         verificationCode.setCreatedAt(LocalDateTime.now());
         verificationCode.setUser(user);
         verificationCode.setChannel(VerificationChannel.SMS);
-        verificationCode.setAttemptCount(0);
         verificationCode.setExpiresAt(LocalDateTime.now().plusMinutes(3));
         verificationCode.setCancelled(false);
         verificationCode.setPurpose(VerificationPurpose.REGISTER);
@@ -397,7 +394,7 @@ public class UserManager implements UserService {
             throw new ExpiredVerificationCodeException();
         }
 
-        User user = verificationCode.getUser();
+        SecurityUser user = verificationCode.getUser();
 
         verificationCode.setUsed(true);
         verificationCodeRepository.save(verificationCode);

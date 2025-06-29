@@ -1,5 +1,6 @@
 package akin.city_card.user.model;
 
+import akin.city_card.security.entity.SecurityUser;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
@@ -22,5 +23,5 @@ public class PasswordResetToken {
     private boolean used;
 
     @OneToOne
-    private User user;
+    private SecurityUser user;
 }

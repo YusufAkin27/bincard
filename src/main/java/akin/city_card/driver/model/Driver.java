@@ -17,32 +17,12 @@ import java.util.List;
 @SuperBuilder
 public class Driver extends SecurityUser {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    // Şoförün adı
-    @Column(nullable = false)
-    private String name;
-
-    // Şoförün soyadı
-    @Column(nullable = false)
-    private String surname;
-
-    // T.C. Kimlik Numarası — benzersiz olmalı
     @Column(unique = true, nullable = false, length = 11)
-    private String identityNumber;
+    private String nationalId;
 
-    // İletişim numarası (zorunlu değil, ayrı tutulmuş)
-    private String phoneNumber;
 
-    // E-posta adresi
-    private String email;
-
-    // Doğum tarihi
     @Column(nullable = false)
     private LocalDate dateOfBirth;
-    private LocalDateTime lastLoginAt;
 
     // İşe başlama tarihi
     private LocalDate employmentDate;
@@ -53,14 +33,10 @@ public class Driver extends SecurityUser {
     // Ehliyet sınıfı: Örn. D, E, CE
     private String licenseClass;
 
-    // Şoför aktif mi? İşten çıkarıldıysa false yapılabilir
-    private boolean active = true;
 
     // İkamet adresi
     private String address;
 
-    // Profil fotoğrafı (URL formatında saklanır)
-    private String photoUrl;
 
     // Güncel vardiya bilgisi (örn. SABAH, AKŞAM)
     @Enumerated(EnumType.STRING)

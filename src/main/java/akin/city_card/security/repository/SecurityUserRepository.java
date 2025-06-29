@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface SecurityUserRepository extends JpaRepository<SecurityUser, Long> {
     Optional<SecurityUser> findByUserNumber(String userNumber); // Kullanıcı numarasına göre kullanıcı bulma
+
+    boolean existsByUserNumber(String telephone);
 }

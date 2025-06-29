@@ -4,6 +4,7 @@ package akin.city_card.security.manager;
 
 
 import akin.city_card.admin.exceptions.AdminNotApprovedException;
+import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.dto.*;
 import akin.city_card.security.exception.*;
@@ -19,5 +20,9 @@ public interface AuthService {
 
     ResponseMessage logout(String username) throws UserNotFoundException, TokenNotFoundException;
 
-    TokenResponseDTO phoneVerify(LoginPhoneVerifyCodeRequest phoneVerifyCode) throws ExpiredVerificationCodeException;
+    TokenResponseDTO phoneVerify(LoginPhoneVerifyCodeRequest phoneVerifyCode) throws ExpiredVerificationCodeException, InvalidVerificationCodeException, UsedVerificationCodeException, CancelledVerificationCodeException;
+
+    ResponseMessage adminLogin(LoginRequestDTO loginRequestDTO) throws NotFoundUserException, IncorrectPasswordException, UserRoleNotAssignedException, UserDeletedException, AdminNotApprovedException, UserNotActiveException, AdminNotFoundException;
+
+    ResponseMessage superadminLogin(LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserRoleNotAssignedException, UserNotActiveException, UserDeletedException, SuperAdminNotFoundException;
 }

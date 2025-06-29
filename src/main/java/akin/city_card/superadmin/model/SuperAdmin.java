@@ -1,36 +1,25 @@
 package akin.city_card.superadmin.model;
 
+import akin.city_card.admin.model.AdminApprovalRequest;
 import akin.city_card.security.entity.SecurityUser;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.persistence.*;
+import lombok.*;
 
-import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
-@Getter
-@Setter
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class SuperAdmin extends SecurityUser {
 
-    @Column(name = "last_login_ip", length = 45)
-    private String lastLoginIp;
 
-    @Column(name = "last_login_device")
-    private String lastLoginDevice;
 
-    @Column(name = "last_login_platform")
-    private String lastLoginPlatform;
+    @OneToMany(mappedBy = "approvedBy", cascade = CascadeType.ALL)
+    private List<AdminApprovalRequest> approvedRequests;
 
-    @Column(name = "last_login_app_version")
-    private String lastLoginAppVersion;
+    // Toplam kaç admin onayladığı (statistiksel amaçla)
+    @Column(name = "total_approved_admins")
+    private int totalApprovedAdmins;
 
-    @Column(name = "last_login_at")
-    private LocalDateTime lastLoginAt;
-
-    @Column(nullable = false)
-    private boolean isActive = true;
-
-    @Column(nullable = false)
-    private boolean isDeleted = false;
 }

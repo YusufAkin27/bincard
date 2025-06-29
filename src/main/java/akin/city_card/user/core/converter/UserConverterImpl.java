@@ -26,7 +26,7 @@ public class UserConverterImpl implements UserConverter {
                 .userNumber(request.getTelephone()) // username olarak kullanılacak
                 .password(passwordEncoder.encode(request.getPassword()))
                 .roles(Collections.singleton(Role.USER)) // Varsayılan kullanıcı rolü
-                .active(false) // Henüz doğrulanmadı
+                .isActive(false) // Henüz doğrulanmadı
                 .allowNegativeBalance(false)
                 .negativeBalanceLimit(0.0)
                 .emailVerified(false)

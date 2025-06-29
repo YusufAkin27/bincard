@@ -30,26 +30,22 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
         String[] publicPaths = {
-                // Authentication işlemleri
-                "/v1/api/auth/login/**",              // login
-                "/v1/api/user/sign-up/**",            // kullanıcı kayıt
-                "/v1/api/user/collective-sign-up/**", // toplu kayıt
-                "/v1/api/user/verify/phone/**",       // telefon doğrulama
-                "/v1/api/user/verify/email/**",       // email doğrulama (hem GET hem POST olabilir)
+                "/v1/api/auth/login/**",
+                "/v1/api/user/sign-up/**",
+                "/v1/api/user/collective-sign-up/**",
+                "/v1/api/user/verify/phone/**",
+                "/v1/api/user/verify/email/**",
                 "/v1/api/user/verify/email/send",
-                "/v1/api/user/verify/phone/resend/**",// email doğrulama linki gönderme
-                "/v1/api/user/password/forgot/**",    // şifre sıfırlama kodu gönderme
+                "/v1/api/user/verify/phone/resend/**",
+                "/v1/api/user/password/forgot/**",
                 "/v1/api/user/password/reset/**",
                 "/v1/api/admin/sign-up",
                 "/v1/api/user/password/verify-code",
                 "/v1/api/auth/phone-verify",
                 "/v1/api/user/password/reset",
-                "/v1/api/auth/refresh/**",
-
-                "/v1/api/user/active/**",              // aktif etme işlemleri varsa
-                // Diğer izin verilenler (örnek: token yenileme)
+                "/v1/api/auth/**",
+                "/v1/api/user/active/**",
                 "/v1/api/token/**",
-                // Admin kayıt yolu
                 "/v1/api/admin/register"
         };
 
