@@ -53,8 +53,7 @@ public class ReportController {
             @PathVariable Long reportId,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("message") String message,
-            @RequestParam(value = "photos", required = false) List<MultipartFile> photos)
-            throws ReportNotFoundException, ReportNotActiveException, IOException, PhotoSizeLargerException {
+            @RequestParam(value = "photos", required = false) List<MultipartFile> photos) {
         return reportService.updateReport(reportId, userDetails.getUsername(), message, photos);
     }
 
@@ -70,8 +69,7 @@ public class ReportController {
     public ResponseMessage changeReportStatus(
             @PathVariable Long reportId,
             @RequestParam ReportStatus status,
-            @AuthenticationPrincipal UserDetails userDetails)
-            throws AdminNotFoundException, ReportNotFoundException {
+            @AuthenticationPrincipal UserDetails userDetails) {
         return reportService.changeStatus(reportId, status, userDetails.getUsername());
     }
 
