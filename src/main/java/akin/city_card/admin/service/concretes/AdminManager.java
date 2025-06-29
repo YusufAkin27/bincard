@@ -30,32 +30,43 @@ public class AdminManager implements AdminService {
 
     @Override
     public ResponseMessage signUp(CreateAdminRequest adminRequest) throws PhoneIsNotValidException, PhoneNumberAlreadyExistsException {
+        // Telefon kontrolü
         if (!PhoneNumberFormatter.PhoneValid(adminRequest.getTelephone())) {
             throw new PhoneIsNotValidException();
         }
+
         if (securityUserRepository.existsByUserNumber(adminRequest.getTelephone())) {
             throw new PhoneNumberAlreadyExistsException();
         }
+
+        // Normalize et
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(adminRequest.getTelephone());
         adminRequest.setTelephone(normalizedPhone);
 
-
+        // Admin oluştur
         Admin admin = Admin.builder()
                 .roles(Collections.singleton(Role.ADMIN))
                 .password(passwordEncoder.encode(adminRequest.getPassword()))
                 .ipAddress(adminRequest.getIpAddress())
+                .deviceUuid(adminRequest.getDeviceUuid())
+                .userNumber(adminRequest.getTelephone())
+                .superAdminApproved(false) // Eğer super admin onayı gerekiyorsa false olmalı
                 .isDeleted(false)
                 .isActive(true)
-                .userNumber(adminRequest.getTelephone())
-                .deviceUuid(adminRequest.getDeviceUuid())
-                .superAdminApproved(true) // onaylanmamış başvuru
+                .name("Admin") // Placeholder, frontend üzerinden alınmalı
+                .surname("User") // Placeholder, frontend üzerinden alınmalı
+                .email(null) // opsiyonel olarak frontend'den alınabilir
+                .phoneVerified(false)
+                .emailVerified(false)
+                .lastLoginDevice(adminRequest.getUserAgent())
                 .build();
 
-        // Kayıt
+        // Kaydet
         adminRepository.save(admin);
 
         return new ResponseMessage("Kayıt başarılı. Super admin onayı bekleniyor.", true);
     }
+
 
 
 }
