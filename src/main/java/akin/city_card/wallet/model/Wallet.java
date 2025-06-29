@@ -4,7 +4,10 @@ import akin.city_card.user.model.User;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.Base64;
 import java.util.List;
 
 
@@ -26,6 +29,9 @@ public class Wallet extends AuditableEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "wiban", unique = true, nullable = false, length = 30)
+    private String wiban;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
@@ -60,4 +66,40 @@ public class Wallet extends AuditableEntity {
 
     @OneToMany(mappedBy = "wallet", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<WalletStatusLog> statusLogs = new ArrayList<>();
+
+
+
+    @PrePersist
+    private void generateWibanIfAbsent() {
+        if (this.wiban == null || this.wiban.isEmpty()) {
+            try {
+                String base = "CW" // CityWallet prefix
+                        + "-" + user.getId()
+                        + "-" + user.getNationalId().substring(0, 3)
+                        + "-" + user.getBirthDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
+                        + "-" + System.currentTimeMillis();
+
+                MessageDigest digest = MessageDigest.getInstance("SHA-256");
+                byte[] hash = digest.digest(base.getBytes());
+
+                // Hash'teki her byte'ı pozitif int yapıp stringe çevir ve sadece rakamlar elde et
+                StringBuilder digitsOnly = new StringBuilder();
+                for (byte b : hash) {
+                    int val = b & 0xFF; // byte'ı unsigned int yap
+                    digitsOnly.append(String.format("%03d", val)); // 3 basamaklı sayıya çevir, örn 005, 123 gibi
+                }
+
+                // İlk 16 haneyi al (başına "WBN-" eklenince toplam 20 karakter olur)
+                String numericPart = digitsOnly.toString().substring(0, 16);
+
+                this.wiban = "WBN-" + numericPart;
+
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException("WIBAN üretiminde hata", e);
+            }
+        }
+    }
+
+
+
 }
