@@ -56,10 +56,10 @@ public class SecurityUser implements UserDetails {
 
     // 🔽 ORTAK ALANLAR (hepsi buraya taşındı)
 
-    @Column(nullable = false, length = 50)
+    @Column(length = 50)
     private String name;
 
-    @Column(nullable = false, length = 50)
+    @Column( length = 50)
     private String surname;
 
     @Column(name = "last_login_at")
@@ -82,6 +82,7 @@ public class SecurityUser implements UserDetails {
 
     @Column(nullable = false)
     private boolean isDeleted = false;
+
     @Column(name = "email")
     private String email;
 

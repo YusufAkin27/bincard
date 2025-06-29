@@ -5,8 +5,6 @@ import akin.city_card.admin.exceptions.AdminNotApprovedException;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
-import akin.city_card.driver.model.Driver;
-import akin.city_card.driver.repository.DriverRepository;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.dto.*;
 import akin.city_card.security.entity.SecurityUser;
@@ -16,11 +14,9 @@ import akin.city_card.security.exception.*;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.security.repository.TokenRepository;
 import akin.city_card.security.service.JwtService;
-import akin.city_card.sms.SmsRequest;
 import akin.city_card.sms.SmsService;
 import akin.city_card.superadmin.model.SuperAdmin;
 import akin.city_card.superadmin.repository.SuperAdminRepository;
-import akin.city_card.user.exceptions.UserIsNotPhoneVerifyException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
 import akin.city_card.user.service.concretes.PhoneNumberFormatter;
@@ -30,14 +26,13 @@ import akin.city_card.verification.model.VerificationCode;
 import akin.city_card.verification.model.VerificationPurpose;
 import akin.city_card.verification.repository.VerificationCodeRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -307,8 +302,9 @@ public class AuthManager implements AuthService {
 
         String userNumber = jwtService.getRefreshTokenClaims(updateAccessTokenRequestDTO.getRefreshToken()).getSubject();
 
-        User user = userRepository.findByUserNumber(userNumber);
-        if (user == null) {
+        Optional<SecurityUser> user = securityUserRepository.findByUserNumber(userNumber);
+
+        if (user.isEmpty()) {
             throw new UserNotFoundException();
         }
 
@@ -316,7 +312,7 @@ public class AuthManager implements AuthService {
         LocalDateTime accessExpiry = issuedAt.plusMinutes(5);
 
         String newAccessToken = jwtService.generateAccessToken(
-                user,
+                user.orElse(null),
                 updateAccessTokenRequestDTO.getIpAddress(),
                 updateAccessTokenRequestDTO.getDeviceInfo(),
                 accessExpiry

@@ -50,13 +50,13 @@ public class AdminManager implements AdminService {
                 .ipAddress(adminRequest.getIpAddress())
                 .deviceUuid(adminRequest.getDeviceUuid())
                 .userNumber(adminRequest.getTelephone())
-                .superAdminApproved(false) // Eğer super admin onayı gerekiyorsa false olmalı
+                .superAdminApproved(true) // Eğer super admin onayı gerekiyorsa false olmalı
                 .isDeleted(false)
                 .isActive(true)
-                .name("Admin") // Placeholder, frontend üzerinden alınmalı
-                .surname("User") // Placeholder, frontend üzerinden alınmalı
-                .email(null) // opsiyonel olarak frontend'den alınabilir
-                .phoneVerified(false)
+                .name(adminRequest.getName()) // Placeholder, frontend üzerinden alınmalı
+                .surname(adminRequest.getSurname()) // Placeholder, frontend üzerinden alınmalı
+                .email(adminRequest.getEmail()) // opsiyonel olarak frontend'den alınabilir
+                .phoneVerified(true)
                 .emailVerified(false)
                 .lastLoginDevice(adminRequest.getUserAgent())
                 .build();
