@@ -12,8 +12,13 @@ import lombok.NoArgsConstructor;
 public class CreateAdminRequest {
     private String telephone;
     private String password;
+    private String name;
+    private String surname;
+    private String email;
     private String ipAddress;
     private String deviceUuid;
+
+
 
     private String userAgent;
 }
