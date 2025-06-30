@@ -83,7 +83,7 @@ public class NewsController {
                                               @PathVariable Long id) throws UserNotFoundException, NewsNotFoundException, NewsIsNotActiveException, AdminNotFoundException {
 
         boolean isAdmin = userDetails.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+                .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
 
         if (isAdmin) {
             return newsService.getNewsByIdForAdmin(userDetails.getUsername(), id); // AdminNewsDTO
@@ -170,7 +170,7 @@ public class NewsController {
     public DataResponseMessage<List<?>> getNewsByCategory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam NewsType category,
                                                           @RequestParam(name = "platform", required = false) PlatformType platform
     ) throws UserNotFoundException {
-        boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ROLE_ADMIN"));
+        boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
         if (isAdmin) {
             return newsService.getNewsByCategoryForAdmin(userDetails.getUsername(), category, platform);
         }

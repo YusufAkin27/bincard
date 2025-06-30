@@ -60,7 +60,9 @@ public class UserManager implements UserService {
 
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(request.getTelephone());
         request.setTelephone(normalizedPhone);
-
+        if (securityUserRepository.existsByUserNumber(request.getTelephone())){
+            throw  new PhoneNumberAlreadyExistsException();
+        }
         userRules.checkPhoneIsUnique(request.getTelephone());
 
         User user = userConverter.convertUserToCreateUser(request);

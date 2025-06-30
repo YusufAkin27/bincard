@@ -113,9 +113,6 @@ public class NewsManager implements NewsService {
     @Override
     public DataResponseMessage<?> getNewsByIdForAdmin(String username, Long id) throws NewsIsNotActiveException, NewsNotFoundException, AdminNotFoundException {
         News news = newsRepository.findById(id).orElseThrow(NewsNotFoundException::new);
-        if (!news.isActive()) {
-            throw new NewsIsNotActiveException(id + " ");
-        }
         AdminNewsDTO adminNewsDTO = newsConverter.toAdminDTO(news);
 
         return new DataResponseMessage<>("haber", true, adminNewsDTO);
