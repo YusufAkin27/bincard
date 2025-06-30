@@ -14,7 +14,10 @@ import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.Role;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.exceptions.FileFormatCouldNotException;
+import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
+import akin.city_card.user.exceptions.VideoSizeLargerException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -51,7 +54,7 @@ public class NewsController {
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseMessage createNews(@AuthenticationPrincipal UserDetails userDetails,
                                       @Valid @ModelAttribute CreateNewsRequest news)
-            throws AdminNotFoundException, UnauthorizedAreaException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException {
+            throws AdminNotFoundException, UnauthorizedAreaException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException, OnlyPhotosAndVideosException, VideoSizeLargerException, FileFormatCouldNotException {
 
         if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
             throw new UnauthorizedAreaException();
@@ -70,7 +73,7 @@ public class NewsController {
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseMessage updateNews(@AuthenticationPrincipal UserDetails userDetails,
                                       @Valid @ModelAttribute UpdateNewsRequest request)
-            throws NewsNotFoundException, AdminNotFoundException, UnauthorizedAreaException, NewsIsNotActiveException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException {
+            throws NewsNotFoundException, AdminNotFoundException, UnauthorizedAreaException, NewsIsNotActiveException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException, OnlyPhotosAndVideosException, VideoSizeLargerException, FileFormatCouldNotException {
 
         if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
             throw new UnauthorizedAreaException();
@@ -109,13 +112,7 @@ public class NewsController {
     }
 
 
-    @PutMapping("/{id}/activate")
-    public ResponseMessage activateNews(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long id) throws NewsNotFoundException, AdminNotFoundException, NewsIsAlreadyActiveException, UnauthorizedAreaException {
 
-        if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
-            throw new UnauthorizedAreaException();
-        return newsService.activateNews(userDetails.getUsername(), id);
-    }
 
     @GetMapping("/between-dates")
     public DataResponseMessage<List<AdminNewsDTO>> getNewsBetweenDates(

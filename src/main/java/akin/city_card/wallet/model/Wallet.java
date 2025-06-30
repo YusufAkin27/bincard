@@ -2,21 +2,18 @@ package akin.city_card.wallet.model;
 
 import akin.city_card.user.model.User;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
-import java.util.Base64;
-import java.util.List;
-
-
-
-import lombok.*;
-import org.hibernate.annotations.UpdateTimestamp;
-
-
 import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "wallets")
@@ -68,7 +65,6 @@ public class Wallet extends AuditableEntity {
     private List<WalletStatusLog> statusLogs = new ArrayList<>();
 
 
-
     @PrePersist
     private void generateWibanIfAbsent() {
         if (this.wiban == null || this.wiban.isEmpty()) {
@@ -90,7 +86,7 @@ public class Wallet extends AuditableEntity {
                 }
 
                 // İlk 16 haneyi al (başına "WBN-" eklenince toplam 20 karakter olur)
-                String numericPart = digitsOnly.toString().substring(0, 16);
+                String numericPart = digitsOnly.substring(0, 16);
 
                 this.wiban = "WBN-" + numericPart;
 
@@ -99,7 +95,6 @@ public class Wallet extends AuditableEntity {
             }
         }
     }
-
 
 
 }

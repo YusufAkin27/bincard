@@ -11,7 +11,6 @@ import akin.city_card.news.core.response.AdminNewsDTO;
 import akin.city_card.news.core.response.NewsHistoryDTO;
 import akin.city_card.news.core.response.NewsStatistics;
 import akin.city_card.news.core.response.UserNewsDTO;
-import akin.city_card.news.exceptions.NewsIsAlreadyActiveException;
 import akin.city_card.news.exceptions.NewsIsNotActiveException;
 import akin.city_card.news.exceptions.NewsNotFoundException;
 import akin.city_card.news.exceptions.OutDatedNewsException;
@@ -24,7 +23,10 @@ import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.Role;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.exceptions.FileFormatCouldNotException;
+import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
+import akin.city_card.user.exceptions.VideoSizeLargerException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -36,8 +38,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
-
-import static java.util.Arrays.stream;
 
 @Service
 @RequiredArgsConstructor
@@ -65,12 +65,12 @@ public class NewsManager implements NewsService {
     @Override
     @Transactional
     public ResponseMessage createNews(String username, CreateNewsRequest createNewsRequest)
-            throws AdminNotFoundException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException {
+            throws AdminNotFoundException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException, OnlyPhotosAndVideosException, VideoSizeLargerException, FileFormatCouldNotException {
 
         News news = newsConverter.fromCreateRequest(createNewsRequest);
 
         if (createNewsRequest.getImage() != null && !createNewsRequest.getImage().isEmpty()) {
-            String imageUrl = mediaUploadService.uploadAndOptimizeImage(createNewsRequest.getImage()).get();
+            String imageUrl = mediaUploadService.uploadAndOptimizeMedia(createNewsRequest.getImage()).get();
             news.setImage(imageUrl);
         }
 
@@ -87,19 +87,16 @@ public class NewsManager implements NewsService {
     }
 
     @Override
-    public ResponseMessage updateNews(String username, UpdateNewsRequest updatedNews) throws AdminNotFoundException, NewsNotFoundException, NewsIsNotActiveException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException {
+    public ResponseMessage updateNews(String username, UpdateNewsRequest updatedNews) throws AdminNotFoundException, NewsNotFoundException, NewsIsNotActiveException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException, OnlyPhotosAndVideosException, VideoSizeLargerException, FileFormatCouldNotException {
         News news = newsRepository.findById(updatedNews.getId())
                 .orElseThrow(NewsNotFoundException::new);
 
-        if (!news.isActive()) {
-            throw new NewsIsNotActiveException(updatedNews.getId() + " ");
-        }
 
         newsConverter.updateEntityFromDTO(news, updatedNews);
 
 
         if (updatedNews.getImage() != null && !updatedNews.getImage().isEmpty()) {
-            String imageUrl = mediaUploadService.uploadAndOptimizeImage(updatedNews.getImage()).get();
+            String imageUrl = mediaUploadService.uploadAndOptimizeMedia(updatedNews.getImage()).get();
             news.setImage(imageUrl);
         }
 
@@ -164,7 +161,6 @@ public class NewsManager implements NewsService {
         return new DataResponseMessage<>("Admin için aktif haberler", true, sortedNews);
     }
 
-
     @Override
     public DataResponseMessage<?> getActiveNewsForUser(PlatformType platform, NewsType type, String username) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
@@ -211,26 +207,6 @@ public class NewsManager implements NewsService {
                 .toList();
 
         return new DataResponseMessage<>("Kullanıcıya özel haber listesi", true, sortedNews);
-    }
-
-    @Override
-    public ResponseMessage activateNews(String username, Long id) throws AdminNotFoundException, NewsNotFoundException, NewsIsAlreadyActiveException {
-
-
-        News news = newsRepository.findById(id)
-                .orElseThrow(NewsNotFoundException::new);
-
-        if (news.isActive()) {
-            throw new NewsIsAlreadyActiveException(id + " ");
-        }
-
-
-        news.setActive(true);
-        news.setUpdatedAt(LocalDateTime.now());
-
-        newsRepository.save(news);
-
-        return new ResponseMessage("Haber başarıyla aktifleştirildi", true);
     }
 
 

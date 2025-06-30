@@ -16,7 +16,10 @@ import akin.city_card.news.model.PlatformType;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.exceptions.FileFormatCouldNotException;
+import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
+import akin.city_card.user.exceptions.VideoSizeLargerException;
 import jakarta.validation.Valid;
 
 import java.io.IOException;
@@ -28,21 +31,17 @@ public interface NewsService {
     DataResponseMessage<List<AdminNewsDTO>> getAllForAdmin(String username, PlatformType platform) throws AdminNotFoundException;
 
 
-    ResponseMessage createNews(String username, @Valid CreateNewsRequest news) throws AdminNotFoundException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException;
+    ResponseMessage createNews(String username, @Valid CreateNewsRequest news) throws AdminNotFoundException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException, OnlyPhotosAndVideosException, VideoSizeLargerException, FileFormatCouldNotException;
 
     ResponseMessage softDeleteNews(String username, Long id) throws NewsNotFoundException, AdminNotFoundException;
 
-    ResponseMessage updateNews(String username, UpdateNewsRequest updatedNews) throws AdminNotFoundException, NewsNotFoundException, NewsIsNotActiveException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException;
+    ResponseMessage updateNews(String username, UpdateNewsRequest updatedNews) throws AdminNotFoundException, NewsNotFoundException, NewsIsNotActiveException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException, OnlyPhotosAndVideosException, VideoSizeLargerException, FileFormatCouldNotException;
 
     DataResponseMessage<?> getNewsByIdForAdmin(String username, Long id) throws NewsIsNotActiveException, NewsNotFoundException, AdminNotFoundException;
 
     DataResponseMessage<?> getNewsByIdForUser(String username, Long id) throws NewsIsNotActiveException, UserNotFoundException, NewsNotFoundException;
 
-    DataResponseMessage<?> getActiveNewsForAdmin(PlatformType platform, NewsType type, String username) throws AdminNotFoundException;
-
-    DataResponseMessage<?> getActiveNewsForUser(PlatformType platform, NewsType type, String username) throws UserNotFoundException;
-
-    ResponseMessage activateNews(String username, Long id) throws AdminNotFoundException, NewsNotFoundException, NewsIsAlreadyActiveException;
+  
 
     DataResponseMessage<List<AdminNewsDTO>> getNewsBetweenDates(String username, LocalDateTime start, LocalDateTime end, PlatformType platform) throws AdminNotFoundException;
 
@@ -65,4 +64,8 @@ public interface NewsService {
     void recordNewsView(String username, Long newsId) throws NewsIsNotActiveException, UserNotFoundException, NewsNotFoundException;
 
     DataResponseMessage<List<UserNewsDTO>> getSuggestedNews(String username,PlatformType platformType) throws UserNotFoundException;
+
+    DataResponseMessage<?> getActiveNewsForUser(PlatformType platform, NewsType type, String username) throws UserNotFoundException;
+
+    DataResponseMessage<?> getActiveNewsForAdmin(PlatformType platform, NewsType type, String username) throws AdminNotFoundException;
 }

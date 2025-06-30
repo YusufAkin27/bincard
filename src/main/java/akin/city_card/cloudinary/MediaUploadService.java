@@ -75,7 +75,7 @@ public class MediaUploadService {
         Map<String, String> uploadResult = cloudinary.uploader().upload(photo.getBytes(), ObjectUtils.asMap(
                 "folder", "profile_photos",
                 "quality", "auto:best",
-                "format", "webp",
+                "format", "png",
                 "transformation", new Transformation()
                         .width(1280)
                         .height(1280)

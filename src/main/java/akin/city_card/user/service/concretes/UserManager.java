@@ -205,11 +205,10 @@ public class UserManager implements UserService {
     public ResponseMessage updateProfilePhoto(String username, MultipartFile file)
             throws PhotoSizeLargerException, IOException, UserNotFoundException {
 
-        // 1. Kullanıcıyı bul
         User user = userRepository.findByUserNumber(username);
 
         try {
-            CompletableFuture<String> futureUrl = mediaUploadService.uploadAndOptimizeImage(file);
+            CompletableFuture<String> futureUrl = mediaUploadService.uploadAndOptimizeMedia(file);
             String imageUrl = futureUrl.get(); // blocking get
 
             user.setProfilePicture(imageUrl);
@@ -221,6 +220,8 @@ public class UserManager implements UserService {
         } catch (InterruptedException | ExecutionException e) {
             Thread.currentThread().interrupt(); // thread flag'i temizle
             throw new IOException("Fotoğraf yüklenirken bir hata oluştu.", e);
+        } catch (OnlyPhotosAndVideosException | VideoSizeLargerException | FileFormatCouldNotException e) {
+            throw new RuntimeException(e);
         }
     }
 
