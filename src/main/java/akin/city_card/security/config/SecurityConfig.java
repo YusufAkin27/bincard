@@ -30,7 +30,6 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(HttpSecurity httpSecurity) throws Exception {
 
         String[] publicPaths = {
-                "/v1/api/auth/login/**",
                 "/v1/api/user/sign-up/**",
                 "/v1/api/user/collective-sign-up/**",
                 "/v1/api/user/verify/phone/**",
@@ -41,7 +40,6 @@ public class SecurityConfig {
                 "/v1/api/user/password/reset/**",
                 "/v1/api/admin/sign-up",
                 "/v1/api/user/password/verify-code",
-                "/v1/api/auth/phone-verify",
                 "/v1/api/user/password/reset",
                 "/v1/api/auth/**",
                 "/v1/api/user/active/**",
@@ -65,6 +63,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable) // CSRF'yi devre dışı bırak
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Stateless yapı
                 .authorizeHttpRequests(authorizeRequests -> authorizeRequests
+                        .requestMatchers("/v1/api/auth/**").permitAll()
                         .requestMatchers(publicPaths).permitAll()
                         .requestMatchers("/ws/**").permitAll()  // WebSocket için izin ver
                         .requestMatchers(adminPaths).hasAuthority(Role.ADMIN.getAuthority())

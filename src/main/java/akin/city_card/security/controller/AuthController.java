@@ -10,6 +10,7 @@ import akin.city_card.security.manager.AuthService;
 import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -50,9 +51,24 @@ public class AuthController {
         return authService.updateAccessToken(updateAccessTokenRequestDTO);
     }
 
-    @PostMapping("logout")
-    public ResponseMessage logout(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException, TokenNotFoundException {
-        return authService.logout(userDetails.getUsername());
+    @GetMapping("/logout")
+    public ResponseEntity<ResponseMessage> logout(@AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(new ResponseMessage("Kullanıcı doğrulanamadı", false));
+        }
+
+        try {
+            System.out.printf(userDetails.getUsername());
+            ResponseMessage response = authService.logout(userDetails.getUsername());
+            return ResponseEntity.ok(response);
+        } catch (UserNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(new ResponseMessage("Kullanıcı bulunamadı", false));
+        } catch (TokenNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ResponseMessage("Token bulunamadı", false));
+        }
     }
 
 }
