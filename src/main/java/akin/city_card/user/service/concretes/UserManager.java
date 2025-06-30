@@ -3,12 +3,10 @@ package akin.city_card.user.service.concretes;
 import akin.city_card.cloudinary.MediaUploadService;
 import akin.city_card.mail.MailService;
 import akin.city_card.response.ResponseMessage;
-import akin.city_card.security.entity.Role;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.security.repository.SecurityUserRepository;
-import akin.city_card.sms.SmsRequest;
 import akin.city_card.sms.SmsService;
 import akin.city_card.user.core.converter.UserConverter;
 import akin.city_card.user.core.request.*;
@@ -16,7 +14,6 @@ import akin.city_card.user.core.response.UserDTO;
 import akin.city_card.user.exceptions.*;
 import akin.city_card.user.model.PasswordResetToken;
 import akin.city_card.user.model.User;
-import akin.city_card.user.model.VerificationMethod;
 import akin.city_card.user.repository.PasswordResetTokenRepository;
 import akin.city_card.user.repository.UserRepository;
 import akin.city_card.user.rules.UserRules;
@@ -228,15 +225,15 @@ public class UserManager implements UserService {
 
     @Override
     public ResponseMessage sendPasswordResetCode(String phone) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(PhoneNumberFormatter.normalizeTurkishPhoneNumber(phone));
-
-        // 6 haneli rastgele kod üret
+        Optional<SecurityUser> user = securityUserRepository.findByUserNumber(PhoneNumberFormatter.normalizeTurkishPhoneNumber(phone));
+        if (user.isEmpty()) {
+            throw new UserNotFoundException();
+        }
         String code = randomSixDigit();
         System.out.println("Doğrulama kodu: " + code);
 
-        // VerificationCode nesnesi oluştur
         VerificationCode verificationCode = VerificationCode.builder()
-                .user(user)
+                .user(user.get())
                 .code(code)
                 .channel(VerificationChannel.SMS)
                 .purpose(VerificationPurpose.RESET_PASSWORD)

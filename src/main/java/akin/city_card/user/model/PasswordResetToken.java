@@ -1,10 +1,8 @@
 package akin.city_card.user.model;
 
 import akin.city_card.security.entity.SecurityUser;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.OneToOne;
+import akin.city_card.user.model.User;
+import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -22,6 +20,7 @@ public class PasswordResetToken {
 
     private boolean used;
 
-    @OneToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private SecurityUser user;
 }
