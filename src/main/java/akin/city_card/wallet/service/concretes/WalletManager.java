@@ -14,9 +14,12 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+
 @Service
 @RequiredArgsConstructor
 public class WalletManager implements WalletService {
+
+
     @Override
     public DataResponseMessage<BigDecimal> getWalletBalance(String phone) {
         return null;
@@ -71,4 +74,5 @@ public class WalletManager implements WalletService {
     public ResponseMessage topUp(String username, BigDecimal amount, String cardNumber, String cardExpiry, String cardCvc) {
         return null;
     }
+
 }
