@@ -383,7 +383,7 @@ public class UserManager implements UserService {
 
     @Override
     @Transactional
-    public UUID verifyPhoneForPasswordReset(VerificationCodeRequest verificationCodeRequest) throws InvalidOrUsedVerificationCodeException, ExpiredVerificationCodeException {
+    public ResponseMessage verifyPhoneForPasswordReset(VerificationCodeRequest verificationCodeRequest) throws InvalidOrUsedVerificationCodeException, ExpiredVerificationCodeException {
         String code = verificationCodeRequest.getCode();
 
         VerificationCode verificationCode = verificationCodeRepository
@@ -409,7 +409,7 @@ public class UserManager implements UserService {
 
         passwordResetTokenRepository.save(passwordResetToken);
 
-        return resetTokenUUID;
+        return new ResponseMessage(resetTokenUUID+"",true);
     }
 
 

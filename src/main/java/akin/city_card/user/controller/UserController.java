@@ -47,7 +47,7 @@ public class UserController {
 
     // ✅ Adım 2: Telefon numarasını doğrulama (kod girilerek)
     @PostMapping("/password/verify-code")
-    public UUID verifyResetCode(@RequestBody VerificationCodeRequest verificationCodeRequest)
+    public ResponseMessage verifyResetCode(@RequestBody VerificationCodeRequest verificationCodeRequest)
             throws UserNotFoundException, ExpiredVerificationCodeException, InvalidOrUsedVerificationCodeException {
         return userService.verifyPhoneForPasswordReset(verificationCodeRequest);
     }
