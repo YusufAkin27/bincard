@@ -1,13 +1,32 @@
 package akin.city_card.admin.service.abstracts;
 
 import akin.city_card.admin.core.request.CreateAdminRequest;
-import akin.city_card.user.exceptions.PhoneIsNotValidException;
+import akin.city_card.admin.core.request.UpdateDeviceInfoRequest;
+import akin.city_card.admin.core.request.UpdateLocationRequest;
+import akin.city_card.admin.core.response.LoginHistoryDTO;
+import akin.city_card.admin.exceptions.AdminNotFoundException;
+import akin.city_card.response.DataResponseMessage;
+import akin.city_card.user.core.request.ChangePasswordRequest;
+import akin.city_card.user.core.request.UpdateProfileRequest;
+import akin.city_card.user.exceptions.*;
 import akin.city_card.response.ResponseMessage;
-import akin.city_card.user.exceptions.PhoneNumberAlreadyExistsException;
 import jakarta.validation.Valid;
+
+import java.util.List;
 
 public interface AdminService {
     ResponseMessage signUp(@Valid CreateAdminRequest adminRequest) throws PhoneIsNotValidException, PhoneNumberAlreadyExistsException;
 
 
+    ResponseMessage changePassword(@Valid ChangePasswordRequest request, String username) throws AdminNotFoundException, PasswordTooShortException, PasswordSameAsOldException, IncorrectCurrentPasswordException;
+
+    ResponseMessage updateProfile(@Valid UpdateProfileRequest request, String username) throws AdminNotFoundException;
+
+    ResponseMessage updateDeviceInfo(UpdateDeviceInfoRequest request, String username);
+
+    ResponseMessage getLocation(String username);
+
+    ResponseMessage updateLocation(UpdateLocationRequest request, String username);
+
+    DataResponseMessage<List<LoginHistoryDTO>> getLoginHistory(String username);
 }

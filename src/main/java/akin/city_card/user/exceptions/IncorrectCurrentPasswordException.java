@@ -4,6 +4,6 @@ import akin.city_card.security.exception.BusinessException;
 
 public class IncorrectCurrentPasswordException extends BusinessException {
     public IncorrectCurrentPasswordException( ) {
-        super("Incorrect current password");
+        super("\"Mevcut şifre hatalı.\"");
     }
 }

@@ -49,4 +49,11 @@ public class SuperAdminManager implements SuperAdminService {
     public DataResponseMessage<Map<String, BigDecimal>> getIncomeSummary(String username) {
         return null;
     }
+/*
+    @Override
+    public DataResponseMessage<List<AuditLogDTO>> getAuditLogs(String fromDate, String toDate, String action, String username) {
+        return null;
+    }
+
+ */
 }

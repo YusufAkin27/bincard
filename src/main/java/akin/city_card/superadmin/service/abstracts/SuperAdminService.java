@@ -1,6 +1,7 @@
 package akin.city_card.superadmin.service.abstracts;
 
 import akin.city_card.admin.model.AdminApprovalRequest;
+import akin.city_card.admin.model.AuditLog;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 
@@ -23,4 +24,6 @@ public interface SuperAdminService {
     DataResponseMessage<Map<String, BigDecimal>> getMonthlyBusIncome(String username, int year, int month);
 
     DataResponseMessage<Map<String, BigDecimal>> getIncomeSummary(String username);
+
+//    DataResponseMessage<List<AuditLogDTO>> getAuditLogs(String fromDate, String toDate, String action, String username);
 }
