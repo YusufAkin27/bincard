@@ -111,7 +111,6 @@ public class UserManager implements UserService {
             return new ResponseMessage("Geçersiz veya kullanılmamış doğrulama kodu bulunamadı.", false);
         }
 
-        // Süresi dolmuşsa
         if (verificationCode.getExpiresAt().isBefore(LocalDateTime.now())) {
             verificationCode.setCancelled(true);
             verificationCodeRepository.save(verificationCode);
@@ -122,10 +121,9 @@ public class UserManager implements UserService {
 
         if (!verificationCode.getCode().equals(request.getCode())) {
             verificationCodeRepository.save(verificationCode);
-            return new ResponseMessage("Doğrulama kodu hatalı.", false);
+1
         }
 
-        // Başarılı doğrulama
         SecurityUser securityUser = verificationCode.getUser();
         if (securityUser instanceof User user) {
             user.setPhoneVerified(true);
@@ -168,6 +166,18 @@ public class UserManager implements UserService {
             user.setSurname(updateProfileRequest.getSurname());
             isUpdated = true;
         }
+        if (updateProfileRequest.getEmail() != null && !updateProfileRequest.getEmail().isBlank()) {
+            user.setEmail(user.getEmail().trim().toLowerCase());
+            isUpdated = true;
+        }
+
+        if (updateProfileRequest.getPassword() != null && !updateProfileRequest.getPassword().isBlank()) {
+            if (updateProfileRequest.getPassword().length() < 6) {
+                return new ResponseMessage("Şifre en az 6 karakter olmalıdır.",true);
+            }
+            user.setPassword(passwordEncoder.encode(updateProfileRequest.getPassword()));
+            isUpdated = true;
+        }
 
         if (isUpdated) {
             userRepository.save(user);
@@ -206,7 +216,7 @@ public class UserManager implements UserService {
 
         try {
             CompletableFuture<String> futureUrl = mediaUploadService.uploadAndOptimizeMedia(file);
-            String imageUrl = futureUrl.get(); // blocking get
+            String imageUrl = futureUrl.get();
 
             user.setProfilePicture(imageUrl);
 
@@ -215,7 +225,7 @@ public class UserManager implements UserService {
             return new ResponseMessage("Profil fotoğrafı başarıyla güncellendi.", true);
 
         } catch (InterruptedException | ExecutionException e) {
-            Thread.currentThread().interrupt(); // thread flag'i temizle
+            Thread.currentThread().interrupt();
             throw new IOException("Fotoğraf yüklenirken bir hata oluştu.", e);
         } catch (OnlyPhotosAndVideosException | VideoSizeLargerException | FileFormatCouldNotException e) {
             throw new RuntimeException(e);
@@ -240,7 +250,7 @@ public class UserManager implements UserService {
                 .expiresAt(LocalDateTime.now().plusMinutes(3))
                 .build();
 
-        // Veritabanına kaydet
+
         verificationCodeRepository.save(verificationCode);
 
         // SMS gönder
@@ -259,7 +269,7 @@ public class UserManager implements UserService {
     public ResponseMessage resetPassword(PasswordResetRequest request)
             throws PasswordResetTokenNotFoundException,
             PasswordResetTokenExpiredException,
-            PasswordResetTokenIsUsedException, PasswordTooShortException, SamePasswordException {
+            PasswordResetTokenIsUsedException,  SamePasswordException {
 
         PasswordResetToken passwordResetToken = passwordResetTokenRepository
                 .findByToken(request.getResetToken())
@@ -312,22 +322,18 @@ public class UserManager implements UserService {
             throw new UserIsDeletedException();
         }
 
-        // Mevcut şifre doğru mu?
         if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
             throw new IncorrectCurrentPasswordException();
         }
 
-        // Yeni şifre en az 6 karakter mi?
         if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
             throw new InvalidNewPasswordException();
         }
 
-        // Yeni şifre mevcut şifre ile aynı mı?
         if (passwordEncoder.matches(request.getNewPassword(), user.getPassword())) {
             throw new SamePasswordException();
         }
 
-        // Şifreyi güncelle
         user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
 
@@ -338,7 +344,7 @@ public class UserManager implements UserService {
     @Override
     public ResponseMessage resendPhoneVerificationCode(ResendPhoneVerificationRequest resendPhoneVerification) throws UserNotFoundException {
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(resendPhoneVerification.getTelephone());
-        resendPhoneVerification.setTelephone(normalizedPhone); // Güncellenmiş haliyle devam et
+        resendPhoneVerification.setTelephone(normalizedPhone);
 
         User user = userRepository.findByUserNumber(resendPhoneVerification.getTelephone());
         if (user == null) {

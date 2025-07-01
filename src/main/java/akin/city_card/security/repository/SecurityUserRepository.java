@@ -9,4 +9,6 @@ public interface SecurityUserRepository extends JpaRepository<SecurityUser, Long
     Optional<SecurityUser> findByUserNumber(String userNumber); // Kullanıcı numarasına göre kullanıcı bulma
 
     boolean existsByUserNumber(String telephone);
+
+    boolean existsByEmail(String email);
 }

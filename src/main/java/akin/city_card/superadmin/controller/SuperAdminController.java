@@ -6,7 +6,6 @@ import akin.city_card.response.ResponseMessage;
 import akin.city_card.superadmin.service.abstracts.SuperAdminService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -74,4 +73,15 @@ public class SuperAdminController {
     public DataResponseMessage<Map<String, BigDecimal>> getIncomeSummary(@AuthenticationPrincipal UserDetails userDetails) {
         return superAdminService.getIncomeSummary(userDetails.getUsername());
     }
+/*
+    //admin log geçmişleri
+    @GetMapping("/audit-logs")
+    public DataResponseMessage<List<AuditLogDTO>> getAuditLogs(@RequestParam(required = false) String fromDate,
+                                        @RequestParam(required = false) String toDate,
+                                        @RequestParam(required = false) String action,
+                                        @AuthenticationPrincipal UserDetails userDetails) {
+        return superAdminService.getAuditLogs(fromDate, toDate, action, userDetails.getUsername());
+    }
+
+ */
 }

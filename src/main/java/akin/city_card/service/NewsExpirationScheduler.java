@@ -1,4 +1,4 @@
-package akin.city_card.news.scheduler;
+package akin.city_card.service;
 
 import akin.city_card.news.model.News;
 import akin.city_card.news.repository.NewsRepository;

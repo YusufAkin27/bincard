@@ -228,7 +228,7 @@ public class AuthManager implements AuthService {
         tokenRepository.deleteBySecurityUserId(user.getId());
 
         LocalDateTime issuedAt = LocalDateTime.now();
-        LocalDateTime accessExpiry = issuedAt.plusMinutes(5);
+        LocalDateTime accessExpiry = issuedAt.plusMinutes(15);
         LocalDateTime refreshExpiry = issuedAt.plusDays(7);
 
         String accessTokenValue = jwtService.generateAccessToken(user, ipAddress, deviceInfo, accessExpiry);
@@ -309,7 +309,7 @@ public class AuthManager implements AuthService {
         }
 
         LocalDateTime issuedAt = LocalDateTime.now();
-        LocalDateTime accessExpiry = issuedAt.plusMinutes(5);
+        LocalDateTime accessExpiry = issuedAt.plusMinutes(15);
 
         String newAccessToken = jwtService.generateAccessToken(
                 user.orElse(null),

@@ -1,30 +1,70 @@
 package akin.city_card.admin.controller;
 
-import akin.city_card.admin.core.request.CreateAdminRequest;
+import akin.city_card.admin.core.request.*;
+import akin.city_card.admin.core.response.LoginHistoryDTO;
+import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.service.abstracts.AdminService;
-import akin.city_card.user.exceptions.PhoneIsNotValidException;
+import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
-import akin.city_card.user.exceptions.InvalidPhoneNumberFormatException;
-import akin.city_card.user.exceptions.PhoneNumberAlreadyExistsException;
-import akin.city_card.user.exceptions.PhoneNumberRequiredException;
+import akin.city_card.user.core.request.ChangePasswordRequest;
+import akin.city_card.user.core.request.UpdateProfileRequest;
+import akin.city_card.user.exceptions.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/v1/api/admin")
 @RequiredArgsConstructor
 public class AdminController {
 
-    public final AdminService adminService;
+    private final AdminService adminService;
+
     // 1. Kullanıcı kayıt
     @PostMapping("/sign-up")
-    public ResponseMessage signUp(@Valid @RequestBody CreateAdminRequest adminRequest) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException, PhoneIsNotValidException {
+    public ResponseMessage signUp(@Valid @RequestBody CreateAdminRequest adminRequest)
+            throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException,
+            InvalidPhoneNumberFormatException, PhoneIsNotValidException {
         return adminService.signUp(adminRequest);
     }
+
+    // 3. Güvenlik & Hesap Ayarları
+    @PutMapping("/change-password")
+    public ResponseMessage changePassword(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody ChangePasswordRequest request) throws IncorrectCurrentPasswordException, PasswordSameAsOldException, AdminNotFoundException, PasswordTooShortException {
+        return adminService.changePassword(request,userDetails.getUsername());
+    }
+
+
+    @PutMapping("/update-profile")
+    public ResponseMessage updateProfile(@AuthenticationPrincipal UserDetails userDetails,@Valid @RequestBody UpdateProfileRequest request) throws AdminNotFoundException {
+        return adminService.updateProfile(request,userDetails.getUsername());
+    }
+
+    @PutMapping("/update-device-info")
+    public ResponseMessage updateDeviceInfo(@AuthenticationPrincipal UserDetails userDetails,@RequestBody UpdateDeviceInfoRequest request) {
+        return adminService.updateDeviceInfo(request,userDetails.getUsername());
+    }
+
+    // 4. Konum & Oturum Bilgileri
+    @GetMapping("/location")
+    public ResponseMessage getLocation(@AuthenticationPrincipal UserDetails userDetails) {
+        return adminService.getLocation(userDetails.getUsername());
+    }
+
+    @PutMapping("/location")
+    public ResponseMessage updateLocation(@AuthenticationPrincipal UserDetails userDetails,@RequestBody UpdateLocationRequest request) {
+        return adminService.updateLocation(request,userDetails.getUsername());
+    }
+
+    @GetMapping("/login-history")
+    public DataResponseMessage<List<LoginHistoryDTO>> getLoginHistory(@AuthenticationPrincipal UserDetails userDetails) {
+        return adminService.getLoginHistory(userDetails.getUsername());
+    }
+
 
 
 }
