@@ -121,7 +121,7 @@ public class UserManager implements UserService {
 
         if (!verificationCode.getCode().equals(request.getCode())) {
             verificationCodeRepository.save(verificationCode);
-1
+
         }
 
         SecurityUser securityUser = verificationCode.getUser();
