@@ -9,7 +9,6 @@ import akin.city_card.security.exception.*;
 import akin.city_card.security.manager.AuthService;
 import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
 import lombok.RequiredArgsConstructor;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,7 +31,7 @@ public class AuthController {
 
     @PostMapping("/admin-login")
     public ResponseMessage adminLogin(@RequestBody LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserNotActiveException, UserRoleNotAssignedException, UserDeletedException, AdminNotFoundException, AdminNotApprovedException, NotFoundUserException {
-      return    authService.adminLogin(loginRequestDTO);
+        return authService.adminLogin(loginRequestDTO);
     }
 
     @PostMapping("/superadmin-login")
@@ -49,6 +48,11 @@ public class AuthController {
     @PostMapping("/refresh")
     public TokenDTO updateAccessToken(@RequestBody UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) throws TokenIsExpiredException, TokenNotFoundException, UserNotFoundException, InvalidRefreshTokenException {
         return authService.updateAccessToken(updateAccessTokenRequestDTO);
+    }
+
+    @PostMapping("/refresh-login")
+    public TokenDTO refreshLogin(@RequestBody RefreshLoginRequest request) throws UserNotFoundException, InvalidRefreshTokenException, IncorrectPasswordException, TokenIsExpiredException, TokenNotFoundException {
+        return authService.refreshLogin(request);
     }
 
     @GetMapping("/logout")

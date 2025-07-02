@@ -52,9 +52,9 @@ public class ReportController {
     public ResponseMessage updateReport(
             @PathVariable Long reportId,
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam("message") String message,
-            @RequestParam(value = "photos", required = false) List<MultipartFile> photos) {
-        return reportService.updateReport(reportId, userDetails.getUsername(), message, photos);
+            @RequestParam("message") String message
+       ) throws UserNotFoundException, ReportNotFoundException {
+        return reportService.updateReport(reportId, userDetails.getUsername(), message);
     }
 
     @DeleteMapping("/{reportId}")
@@ -69,7 +69,7 @@ public class ReportController {
     public ResponseMessage changeReportStatus(
             @PathVariable Long reportId,
             @RequestParam ReportStatus status,
-            @AuthenticationPrincipal UserDetails userDetails) {
+            @AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundException, ReportNotFoundException {
         return reportService.changeStatus(reportId, status, userDetails.getUsername());
     }
 

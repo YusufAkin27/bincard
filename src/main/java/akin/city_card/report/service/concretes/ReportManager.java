@@ -17,23 +17,25 @@ import akin.city_card.report.model.ReportPhoto;
 import akin.city_card.report.model.ReportStatus;
 import akin.city_card.report.repository.ReportRepository;
 import akin.city_card.report.service.abstracts.ReportService;
+import akin.city_card.report.service.abstracts.ReportSpecification;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-
-import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 @Service
@@ -90,7 +92,7 @@ public class ReportManager implements ReportService {
 
 
     @Override
-    public ResponseMessage deleteReport(Long reportId,String username) throws ReportNotFoundException, ReportAlreadyDeletedException, ReportNotActiveException {
+    public ResponseMessage deleteReport(Long reportId, String username) throws ReportNotFoundException, ReportAlreadyDeletedException, ReportNotActiveException {
         Report report = reportRepository.findById(reportId)
                 .orElse(null);
 
@@ -111,15 +113,6 @@ public class ReportManager implements ReportService {
 
 
     @Override
-    public List<Report> getUserReport(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
-        if (user == null) {
-            throw new UserNotFoundException();
-        }
-        return reportRepository.findByUser(user);
-    }
-
-    @Override
     public List<Report> getReportByCategory(ReportCategory category, String username) throws UserNotFoundException, CategoryNotFoundExecption, AdminNotFoundException, AdminNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
         User user = userRepository.findByUserNumber(username);
@@ -134,29 +127,92 @@ public class ReportManager implements ReportService {
         return reportRepository.findAllByCategoryAndUser(category, user);
     }
 
+    @Override
     public List<AdminReportDTO> getAllReportsForAdmin(String adminUsername, Pageable pageable) {
-        return List.of();
-
+        return reportRepository.findAll(pageable)
+                .stream()
+                .map(reportConverter::convertToAdminReportDTO)
+                .collect(Collectors.toList());
     }
 
+    public User findByUserName(String userName) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(userName);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+        return user;
+    }
+
+    @Override
     public List<UserReportDTO> getAllReportsForUser(String username, Pageable pageable) throws UserNotFoundException {
-    return List.of();
+        User user = findByUserName(username);
+        return reportRepository.findByUser(user, pageable)
+                .stream()
+                .map(reportConverter::convertToUserReportDTO)
+                .collect(Collectors.toList());
     }
+
 
     @Override
     public List<AdminReportDTO> search(Optional<String> keyword, Optional<ReportCategory> category, Optional<ReportStatus> status, Pageable pageable) {
-        return null;
+        Specification<Report> spec = (root, query, cb) -> cb.conjunction(); // boş filtre başlangıcı
+
+        if (category.isPresent()) {
+            spec = spec.and(ReportSpecification.hasCategory(category.get()));
+        }
+
+        if (status.isPresent()) {
+            spec = spec.and(ReportSpecification.hasStatus(status.get()));
+        }
+
+        if (keyword.isPresent()) {
+            spec = spec.and(ReportSpecification.containsKeyword(keyword.get()));
+        }
+
+        Page<Report> reportPage = reportRepository.findAll(spec, pageable);
+
+        return reportPage.stream()
+                .map(reportConverter::convertToAdminReportDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public ResponseMessage updateReport(Long reportId, String username, String message, List<MultipartFile> photos) {
-        return null;
+    public ResponseMessage updateReport(Long reportId, String username, String message) throws ReportNotFoundException, UserNotFoundException {
+        User user = findByUserName(username);
+        Optional<Report> optionalReport = reportRepository.findById(reportId);
+        if (optionalReport.isEmpty()) {
+            throw new ReportNotFoundException();
+        }
+
+        Report report = optionalReport.get();
+        if (!report.getUser().equals(user)) {
+            throw new ReportNotFoundException();
+        }
+        if (message != null && !report.getMessage().equals(message)) {
+            report.setMessage(message);
+        }
+
+        return new ResponseMessage("güncellendi", true);
     }
 
     @Override
-    public ResponseMessage changeStatus(Long reportId, ReportStatus status, String username) {
-        return null;
+    public ResponseMessage changeStatus(Long reportId, ReportStatus status, String username) throws AdminNotFoundException, ReportNotFoundException {
+        Report report = findById(reportId);
+        Admin admin = adminRepository.findByUserNumber(username);
+        if (admin == null) {
+            throw new AdminNotFoundException();
+        }
+        report.setStatus(status);
+        reportRepository.save(report);
+        return new ResponseMessage("durum güncellendi", true);
     }
+
+
+    public Report findById(Long reportId) throws ReportNotFoundException {
+        return reportRepository.findById(reportId)
+                .orElseThrow(ReportNotFoundException::new);
+    }
+
 
     @Override
     public ResponseMessage toggleDeleteReport(Long reportId, String username) {

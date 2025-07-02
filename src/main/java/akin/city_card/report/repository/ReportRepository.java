@@ -8,11 +8,12 @@ import org.hibernate.query.Page;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import java.util.List;
 
-public interface ReportRepository extends JpaRepository<Report, Long> {
-    List<Report> findByUser(User user);
+public interface ReportRepository extends JpaRepository<Report, Long>, JpaSpecificationExecutor<Report> {
+    List<Report> findByUser(User user,Pageable pageable);
 
     List<Report> findAllByCategoryAndUser(ReportCategory category, User user);
 

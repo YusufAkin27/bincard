@@ -27,8 +27,6 @@ public interface ReportService {
     ResponseMessage deleteReport(Long reportId,String username) throws ReportNotFoundException, ReportAlreadyDeletedException, ReportNotActiveException;
 
 
-    List<Report> getUserReport(String username) throws UserNotFoundException, AdminNotFoundException;
-
     List<Report> getReportByCategory(ReportCategory category, String username) throws UserNotFoundException, CategoryNotFoundExecption, AdminNotFoundException;
 
     List<AdminReportDTO> getAllReportsForAdmin(String username, Pageable pageable) throws AdminNotFoundException;
@@ -37,9 +35,9 @@ public interface ReportService {
 
    List<AdminReportDTO> search(Optional<String> keyword, Optional<ReportCategory> category, Optional<ReportStatus> status, Pageable pageable);
 
-    ResponseMessage updateReport(Long reportId, String username, String message, List<MultipartFile> photos);
+    ResponseMessage updateReport(Long reportId, String username, String message) throws ReportNotFoundException, UserNotFoundException;
 
-    ResponseMessage changeStatus(Long reportId, ReportStatus status, String username);
+    ResponseMessage changeStatus(Long reportId, ReportStatus status, String username) throws AdminNotFoundException, ReportNotFoundException;
 
     ResponseMessage toggleDeleteReport(Long reportId, String username);
 

@@ -111,9 +111,6 @@ public class AuthManager implements AuthService {
     }
 
 
-
-
-
     @Override
     public ResponseMessage adminLogin(LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserRoleNotAssignedException, UserDeletedException, AdminNotApprovedException, UserNotActiveException, AdminNotFoundException {
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
@@ -165,147 +162,24 @@ public class AuthManager implements AuthService {
         } else {
             throw new SuperAdminNotFoundException();
         }
-        return new ResponseMessage("SMS gönderildi lütfen giriş için sms kodunu giriniz", true);    }
-
-
-    @Override
-    @Transactional
-    public TokenResponseDTO login(LoginRequestDTO loginRequestDTO)
-            throws NotFoundUserException, UserDeletedException, UserNotActiveException,
-            IncorrectPasswordException, UserRoleNotAssignedException, PhoneNotVerifiedException, UnrecognizedDeviceException, AdminNotApprovedException {
-
-        String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
-        loginRequestDTO.setTelephone(normalizedPhone);
-
-        SecurityUser securityUser = securityUserRepository.findByUserNumber(normalizedPhone)
-                .orElseThrow(NotFoundUserException::new);
-
-        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), securityUser.getPassword())) {
-            throw new IncorrectPasswordException();
-        }
-
-        if (securityUser.getRoles() == null || securityUser.getRoles().isEmpty()) {
-            throw new UserRoleNotAssignedException();
-        }
-
-        if (securityUser instanceof User user) {
-            if (!user.isActive()) {
-                throw new UserNotActiveException();
-            }
-
-            if (!user.isPhoneVerified()) {
-                sendLoginVerificationCode(user, loginRequestDTO);
-                throw new PhoneNotVerifiedException();
-            }
-
-            String currentDevice = loginRequestDTO.getDeviceInfo();
-            String lastDevice = user.getLastLoginDevice();
-
-            if (lastDevice != null && !lastDevice.equals(currentDevice)) {
-                sendLoginVerificationCode(user, loginRequestDTO);
-                throw new UnrecognizedDeviceException();
-            }
-
-            TokenResponseDTO tokenResponseDTO = generateTokenResponse(user, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
-
-
-            user.setLastLoginDevice(currentDevice);
-            user.setLastLoginAt(LocalDateTime.now());
-            user.setLastLoginIp(loginRequestDTO.getIpAddress());
-            user.setLastLoginAppVersion(loginRequestDTO.getAppVersion());
-            user.setLastLoginPlatform(loginRequestDTO.getPlatform());
-
-            userRepository.save(user);
-
-            return tokenResponseDTO;
-        }
-
-
-        throw new NotFoundUserException();
-    }
-
-    public TokenResponseDTO generateTokenResponse(SecurityUser user, String ipAddress, String deviceInfo) {
-        tokenRepository.deleteBySecurityUserId(user.getId());
-
-        LocalDateTime issuedAt = LocalDateTime.now();
-        LocalDateTime accessExpiry = issuedAt.plusMinutes(15);
-        LocalDateTime refreshExpiry = issuedAt.plusDays(7);
-
-        String accessTokenValue = jwtService.generateAccessToken(user, ipAddress, deviceInfo, accessExpiry);
-        String refreshTokenValue = jwtService.generateRefreshToken(user, ipAddress, deviceInfo, refreshExpiry);
-
-        TokenDTO accessToken = new TokenDTO(
-                accessTokenValue,
-                issuedAt,
-                accessExpiry,
-                issuedAt,
-                ipAddress,
-                deviceInfo,
-                TokenType.ACCESS
-        );
-
-        TokenDTO refreshToken = new TokenDTO(
-                refreshTokenValue,
-                issuedAt,
-                refreshExpiry,
-                issuedAt,
-                ipAddress,
-                deviceInfo,
-                TokenType.REFRESH
-        );
-
-        return new TokenResponseDTO(accessToken, refreshToken);
-    }
-
-
-    private void sendLoginVerificationCode(SecurityUser user, LoginRequestDTO request) {
-        verificationCodeRepository.cancelAllActiveCodes(user.getId(), VerificationPurpose.LOGIN);
-
-        String code = randomSixDigit();
-
-        VerificationCode verificationCode = VerificationCode.builder()
-                .code(code)
-                .user(user)
-                .createdAt(LocalDateTime.now())
-                .expiresAt(LocalDateTime.now().plusMinutes(3))
-                .channel(VerificationChannel.SMS)
-                .used(false)
-                .cancelled(false)
-                .purpose(VerificationPurpose.LOGIN)
-                .ipAddress(request.getIpAddress())
-                .userAgent(request.getDeviceInfo())
-                .build();
-
-        verificationCodeRepository.save(verificationCode);
-        System.out.println("Gönderilen kod :" + code);
-        // SMS gönder
-        /*
-        SmsRequest smsRequest = new SmsRequest();
-        smsRequest.setTo(user.getUserNumber());
-        smsRequest.setMessage("City Card - Giriş için doğrulama kodunuz: " + code + ". Kod 3 dakika geçerlidir.");
-        smsService.sendSms(smsRequest);
-
-         */
-    }
-
-
-    public String randomSixDigit() {
-        Random random = new Random();
-        return String.format("%06d", random.nextInt(1000000)); // 000000 ile 999999 arasında 6 hane
+        return new ResponseMessage("SMS gönderildi lütfen giriş için sms kodunu giriniz", true);
     }
 
     @Override
-    public TokenDTO updateAccessToken(UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) throws UserNotFoundException, InvalidRefreshTokenException, TokenIsExpiredException, TokenNotFoundException {
-        if (!jwtService.validateRefreshToken(updateAccessTokenRequestDTO.getRefreshToken())) {
+    public TokenDTO refreshLogin(RefreshLoginRequest request) throws TokenIsExpiredException, TokenNotFoundException, InvalidRefreshTokenException, UserNotFoundException, IncorrectPasswordException {
+        if (!jwtService.validateRefreshToken(request.getRefreshToken())) {
             throw new InvalidRefreshTokenException();
         }
 
-        String userNumber = jwtService.getRefreshTokenClaims(updateAccessTokenRequestDTO.getRefreshToken()).getSubject();
+        String userNumber = jwtService.getRefreshTokenClaims(request.getRefreshToken()).getSubject();
 
         Optional<SecurityUser> user = securityUserRepository.findByUserNumber(userNumber);
 
         if (user.isEmpty()) {
             throw new UserNotFoundException();
+        }
+        if (!passwordEncoder.matches(request.getPassword(), user.get().getPassword())) {
+            throw new IncorrectPasswordException();
         }
 
         LocalDateTime issuedAt = LocalDateTime.now();
@@ -313,8 +187,8 @@ public class AuthManager implements AuthService {
 
         String newAccessToken = jwtService.generateAccessToken(
                 user.orElse(null),
-                updateAccessTokenRequestDTO.getIpAddress(),
-                updateAccessTokenRequestDTO.getDeviceInfo(),
+                request.getIpAddress(),
+                request.getDeviceInfo(),
                 accessExpiry
         );
 
@@ -323,11 +197,175 @@ public class AuthManager implements AuthService {
                 issuedAt,
                 accessExpiry,
                 issuedAt,
-                updateAccessTokenRequestDTO.getIpAddress(),
-                updateAccessTokenRequestDTO.getDeviceInfo(),
+                request.getIpAddress(),
+                request.getDeviceInfo(),
                 TokenType.ACCESS
         );
     }
+
+
+
+
+@Override
+@Transactional
+public TokenResponseDTO login(LoginRequestDTO loginRequestDTO)
+        throws NotFoundUserException, UserDeletedException, UserNotActiveException,
+        IncorrectPasswordException, UserRoleNotAssignedException, PhoneNotVerifiedException, UnrecognizedDeviceException, AdminNotApprovedException {
+
+    String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
+    loginRequestDTO.setTelephone(normalizedPhone);
+
+    SecurityUser securityUser = securityUserRepository.findByUserNumber(normalizedPhone)
+            .orElseThrow(NotFoundUserException::new);
+
+    if (!passwordEncoder.matches(loginRequestDTO.getPassword(), securityUser.getPassword())) {
+        throw new IncorrectPasswordException();
+    }
+
+    if (securityUser.getRoles() == null || securityUser.getRoles().isEmpty()) {
+        throw new UserRoleNotAssignedException();
+    }
+
+    if (securityUser instanceof User user) {
+        if (!user.isActive()) {
+            throw new UserNotActiveException();
+        }
+
+        if (!user.isPhoneVerified()) {
+            sendLoginVerificationCode(user, loginRequestDTO);
+            throw new PhoneNotVerifiedException();
+        }
+
+        String currentDevice = loginRequestDTO.getDeviceInfo();
+        String lastDevice = user.getLastLoginDevice();
+
+        if (lastDevice != null && !lastDevice.equals(currentDevice)) {
+            sendLoginVerificationCode(user, loginRequestDTO);
+            throw new UnrecognizedDeviceException();
+        }
+
+        TokenResponseDTO tokenResponseDTO = generateTokenResponse(user, loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
+
+
+        user.setLastLoginDevice(currentDevice);
+        user.setLastLoginAt(LocalDateTime.now());
+        user.setLastLoginIp(loginRequestDTO.getIpAddress());
+        user.setLastLoginAppVersion(loginRequestDTO.getAppVersion());
+        user.setLastLoginPlatform(loginRequestDTO.getPlatform());
+
+        userRepository.save(user);
+
+        return tokenResponseDTO;
+    }
+
+
+    throw new NotFoundUserException();
+}
+
+public TokenResponseDTO generateTokenResponse(SecurityUser user, String ipAddress, String deviceInfo) {
+    tokenRepository.deleteBySecurityUserId(user.getId());
+
+    LocalDateTime issuedAt = LocalDateTime.now();
+    LocalDateTime accessExpiry = issuedAt.plusMinutes(15);
+    LocalDateTime refreshExpiry = issuedAt.plusDays(7);
+
+    String accessTokenValue = jwtService.generateAccessToken(user, ipAddress, deviceInfo, accessExpiry);
+    String refreshTokenValue = jwtService.generateRefreshToken(user, ipAddress, deviceInfo, refreshExpiry);
+
+    TokenDTO accessToken = new TokenDTO(
+            accessTokenValue,
+            issuedAt,
+            accessExpiry,
+            issuedAt,
+            ipAddress,
+            deviceInfo,
+            TokenType.ACCESS
+    );
+
+    TokenDTO refreshToken = new TokenDTO(
+            refreshTokenValue,
+            issuedAt,
+            refreshExpiry,
+            issuedAt,
+            ipAddress,
+            deviceInfo,
+            TokenType.REFRESH
+    );
+
+    return new TokenResponseDTO(accessToken, refreshToken);
+}
+
+
+private void sendLoginVerificationCode(SecurityUser user, LoginRequestDTO request) {
+    verificationCodeRepository.cancelAllActiveCodes(user.getId(), VerificationPurpose.LOGIN);
+
+    String code = randomSixDigit();
+
+    VerificationCode verificationCode = VerificationCode.builder()
+            .code(code)
+            .user(user)
+            .createdAt(LocalDateTime.now())
+            .expiresAt(LocalDateTime.now().plusMinutes(3))
+            .channel(VerificationChannel.SMS)
+            .used(false)
+            .cancelled(false)
+            .purpose(VerificationPurpose.LOGIN)
+            .ipAddress(request.getIpAddress())
+            .userAgent(request.getDeviceInfo())
+            .build();
+
+    verificationCodeRepository.save(verificationCode);
+    System.out.println("Gönderilen kod :" + code);
+    // SMS gönder
+        /*
+        SmsRequest smsRequest = new SmsRequest();
+        smsRequest.setTo(user.getUserNumber());
+        smsRequest.setMessage("City Card - Giriş için doğrulama kodunuz: " + code + ". Kod 3 dakika geçerlidir.");
+        smsService.sendSms(smsRequest);
+
+         */
+}
+
+
+public String randomSixDigit() {
+    Random random = new Random();
+    return String.format("%06d", random.nextInt(1000000)); // 000000 ile 999999 arasında 6 hane
+}
+
+@Override
+public TokenDTO updateAccessToken(UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) throws UserNotFoundException, InvalidRefreshTokenException, TokenIsExpiredException, TokenNotFoundException {
+    if (!jwtService.validateRefreshToken(updateAccessTokenRequestDTO.getRefreshToken())) {
+        throw new InvalidRefreshTokenException();
+    }
+
+    String userNumber = jwtService.getRefreshTokenClaims(updateAccessTokenRequestDTO.getRefreshToken()).getSubject();
+
+    Optional<SecurityUser> user = securityUserRepository.findByUserNumber(userNumber);
+
+    if (user.isEmpty()) {
+        throw new UserNotFoundException();
+    }
+
+    LocalDateTime issuedAt = LocalDateTime.now();
+    LocalDateTime accessExpiry = issuedAt.plusMinutes(15);
+
+    String newAccessToken = jwtService.generateAccessToken(
+            user.orElse(null),
+            updateAccessTokenRequestDTO.getIpAddress(),
+            updateAccessTokenRequestDTO.getDeviceInfo(),
+            accessExpiry
+    );
+
+    return new TokenDTO(
+            newAccessToken,
+            issuedAt,
+            accessExpiry,
+            issuedAt,
+            updateAccessTokenRequestDTO.getIpAddress(),
+            updateAccessTokenRequestDTO.getDeviceInfo(),
+            TokenType.ACCESS
+    );
+}
 
 
 }
