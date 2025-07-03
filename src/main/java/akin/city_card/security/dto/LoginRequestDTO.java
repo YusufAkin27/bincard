@@ -12,4 +12,6 @@ public class LoginRequestDTO {
     private String deviceInfo; // Kullanıcının giriş yaptığı cihaz bilgisi
     private String appVersion;
     private String platform;
+    private Double latitude;
+    private Double longitude;
 }

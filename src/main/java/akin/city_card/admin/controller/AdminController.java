@@ -4,6 +4,9 @@ import akin.city_card.admin.core.request.*;
 import akin.city_card.admin.core.response.LoginHistoryDTO;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.service.abstracts.AdminService;
+import akin.city_card.location.core.response.LocationDTO;
+import akin.city_card.location.exceptions.NoLocationFoundException;
+import akin.city_card.location.model.Location;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.user.core.request.ChangePasswordRequest;
@@ -45,23 +48,23 @@ public class AdminController {
     }
 
     @PutMapping("/update-device-info")
-    public ResponseMessage updateDeviceInfo(@AuthenticationPrincipal UserDetails userDetails,@RequestBody UpdateDeviceInfoRequest request) {
+    public ResponseMessage updateDeviceInfo(@AuthenticationPrincipal UserDetails userDetails,@RequestBody UpdateDeviceInfoRequest request) throws AdminNotFoundException {
         return adminService.updateDeviceInfo(request,userDetails.getUsername());
     }
 
     // 4. Konum & Oturum Bilgileri
     @GetMapping("/location")
-    public ResponseMessage getLocation(@AuthenticationPrincipal UserDetails userDetails) {
+    public LocationDTO getLocation(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundException, NoLocationFoundException {
         return adminService.getLocation(userDetails.getUsername());
     }
 
     @PutMapping("/location")
-    public ResponseMessage updateLocation(@AuthenticationPrincipal UserDetails userDetails,@RequestBody UpdateLocationRequest request) {
+    public ResponseMessage updateLocation(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdateLocationRequest request) throws AdminNotFoundException {
         return adminService.updateLocation(request,userDetails.getUsername());
     }
 
     @GetMapping("/login-history")
-    public DataResponseMessage<List<LoginHistoryDTO>> getLoginHistory(@AuthenticationPrincipal UserDetails userDetails) {
+    public DataResponseMessage<List<LoginHistoryDTO>> getLoginHistory(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundException {
         return adminService.getLoginHistory(userDetails.getUsername());
     }
 

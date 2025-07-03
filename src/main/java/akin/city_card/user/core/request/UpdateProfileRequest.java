@@ -7,6 +7,6 @@ public class UpdateProfileRequest {
     private String name;           // ad
     private String surname;        // soyad
     private String email;
-    private String password;
+
 
 }

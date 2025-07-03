@@ -171,13 +171,6 @@ public class UserManager implements UserService {
             isUpdated = true;
         }
 
-        if (updateProfileRequest.getPassword() != null && !updateProfileRequest.getPassword().isBlank()) {
-            if (updateProfileRequest.getPassword().length() < 6) {
-                return new ResponseMessage("Şifre en az 6 karakter olmalıdır.",true);
-            }
-            user.setPassword(passwordEncoder.encode(updateProfileRequest.getPassword()));
-            isUpdated = true;
-        }
 
         if (isUpdated) {
             userRepository.save(user);

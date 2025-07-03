@@ -1,5 +1,7 @@
 package akin.city_card.security.entity;
 
+import akin.city_card.location.model.Location;
+import akin.city_card.user.model.LoginHistory;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -10,7 +12,9 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -62,20 +66,7 @@ public class SecurityUser implements UserDetails {
     @Column( length = 50)
     private String surname;
 
-    @Column(name = "last_login_at")
-    private LocalDateTime lastLoginAt;
 
-    @Column(name = "last_login_ip", length = 45)
-    private String lastLoginIp;
-
-    @Column(name = "last_login_device")
-    private String lastLoginDevice;
-
-    @Column(name = "last_login_platform")
-    private String lastLoginPlatform;
-
-    @Column(name = "last_login_app_version")
-    private String lastLoginAppVersion;
 
     @Column(nullable = false)
     private boolean isActive = true;
@@ -101,6 +92,13 @@ public class SecurityUser implements UserDetails {
     @UpdateTimestamp
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("loginAt DESC")
+    private List<LoginHistory> loginHistory = new ArrayList<>();
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("recordedAt DESC")
+    private List<Location> locationHistory = new ArrayList<>();
 
     // ✅ Constructor (roller ile birlikte)
     public SecurityUser(String userNumber, Set<Role> roles) {

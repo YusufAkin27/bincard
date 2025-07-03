@@ -5,6 +5,8 @@ import akin.city_card.admin.core.request.UpdateDeviceInfoRequest;
 import akin.city_card.admin.core.request.UpdateLocationRequest;
 import akin.city_card.admin.core.response.LoginHistoryDTO;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
+import akin.city_card.location.core.response.LocationDTO;
+import akin.city_card.location.exceptions.NoLocationFoundException;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.user.core.request.ChangePasswordRequest;
 import akin.city_card.user.core.request.UpdateProfileRequest;
@@ -22,11 +24,11 @@ public interface AdminService {
 
     ResponseMessage updateProfile(@Valid UpdateProfileRequest request, String username) throws AdminNotFoundException;
 
-    ResponseMessage updateDeviceInfo(UpdateDeviceInfoRequest request, String username);
+    ResponseMessage updateDeviceInfo(UpdateDeviceInfoRequest request, String username) throws AdminNotFoundException;
 
-    ResponseMessage getLocation(String username);
+    LocationDTO getLocation(String username) throws AdminNotFoundException, NoLocationFoundException;
 
-    ResponseMessage updateLocation(UpdateLocationRequest request, String username);
+    ResponseMessage updateLocation(UpdateLocationRequest request, String username) throws AdminNotFoundException;
 
-    DataResponseMessage<List<LoginHistoryDTO>> getLoginHistory(String username);
+    DataResponseMessage<List<LoginHistoryDTO>> getLoginHistory(String username) throws AdminNotFoundException;
 }

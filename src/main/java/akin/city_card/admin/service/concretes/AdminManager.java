@@ -8,21 +8,25 @@ import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
 import akin.city_card.admin.service.abstracts.AdminService;
+import akin.city_card.location.core.response.LocationDTO;
+import akin.city_card.location.exceptions.NoLocationFoundException;
+import akin.city_card.location.model.Location;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.Role;
 import akin.city_card.security.repository.SecurityUserRepository;
-import akin.city_card.sms.SmsService;
 import akin.city_card.user.core.request.ChangePasswordRequest;
 import akin.city_card.user.core.request.UpdateProfileRequest;
 import akin.city_card.user.exceptions.*;
+import akin.city_card.user.model.LoginHistory;
+import akin.city_card.user.repository.LoginHistoryRepository;
 import akin.city_card.user.service.concretes.PhoneNumberFormatter;
-import akin.city_card.verification.repository.VerificationCodeRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,15 +35,12 @@ import java.util.List;
 public class AdminManager implements AdminService {
     private final SecurityUserRepository securityUserRepository;
     private final PasswordEncoder passwordEncoder;
-    private final SmsService smsService;
     private final AdminRepository adminRepository;
-
-    private final VerificationCodeRepository verificationCodeRepository;
+    private final LoginHistoryRepository loginHistoryRepository;
 
     @Override
     @Transactional
     public ResponseMessage signUp(CreateAdminRequest adminRequest) throws PhoneIsNotValidException, PhoneNumberAlreadyExistsException {
-        // Telefon kontrolü
         if (!PhoneNumberFormatter.PhoneValid(adminRequest.getTelephone())) {
             throw new PhoneIsNotValidException();
         }
@@ -57,15 +58,14 @@ public class AdminManager implements AdminService {
                 .ipAddress(adminRequest.getIpAddress())
                 .deviceUuid(adminRequest.getDeviceUuid())
                 .userNumber(adminRequest.getTelephone())
-                .superAdminApproved(true) // Eğer super admin onayı gerekiyorsa false olmalı
+                .superAdminApproved(true)
                 .isDeleted(false)
                 .isActive(true)
-                .name(adminRequest.getName()) // Placeholder, frontend üzerinden alınmalı
-                .surname(adminRequest.getSurname()) // Placeholder, frontend üzerinden alınmalı
-                .email(adminRequest.getEmail()) // opsiyonel olarak frontend'den alınabilir
+                .name(adminRequest.getName())
+                .surname(adminRequest.getSurname())
+                .email(adminRequest.getEmail())
                 .phoneVerified(true)
                 .emailVerified(false)
-                .lastLoginDevice(adminRequest.getUserAgent())
                 .build();
 
         // Kaydet
@@ -130,13 +130,6 @@ public class AdminManager implements AdminService {
             updated = true;
         }
 
-        if (request.getPassword() != null && !request.getPassword().isBlank()) {
-            if (request.getPassword().length() < 6) {
-                return new ResponseMessage("Şifre en az 6 karakter olmalıdır.",true);
-            }
-            admin.setPassword(passwordEncoder.encode(request.getPassword()));
-            updated = true;
-        }
 
         if (!updated) {
             return new ResponseMessage("Güncellenicek hiç bir veri bulunamadı", false);
@@ -144,28 +137,73 @@ public class AdminManager implements AdminService {
 
         adminRepository.save(admin);
 
-        return new ResponseMessage("Profil bilgileriniz başarıyla güncellendi.",true);
+        return new ResponseMessage("Profil bilgileriniz başarıyla güncellendi.", true);
     }
 
 
     @Override
-    public ResponseMessage updateDeviceInfo(UpdateDeviceInfoRequest request, String username) {
-        return null;
+    public ResponseMessage updateDeviceInfo(UpdateDeviceInfoRequest request, String username) throws AdminNotFoundException {
+        Admin admin = findByUserNumber(username);
+
+        admin.setFcmToken(request.getFcmToken());
+        admin.setDeviceUuid(request.getDeviceUuid());
+        admin.setIpAddress(request.getIpAddress());
+        adminRepository.save(admin);
+
+        return new ResponseMessage("Cihaz bilgileri başarıyla güncellendi.", true);
+    }
+
+
+    @Override
+    public LocationDTO getLocation(String username) throws AdminNotFoundException, NoLocationFoundException {
+        Admin admin = findByUserNumber(username);
+
+        List<Location> locations = admin.getLocationHistory();
+        if (locations == null || locations.isEmpty()) {
+            throw new NoLocationFoundException();
+        }
+
+        Location latestLocation = locations.get(0);
+
+        return LocationDTO.builder()
+                .latitude(latestLocation.getLatitude())
+                .longitude(latestLocation.getLongitude())
+                .recordedAt(latestLocation.getRecordedAt())
+                .userId(admin.getId())
+                .build();
+    }
+
+
+    @Override
+    public ResponseMessage updateLocation(UpdateLocationRequest request, String username) throws AdminNotFoundException {
+        Admin admin = findByUserNumber(username);
+        Location location = new Location();
+        location.setLatitude(request.getLatitude());
+        location.setLongitude(request.getLongitude());
+        location.setRecordedAt(LocalDateTime.now());
+        location.setUser(admin);
+        admin.getLocationHistory().add(location);
+        adminRepository.save(admin);
+        return new ResponseMessage("Lokasyon güncellendi.", true);
     }
 
     @Override
-    public ResponseMessage getLocation(String username) {
-        return null;
-    }
+    public DataResponseMessage<List<LoginHistoryDTO>> getLoginHistory(String username) throws AdminNotFoundException {
+        Admin admin = findByUserNumber(username);
 
-    @Override
-    public ResponseMessage updateLocation(UpdateLocationRequest request, String username) {
-        return null;
-    }
+        List<LoginHistory> historyList = loginHistoryRepository.findAllByUserOrderByLoginAtDesc(admin);
 
-    @Override
-    public DataResponseMessage<List<LoginHistoryDTO>> getLoginHistory(String username) {
-        return null;
+        List<LoginHistoryDTO> responseList = historyList.stream()
+                .map(login -> LoginHistoryDTO.builder()
+                        .ipAddress(login.getIpAddress())
+                        .device(login.getDevice())
+                        .platform(login.getPlatform())
+                        .appVersion(login.getAppVersion())
+                        .loginAt(login.getLoginAt())
+                        .build())
+                .toList();
+
+        return new DataResponseMessage<>("Giriş geçmişi başarıyla getirildi.", true, responseList);
     }
 
 
