@@ -1,15 +1,24 @@
 package akin.city_card.superadmin.controller;
 
+import akin.city_card.admin.core.response.AuditLogDTO;
+import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.AdminApprovalRequest;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.exception.SuperAdminNotFoundException;
+import akin.city_card.superadmin.exceptions.AdminApprovalRequestNotFoundException;
+import akin.city_card.superadmin.exceptions.RequestAlreadyProcessedException;
 import akin.city_card.superadmin.service.abstracts.SuperAdminService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -22,27 +31,25 @@ public class SuperAdminController {
 
     private final SuperAdminService superAdminService;
 
-    // Tüm onay bekleyen admin isteklerini getir
+
     @GetMapping("/admin-requests/pending")
-    public DataResponseMessage<List<AdminApprovalRequest>> getPendingAdminRequests(@AuthenticationPrincipal UserDetails userDetails) {
-        return superAdminService.getPendingAdminRequest(userDetails.getUsername());
+    public DataResponseMessage<List<AdminApprovalRequest>> getPendingAdminRequests(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) throws SuperAdminNotFoundException {
+        return superAdminService.getPendingAdminRequest(userDetails.getUsername(), pageable);
     }
 
-    // Admin isteğini onayla
     @PostMapping("/admin-requests/{adminId}/approve")
     public ResponseMessage approveAdminRequest(@AuthenticationPrincipal UserDetails userDetails,
-                                               @PathVariable Long adminId) {
+                                               @PathVariable Long adminId) throws AdminNotFoundException, AdminApprovalRequestNotFoundException, RequestAlreadyProcessedException {
         return superAdminService.approveAdminRequest(userDetails.getUsername(), adminId);
     }
-
-    // Admin isteğini reddet (soft delete)
     @PostMapping("/admin-requests/{adminId}/reject")
     public ResponseMessage rejectAdminRequest(@AuthenticationPrincipal UserDetails userDetails,
-                                              @PathVariable Long adminId) {
+                                              @PathVariable Long adminId) throws AdminNotFoundException, AdminApprovalRequestNotFoundException, RequestAlreadyProcessedException {
         return superAdminService.rejectAdminRequest(userDetails.getUsername(), adminId);
     }
 
-    // --- OTOMOBİS GELİR İSTATİSTİKLERİ ---
 
     // Günlük gelirler
     @GetMapping("/bus-income/daily")
@@ -73,15 +80,15 @@ public class SuperAdminController {
     public DataResponseMessage<Map<String, BigDecimal>> getIncomeSummary(@AuthenticationPrincipal UserDetails userDetails) {
         return superAdminService.getIncomeSummary(userDetails.getUsername());
     }
-/*
+
     //admin log geçmişleri
     @GetMapping("/audit-logs")
     public DataResponseMessage<List<AuditLogDTO>> getAuditLogs(@RequestParam(required = false) String fromDate,
-                                        @RequestParam(required = false) String toDate,
-                                        @RequestParam(required = false) String action,
-                                        @AuthenticationPrincipal UserDetails userDetails) {
+                                                               @RequestParam(required = false) String toDate,
+                                                               @RequestParam(required = false) String action,
+                                                               @AuthenticationPrincipal UserDetails userDetails) {
         return superAdminService.getAuditLogs(fromDate, toDate, action, userDetails.getUsername());
     }
 
- */
+
 }

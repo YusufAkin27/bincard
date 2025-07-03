@@ -3,6 +3,7 @@ package akin.city_card.admin.service.concretes;
 import akin.city_card.admin.core.request.CreateAdminRequest;
 import akin.city_card.admin.core.request.UpdateDeviceInfoRequest;
 import akin.city_card.admin.core.request.UpdateLocationRequest;
+import akin.city_card.admin.core.response.AuditLogDTO;
 import akin.city_card.admin.core.response.LoginHistoryDTO;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.Admin;
@@ -205,6 +206,8 @@ public class AdminManager implements AdminService {
 
         return new DataResponseMessage<>("Giriş geçmişi başarıyla getirildi.", true, responseList);
     }
+
+
 
 
 }

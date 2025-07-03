@@ -1,8 +1,6 @@
 package akin.city_card.bus.model;
 
 import akin.city_card.buscard.model.BusCard;
-import akin.city_card.driver.model.Driver;
-import akin.city_card.route.model.Route;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -17,31 +15,32 @@ public class BusRide {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Hangi otobüse bindi
+    // Biniş yapılan otobüs
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Bus bus;
 
-    // Hangi rota üzerindeydi
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Route route;
-
-    // Binmeyi yapan kart (kullanıcı)
+    // Yolcuya ait kart
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private BusCard busCard;
-
-    // O anki şoför (otobüsün şoförü zaten)
-    @ManyToOne(fetch = FetchType.LAZY)
-    private Driver driver;
 
     // Biniş zamanı
     @Column(nullable = false)
     private LocalDateTime boardingTime;
 
-    // Ücret
+    // Hesaplanan ücret
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal fareCharged;
 
-    // İşlem durumu (başarılı, iptal vb.)
+    // İşlem durumu
     @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private RideStatus status;
+
+    // Otomatik tarih takibi eklenebilir
+    @PrePersist
+    public void prePersist() {
+        if (boardingTime == null) {
+            boardingTime = LocalDateTime.now();
+        }
+    }
 }

@@ -1,12 +1,14 @@
 package akin.city_card.admin.controller;
 
-import akin.city_card.admin.core.request.*;
+import akin.city_card.admin.core.request.CreateAdminRequest;
+import akin.city_card.admin.core.request.UpdateDeviceInfoRequest;
+import akin.city_card.admin.core.request.UpdateLocationRequest;
+import akin.city_card.admin.core.response.AuditLogDTO;
 import akin.city_card.admin.core.response.LoginHistoryDTO;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.service.abstracts.AdminService;
 import akin.city_card.location.core.response.LocationDTO;
 import akin.city_card.location.exceptions.NoLocationFoundException;
-import akin.city_card.location.model.Location;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.user.core.request.ChangePasswordRequest;
@@ -38,18 +40,18 @@ public class AdminController {
     // 3. Güvenlik & Hesap Ayarları
     @PutMapping("/change-password")
     public ResponseMessage changePassword(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody ChangePasswordRequest request) throws IncorrectCurrentPasswordException, PasswordSameAsOldException, AdminNotFoundException, PasswordTooShortException {
-        return adminService.changePassword(request,userDetails.getUsername());
+        return adminService.changePassword(request, userDetails.getUsername());
     }
 
 
     @PutMapping("/update-profile")
-    public ResponseMessage updateProfile(@AuthenticationPrincipal UserDetails userDetails,@Valid @RequestBody UpdateProfileRequest request) throws AdminNotFoundException {
-        return adminService.updateProfile(request,userDetails.getUsername());
+    public ResponseMessage updateProfile(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody UpdateProfileRequest request) throws AdminNotFoundException {
+        return adminService.updateProfile(request, userDetails.getUsername());
     }
 
     @PutMapping("/update-device-info")
-    public ResponseMessage updateDeviceInfo(@AuthenticationPrincipal UserDetails userDetails,@RequestBody UpdateDeviceInfoRequest request) throws AdminNotFoundException {
-        return adminService.updateDeviceInfo(request,userDetails.getUsername());
+    public ResponseMessage updateDeviceInfo(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdateDeviceInfoRequest request) throws AdminNotFoundException {
+        return adminService.updateDeviceInfo(request, userDetails.getUsername());
     }
 
     // 4. Konum & Oturum Bilgileri
@@ -60,7 +62,7 @@ public class AdminController {
 
     @PutMapping("/location")
     public ResponseMessage updateLocation(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdateLocationRequest request) throws AdminNotFoundException {
-        return adminService.updateLocation(request,userDetails.getUsername());
+        return adminService.updateLocation(request, userDetails.getUsername());
     }
 
     @GetMapping("/login-history")
