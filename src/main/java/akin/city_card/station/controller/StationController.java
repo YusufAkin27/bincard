@@ -1,9 +1,9 @@
 package akin.city_card.station.controller;
 
+import akin.city_card.bus.core.response.StationDTO;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.station.core.request.CreateStationRequest;
-import akin.city_card.station.core.request.StationDTO;
 import akin.city_card.station.core.request.UpdateStationRequest;
 import akin.city_card.station.service.abstracts.StationService;
 import lombok.RequiredArgsConstructor;

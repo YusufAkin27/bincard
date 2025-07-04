@@ -65,7 +65,6 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(new ResponseMessage("Kullanıcı doğrulanamadı", false));
         }
-
         try {
             System.out.printf(userDetails.getUsername());
             ResponseMessage response = authService.logout(userDetails.getUsername());
