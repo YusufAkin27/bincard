@@ -27,6 +27,8 @@ public class BusCard {
     @Enumerated(EnumType.STRING)
     private CardType type;
 
+    private BigDecimal balance;
+
     @Enumerated(EnumType.STRING)
     private CardStatus status;
 

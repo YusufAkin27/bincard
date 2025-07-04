@@ -19,6 +19,7 @@ import akin.city_card.bus.model.RideStatus;
 import akin.city_card.bus.repository.BusLocationRepository;
 import akin.city_card.bus.repository.BusRepository;
 import akin.city_card.bus.repository.BusRideRepository;
+import akin.city_card.bus.service.abstracts.BusLocationService;
 import akin.city_card.bus.service.abstracts.BusService;
 import akin.city_card.buscard.model.BusCard;
 import akin.city_card.buscard.model.CardType;
@@ -30,6 +31,8 @@ import akin.city_card.response.ResponseMessage;
 import akin.city_card.route.model.Route;
 import akin.city_card.route.repository.RouteRepository;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.station.model.Station;
+import akin.city_card.station.repository.StationRepository;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -58,6 +61,8 @@ public class BusManager implements BusService {
     private final BusLocationRepository busLocationRepository;
     private  final CardRepository cardRepository;
     private final BusRideRepository   busRideRepository;
+    private final BusLocationService busLocationService;
+    private final StationRepository stationRepository;
 
     @Override
     public DataResponseMessage<List<BusDTO>> getAllBuses(String username) throws AdminNotFoundException {
@@ -332,7 +337,7 @@ public class BusManager implements BusService {
                 fare = 0.0;
             }
         }
-/*
+
         // 6. Bakiye kontrolü
         if (card.getBalance().compareTo(BigDecimal.valueOf(fare)) < 0) {
             throw new InsufficientBalanceException();
@@ -343,7 +348,7 @@ public class BusManager implements BusService {
         cardRepository.save(card);
 
 
- */
+
         // 8. Yeni biniş kaydı oluştur
         BusRide ride = new BusRide();
         ride.setBus(bus);
@@ -358,21 +363,87 @@ public class BusManager implements BusService {
 
     @Override
     public DataResponseMessage<List<BusRideDTO>> getBusRides(Long busId, String username) {
+       /*
+        Bus bus = busRepository.findById(busId).orElseThrow(BusNotFoundException::new);
+
+        // İstersen burada username ile yetki kontrolü yapabilirsin (örneğin admin veya bus yetkilisi mi)
+
+        List<BusRide> rides = busRideRepository.findByBusId(busId);
+        List<BusRideDTO> rideDTOs = rides.stream()
+                .map(busConverter::toBusRideDTO)
+                .toList();
+
+        return DataResponseMessage.<List<BusRideDTO>>builder()
+                .data(rideDTOs)
+                .build();
+
+        */
         return null;
     }
 
     @Override
     public ResponseMessage assignRoute(Long busId, Long routeId, String username) {
-        return null;
+        Bus bus = busRepository.findById(busId).orElseThrow();
+        Route route = routeRepository.findById(routeId).orElseThrow();
+
+
+        bus.setRoute(route);
+        busRepository.save(bus);
+
+        return new ResponseMessage("Route assigned to bus successfully", true);
     }
 
     @Override
     public DataResponseMessage<List<StationDTO>> getRouteStations(Long busId, String username) {
+        /*
+        Bus bus = busRepository.findById(busId).orElseThrow();
+
+        Route route = bus.getRoute();
+        if (route == null) {
+            return DataResponseMessage.<List<StationDTO>>builder()
+                    .build();
+        }
+
+        List<Station> stations = stationRepository.findByRouteIdOrderByOrderAsc(route.getId());
+        List<StationDTO> stationDTOs = stations.stream()
+                .map(stationConverter::toStationDTO)
+                .toList();
+
+        return DataResponseMessage.<List<StationDTO>>builder()
+                .data(stationDTOs)
+                .build();
+
+
+         */
         return null;
     }
 
     @Override
     public DataResponseMessage<Double> getEstimatedArrivalTime(Long busId, Long stationId, String username) {
+
+        /*
+        Bus bus = busRepository.findById(busId).orElseThrow(BusNotFoundException::new);
+        Station station = stationRepository.findById(stationId).orElseThrow(StationNotFoundException::new);
+
+        Route route = bus.getRoute();
+        if (route == null) {
+            return DataResponseMessage.<Double>builder()
+                    .success(false)
+                    .message("No route assigned to bus")
+                    .build();
+        }
+
+
+        double eta = busLocationService.calculateEstimatedArrivalTime(bus, station);
+
+        return DataResponseMessage.<Double>builder()
+                .success(true)
+                .data(eta)
+                .message("Estimated arrival time calculated successfully")
+                .build();
+
+         */
         return null;
     }
+
 }

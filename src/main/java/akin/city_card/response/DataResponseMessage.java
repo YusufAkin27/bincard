@@ -1,7 +1,11 @@
 package akin.city_card.response;
 
 
+import lombok.Builder;
+import lombok.Data;
 
+@Builder
+@Data
 public class DataResponseMessage<T> extends ResponseMessage {
     private T data;
 
