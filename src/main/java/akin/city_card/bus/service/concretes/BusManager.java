@@ -61,8 +61,7 @@ public class BusManager implements BusService {
     private final BusLocationRepository busLocationRepository;
     private  final CardRepository cardRepository;
     private final BusRideRepository   busRideRepository;
-    private final BusLocationService busLocationService;
-    private final StationRepository stationRepository;
+
 
     @Override
     public DataResponseMessage<List<BusDTO>> getAllBuses(String username) throws AdminNotFoundException {
