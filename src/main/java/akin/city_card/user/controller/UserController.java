@@ -45,7 +45,7 @@ public class UserController {
         if (xfHeader == null || xfHeader.isEmpty()) {
             return request.getRemoteAddr();
         }
-        return xfHeader.split(",")[0]; // Eğer birden fazla IP varsa ilkini al
+        return xfHeader.split(",")[0];
     }
 
 
@@ -116,6 +116,11 @@ public class UserController {
     @DeleteMapping("/deactivate")
     public ResponseMessage deactivateUser(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
         return userService.deactivateUser(userDetails.getUsername());
+    }
+
+    @PatchMapping("/update-fcm-token")
+    public boolean updateFCMToken(@RequestParam String fcmToken,@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+        return userService.updateFCMToken(fcmToken,userDetails.getUsername());
     }
 }
 

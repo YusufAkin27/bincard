@@ -439,6 +439,13 @@ public class UserManager implements UserService {
         return new ResponseMessage(resetTokenUUID + "", true);
     }
 
+    @Override
+    public boolean updateFCMToken(String fcmToken, String username) throws UserNotFoundException {
+        User user=userRepository.findByUserNumber(username);
+        user.getDeviceInfo().setFcmToken(fcmToken);
+        return true;
+    }
+
 
     public String randomSixDigit() {
         Random random = new Random();

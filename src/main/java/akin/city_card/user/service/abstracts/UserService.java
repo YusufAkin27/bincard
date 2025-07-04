@@ -44,4 +44,6 @@ public interface UserService {
     ResponseMessage resendPhoneVerificationCode(ResendPhoneVerificationRequest request) throws UserNotFoundException;
 
     ResponseMessage verifyPhoneForPasswordReset(VerificationCodeRequest verificationCodeRequest) throws InvalidOrUsedVerificationCodeException, ExpiredVerificationCodeException;
+
+    boolean updateFCMToken(String fcmToken, String username) throws UserNotFoundException;
 }
