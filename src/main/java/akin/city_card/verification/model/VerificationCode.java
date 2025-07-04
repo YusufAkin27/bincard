@@ -32,6 +32,8 @@ public class VerificationCode {
     @Column(nullable = false, length = 10)
     private VerificationChannel channel; // EMAIL / SMS
 
+    private LocalDateTime verifiedAt;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private VerificationPurpose purpose; // REGISTER, LOGIN, etc.

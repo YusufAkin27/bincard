@@ -3,12 +3,14 @@ package akin.city_card.user.controller;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.security.exception.VerificationCodeStillValidException;
 import akin.city_card.user.core.request.*;
 import akin.city_card.user.core.response.UserDTO;
 import akin.city_card.user.exceptions.*;
 import akin.city_card.user.service.abstracts.UserService;
 import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
 import akin.city_card.verification.exceptions.InvalidOrUsedVerificationCodeException;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,11 +29,25 @@ public class UserController {
 
     private final UserService userService;
 
-
     @PostMapping("/sign-up")
-    public ResponseMessage signUp(@Valid @RequestBody CreateUserRequest createUserRequest) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException {
+    public ResponseMessage signUp(@Valid @RequestBody CreateUserRequest createUserRequest, HttpServletRequest request) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException, VerificationCodeStillValidException {
+        String ipAddress = extractClientIp(request);
+        String userAgent = request.getHeader("User-Agent");
+
+        createUserRequest.setIpAddress(ipAddress);
+        createUserRequest.setUserAgent(userAgent);
+
         return userService.create(createUserRequest);
     }
+
+    private String extractClientIp(HttpServletRequest request) {
+        String xfHeader = request.getHeader("X-Forwarded-For");
+        if (xfHeader == null || xfHeader.isEmpty()) {
+            return request.getRemoteAddr();
+        }
+        return xfHeader.split(",")[0]; // Eğer birden fazla IP varsa ilkini al
+    }
+
 
     //sms doğrulama
     @PostMapping("/verify/phone")
@@ -71,7 +87,7 @@ public class UserController {
     }
 
     @PostMapping("/collective-sign-up")
-    public List<ResponseMessage> collectiveSignUp(@Valid @RequestBody CreateUserRequestList createUserRequestList) throws PhoneNumberRequiredException, InvalidPhoneNumberFormatException, PhoneNumberAlreadyExistsException {
+    public List<ResponseMessage> collectiveSignUp(@Valid @RequestBody CreateUserRequestList createUserRequestList) throws PhoneNumberRequiredException, InvalidPhoneNumberFormatException, PhoneNumberAlreadyExistsException, VerificationCodeStillValidException {
         return userService.createAll(createUserRequestList.getUsers());
     }
 

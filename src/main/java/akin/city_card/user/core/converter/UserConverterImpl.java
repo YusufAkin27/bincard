@@ -22,21 +22,15 @@ public class UserConverterImpl implements UserConverter {
 
     @Override
     public User convertUserToCreateUser(CreateUserRequest request) {
-
-        // Profil bilgilerini oluştur
         ProfileInfo profileInfo = ProfileInfo.builder()
                 .name(request.getFirstName())
                 .surname(request.getLastName())
                 .build();
-
-        // Cihaz bilgilerini oluştur
         DeviceInfo deviceInfo = DeviceInfo.builder()
                 .deviceUuid(request.getDeviceUuid())
                 .ipAddress(request.getIpAddress())
                 .fcmToken(request.getFcmToken())
                 .build();
-
-        // Kullanıcı nesnesini oluştur
         return User.builder()
                 .userNumber(request.getTelephone())
                 .password(passwordEncoder.encode(request.getPassword()))

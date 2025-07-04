@@ -414,14 +414,12 @@ public class AuthManager implements AuthService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // 1. En son LOGIN kodunu getir
         VerificationCode lastCode = verificationCodeRepository.findAll().stream()
                 .filter(vc -> vc.getUser().getId().equals(user.getId())
                         && vc.getPurpose() == VerificationPurpose.LOGIN)
                 .max(Comparator.comparing(VerificationCode::getCreatedAt))
                 .orElse(null);
 
-        // 2. Kod hâlâ geçerliyse: yeni kod gönderme, kullanıcıdan mevcut kodu girmesini iste
         if (lastCode != null && !lastCode.isUsed() && !lastCode.isCancelled() && lastCode.getExpiresAt().isAfter(now)) {
             Duration timeSinceSent = Duration.between(lastCode.getCreatedAt(), now);
             long secondsSinceSent = timeSinceSent.toSeconds();

@@ -6,6 +6,7 @@ import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.security.exception.VerificationCodeStillValidException;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.sms.SmsService;
 import akin.city_card.user.core.converter.UserConverter;
@@ -53,62 +54,94 @@ public class UserManager implements UserService {
 
     @Override
     @Transactional
-    public ResponseMessage create(CreateUserRequest request) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException {
+    public ResponseMessage create(CreateUserRequest request) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException, VerificationCodeStillValidException {
 
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(request.getTelephone());
         request.setTelephone(normalizedPhone);
-        if (securityUserRepository.existsByUserNumber(request.getTelephone())) {
-            throw new PhoneNumberAlreadyExistsException();
+
+        Optional<SecurityUser> existingUserOpt = securityUserRepository.findByUserNumber(request.getTelephone());
+
+        if (existingUserOpt.isPresent()) {
+            SecurityUser existingUser = existingUserOpt.get();
+
+            if (existingUser.isEnabled()) {
+                throw new PhoneNumberAlreadyExistsException();
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+
+            VerificationCode lastCode = verificationCodeRepository.findAll().stream()
+                    .filter(vc -> vc.getUser().getId().equals(existingUser.getId()) &&
+                            vc.getPurpose() == VerificationPurpose.REGISTER)
+                    .max(Comparator.comparing(VerificationCode::getCreatedAt))
+                    .orElse(null);
+
+            if (lastCode != null && !lastCode.isUsed() && !lastCode.isCancelled() && lastCode.getExpiresAt().isAfter(now)) {
+                throw new VerificationCodeStillValidException();
+            }
+
+            verificationCodeRepository.cancelAllActiveCodes(existingUser.getId(), VerificationPurpose.REGISTER);
+
+            sendVerificationCode(existingUser, request.getIpAddress(), request.getUserAgent(), VerificationPurpose.REGISTER);
+
+            return new ResponseMessage("Telefon numarası daha önce kayıt olmuş ancak aktif edilmemiş. Yeni doğrulama kodu gönderildi.", true);
         }
+
         userRules.checkPhoneIsUnique(request.getTelephone());
 
         User user = userConverter.convertUserToCreateUser(request);
-
-
         userRepository.save(user);
 
-
-        String code = randomSixDigit();
-/*
-        SmsRequest smsRequest = new SmsRequest();
-        smsRequest.setTo(request.getTelephone());
-        smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code +
-                ". Kod 3 dakika boyunca geçerlidir.");
-        smsService.sendSms(smsRequest);
-
-
- */
-        System.out.println(code);
-        // 6. Doğrulama kodu bilgisi oluştur ve kaydet
-        VerificationCode verificationCode = new VerificationCode();
-        verificationCode.setCode(code);
-        verificationCode.setCreatedAt(LocalDateTime.now());
-        verificationCode.setUser(user);
-        verificationCode.setChannel(VerificationChannel.SMS);
-        verificationCode.setExpiresAt(LocalDateTime.now().plusMinutes(3));
-        verificationCode.setCancelled(false);
-        verificationCode.setPurpose(VerificationPurpose.REGISTER);
-        verificationCode.setUsed(false);
-        verificationCode.setIpAddress(request.getIpAddress());
-        verificationCode.setUserAgent(request.getUserAgent());
-        if (user.getVerificationCodes() == null) {
-            user.setVerificationCodes(new ArrayList<>());
-            user.getVerificationCodes().add(verificationCode);
-        }
-
-        verificationCodeRepository.save(verificationCode);
+        sendVerificationCode(user, request.getIpAddress(), request.getUserAgent(), VerificationPurpose.REGISTER);
 
         return new ResponseMessage("Kullanıcı başarıyla oluşturuldu. Doğrulama kodu SMS olarak gönderildi.", true);
     }
+
+    private void sendVerificationCode(SecurityUser user, String ipAddress, String userAgent, VerificationPurpose purpose) {
+        String code = randomSixDigit();
+        LocalDateTime now = LocalDateTime.now();
+
+        VerificationCode verificationCode = VerificationCode.builder()
+                .code(code)
+                .user(user)
+                .createdAt(now)
+                .expiresAt(now.plusMinutes(3))
+                .channel(VerificationChannel.SMS)
+                .used(false)
+                .cancelled(false)
+                .purpose(purpose)
+                .ipAddress(ipAddress)
+                .userAgent(userAgent)
+                .build();
+
+        verificationCodeRepository.save(verificationCode);
+
+        // SmsRequest smsRequest = new SmsRequest();
+        // smsRequest.setTo(user.getUserNumber());
+        // smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code + ". Kod 3 dakika geçerlidir.");
+        // smsService.sendSms(smsRequest);
+
+        System.out.println("📩 Yeni kayıt doğrulama kodu: " + code);
+    }
+
+
 
     @Override
     @Transactional
     public ResponseMessage verifyPhone(VerificationCodeRequest request) throws UserNotFoundException {
         VerificationCode verificationCode = verificationCodeRepository
-                .findTopByCodeAndCancelledFalseAndUsedFalseOrderByCreatedAtDesc(request.getCode());
+                .findTopByCodeOrderByCreatedAtDesc(request.getCode());
 
         if (verificationCode == null) {
-            return new ResponseMessage("Geçersiz veya kullanılmamış doğrulama kodu bulunamadı.", false);
+            return new ResponseMessage("Böyle bir doğrulama kodu bulunamadı.", false);
+        }
+
+        if (verificationCode.isUsed()) {
+            return new ResponseMessage("Bu doğrulama kodu zaten kullanılmış.", false);
+        }
+
+        if (verificationCode.isCancelled()) {
+            return new ResponseMessage("Bu doğrulama kodu iptal edilmiş.", false);
         }
 
         if (verificationCode.getExpiresAt().isBefore(LocalDateTime.now())) {
@@ -117,27 +150,22 @@ public class UserManager implements UserService {
             return new ResponseMessage("Doğrulama kodunun süresi dolmuş.", false);
         }
 
-
-        if (!verificationCode.getCode().equals(request.getCode())) {
-            verificationCodeRepository.save(verificationCode);
-
-        }
-
         SecurityUser securityUser = verificationCode.getUser();
-        if (securityUser instanceof User user) {
-            user.setPhoneVerified(true);
-            user.setActive(true);
-            userRepository.save(user);
-        } else {
+        if (!(securityUser instanceof User user)) {
             throw new UserNotFoundException();
-
         }
 
+        user.setPhoneVerified(true);
+        user.setActive(true);
+        userRepository.save(user);
 
         verificationCode.setUsed(true);
+        verificationCode.setVerifiedAt(LocalDateTime.now());
         verificationCodeRepository.save(verificationCode);
 
-        return new ResponseMessage("Telefon numarası başarıyla doğrulandı.", true);
+        verificationCodeRepository.cancelAllActiveCodes(user.getId(), VerificationPurpose.REGISTER);
+
+        return new ResponseMessage("Telefon numarası başarıyla doğrulandı. Hesabınız aktif hale getirildi.", true);
     }
 
 
@@ -188,7 +216,7 @@ public class UserManager implements UserService {
     }
 
     @Override
-    public List<ResponseMessage> createAll(List<CreateUserRequest> createUserRequests) throws PhoneNumberRequiredException, InvalidPhoneNumberFormatException, PhoneNumberAlreadyExistsException {
+    public List<ResponseMessage> createAll(List<CreateUserRequest> createUserRequests) throws PhoneNumberRequiredException, InvalidPhoneNumberFormatException, PhoneNumberAlreadyExistsException, VerificationCodeStillValidException {
         List<ResponseMessage> responseMessages = new ArrayList<>();
         for (CreateUserRequest createUserRequest : createUserRequests) {
             responseMessages.add(create(createUserRequest));

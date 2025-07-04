@@ -3,6 +3,7 @@ package akin.city_card.user.service.abstracts;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.security.exception.VerificationCodeStillValidException;
 import akin.city_card.user.core.request.*;
 import akin.city_card.user.core.response.UserDTO;
 import akin.city_card.user.exceptions.*;
@@ -17,7 +18,7 @@ import java.util.UUID;
 
 public interface UserService {
 
-    ResponseMessage create(CreateUserRequest createUserRequest) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException;
+    ResponseMessage create(CreateUserRequest createUserRequest) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException, VerificationCodeStillValidException;
 
     UserDTO getProfile(String username) throws UserNotFoundException;
 
@@ -26,7 +27,7 @@ public interface UserService {
 
     ResponseMessage deactivateUser(String username) throws UserNotFoundException;
 
-    List<ResponseMessage> createAll(@Valid List<CreateUserRequest> createUserRequests) throws PhoneNumberRequiredException, InvalidPhoneNumberFormatException, PhoneNumberAlreadyExistsException;
+    List<ResponseMessage> createAll(@Valid List<CreateUserRequest> createUserRequests) throws PhoneNumberRequiredException, InvalidPhoneNumberFormatException, PhoneNumberAlreadyExistsException, VerificationCodeStillValidException;
 
     ResponseMessage updateProfilePhoto(String username, MultipartFile file) throws PhotoSizeLargerException, IOException, UserNotFoundException;
 

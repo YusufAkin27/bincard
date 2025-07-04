@@ -29,4 +29,6 @@ public interface VerificationCodeRepository extends JpaRepository<VerificationCo
     VerificationCode findTopByCodeAndCancelledFalseOrderByCreatedAtDesc(String code);
 
     List<VerificationCode> findAllByIpAddressAndUserAgentAndUsedFalseAndCancelledFalse(String ipAddress, String deviceInfo);
+
+    VerificationCode findTopByCodeOrderByCreatedAtDesc(String code);
 }

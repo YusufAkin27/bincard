@@ -5,6 +5,6 @@ import akin.city_card.security.exception.BusinessException;
 
 public class PhoneNumberAlreadyExistsException extends BusinessException {
     public PhoneNumberAlreadyExistsException() {
-        super("Bu telefon numarası zaten kullanımda.");
+        super("Bu telefon numarasıyla zaten aktif bir kullanıcı mevcut.");
     }
 }
