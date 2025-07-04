@@ -64,12 +64,10 @@ public class SecurityUser implements UserDetails {
     @OrderBy("loginAt DESC")
     private List<LoginHistory> loginHistory = new ArrayList<>();
 
-    // Kullanıcının konum geçmişi
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("recordedAt DESC")
     private List<Location> locationHistory = new ArrayList<>();
 
-    // Kullanıcının son bilinen konumu
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_location_id")
     private Location lastKnownLocation;
@@ -78,7 +76,6 @@ public class SecurityUser implements UserDetails {
 
 
 
-    // ✅ Constructor (roller ile birlikte)
     public SecurityUser(String userNumber, Set<Role> roles) {
         this.userNumber = userNumber;
         this.roles = roles;
