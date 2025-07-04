@@ -29,6 +29,7 @@ import akin.city_card.verification.model.VerificationChannel;
 import akin.city_card.verification.model.VerificationCode;
 import akin.city_card.verification.model.VerificationPurpose;
 import akin.city_card.verification.repository.VerificationCodeRepository;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -76,7 +77,7 @@ public class AuthManager implements AuthService {
 
     @Override
     @Transactional
-    public TokenResponseDTO phoneVerify(LoginPhoneVerifyCodeRequest phoneVerifyCode)
+    public TokenResponseDTO phoneVerify(LoginPhoneVerifyCodeRequest phoneVerifyCode, HttpServletRequest httpServletRequest)
             throws InvalidVerificationCodeException,
             ExpiredVerificationCodeException,
             UsedVerificationCodeException,
@@ -105,21 +106,38 @@ public class AuthManager implements AuthService {
         verificationCodeRepository.save(verificationCode);
 
         SecurityUser user = verificationCode.getUser();
+
         tokenRepository.deleteBySecurityUserId(user.getId());
 
+        LoginMetadataDTO metadata = extractClientMetadata(httpServletRequest);
+
+        if (phoneVerifyCode.getDeviceInfo() != null) metadata.setDeviceInfo(phoneVerifyCode.getDeviceInfo());
+        if (phoneVerifyCode.getPlatform() != null) metadata.setPlatform(phoneVerifyCode.getPlatform());
+        if (phoneVerifyCode.getAppVersion() != null) metadata.setAppVersion(phoneVerifyCode.getAppVersion());
+        if (phoneVerifyCode.getDeviceUuid() != null) metadata.setDeviceUuid(phoneVerifyCode.getDeviceUuid());
+        if (phoneVerifyCode.getFcmToken() != null) metadata.setFcmToken(phoneVerifyCode.getFcmToken());
+        if (phoneVerifyCode.getLatitude() != null) metadata.setLatitude(phoneVerifyCode.getLatitude());
+        if (phoneVerifyCode.getLongitude() != null) metadata.setLongitude(phoneVerifyCode.getLongitude());
+
+        applyLoginMetadataToUser(user, metadata);
 
         securityUserRepository.save(user);
 
-        return generateTokenResponse(user, verificationCode.getIpAddress(), verificationCode.getUserAgent());
+        return generateTokenResponse(user, metadata.getIpAddress(), metadata.getDeviceInfo());
     }
 
 
     @Override
-    public ResponseMessage adminLogin(LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserRoleNotAssignedException, UserDeletedException, AdminNotApprovedException, UserNotActiveException, AdminNotFoundException, UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException {
+    public ResponseMessage adminLogin(LoginRequestDTO loginRequestDTO, HttpServletRequest request)
+            throws IncorrectPasswordException, UserRoleNotAssignedException, UserDeletedException,
+            AdminNotApprovedException, UserNotActiveException, AdminNotFoundException,
+            UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException {
+
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
         loginRequestDTO.setTelephone(normalizedPhone);
 
         Admin admin = adminRepository.findByUserNumber(normalizedPhone);
+        if (admin == null) throw new AdminNotFoundException();
 
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), admin.getPassword())) {
             throw new IncorrectPasswordException();
@@ -129,31 +147,34 @@ public class AuthManager implements AuthService {
             throw new UserRoleNotAssignedException();
         }
 
-        if (admin != null) {
-            if (admin.isDeleted()) throw new UserDeletedException();
-            if (!admin.isSuperAdminApproved()) throw new AdminNotApprovedException();
-            if (!admin.isActive()) throw new UserNotActiveException();
+        if (admin.isDeleted()) throw new UserDeletedException();
+        if (!admin.isSuperAdminApproved()) throw new AdminNotApprovedException();
+        if (!admin.isActive()) throw new UserNotActiveException();
 
-            LoginMetadataDTO metadata = new LoginMetadataDTO();
-            BeanUtils.copyProperties(loginRequestDTO, metadata);  // Spring framework'ten gelir
-            applyLoginMetadataToUser(admin, metadata);
+        LoginMetadataDTO metadata = extractClientMetadata(request);
 
-            // 5. Admin’i kaydet
-            adminRepository.save(admin);
-            sendLoginVerificationCode(admin.getUserNumber(), loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
-        } else {
-            throw new AdminNotFoundException();
-        }
-        return new ResponseMessage("SMS gönderildi lütfen giriş için sms kodunu giriniz", true);
+        applyLoginMetadataToUser(admin, metadata);
+
+        adminRepository.save(admin);
+
+        sendLoginVerificationCode(admin.getUserNumber(), metadata.getIpAddress(), metadata.getDeviceInfo());
+
+        return new ResponseMessage("SMS gönderildi, lütfen giriş için kodu giriniz", true);
     }
 
 
+
     @Override
-    public ResponseMessage superadminLogin(LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserRoleNotAssignedException, UserNotActiveException, UserDeletedException, SuperAdminNotFoundException, UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException {
+    public ResponseMessage superadminLogin(HttpServletRequest request, LoginRequestDTO loginRequestDTO)
+            throws IncorrectPasswordException, UserRoleNotAssignedException, UserNotActiveException,
+            UserDeletedException, SuperAdminNotFoundException, UserNotFoundException,
+            VerificationCodeStillValidException, VerificationCooldownException {
+
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
         loginRequestDTO.setTelephone(normalizedPhone);
 
         SuperAdmin superAdmin = superAdminRepository.findByUserNumber(normalizedPhone);
+        if (superAdmin == null) throw new SuperAdminNotFoundException();
 
         if (!passwordEncoder.matches(loginRequestDTO.getPassword(), superAdmin.getPassword())) {
             throw new IncorrectPasswordException();
@@ -163,45 +184,43 @@ public class AuthManager implements AuthService {
             throw new UserRoleNotAssignedException();
         }
 
-        if (superAdmin != null) {
-            if (superAdmin.isDeleted()) throw new UserDeletedException();
-            if (!superAdmin.isActive()) throw new UserNotActiveException();
+        if (superAdmin.isDeleted()) throw new UserDeletedException();
+        if (!superAdmin.isActive()) throw new UserNotActiveException();
 
-            LoginMetadataDTO metadata = new LoginMetadataDTO();
-            BeanUtils.copyProperties(loginRequestDTO, metadata);  // Spring framework'ten gelir
-            applyLoginMetadataToUser(superAdmin, metadata);
+        LoginMetadataDTO metadata = extractClientMetadata(request);
 
-            // 5. Admin’i kaydet
-            superAdminRepository.save(superAdmin);
-            sendLoginVerificationCode(superAdmin.getUserNumber(), loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
-        } else {
-            throw new SuperAdminNotFoundException();
-        }
-        return new ResponseMessage("SMS gönderildi lütfen giriş için sms kodunu giriniz", true);
+        applyLoginMetadataToUser(superAdmin, metadata);
+
+        superAdminRepository.save(superAdmin);
+        sendLoginVerificationCode(superAdmin.getUserNumber(), metadata.getIpAddress(), metadata.getDeviceInfo());
+
+        return new ResponseMessage("SMS gönderildi, lütfen giriş için SMS kodunu giriniz", true);
     }
 
     @Override
-    public TokenDTO refreshLogin(RefreshLoginRequest request) throws TokenIsExpiredException, TokenNotFoundException, InvalidRefreshTokenException, UserNotFoundException, IncorrectPasswordException {
-        if (!jwtService.validateRefreshToken(request.getRefreshToken())) {
+    public TokenDTO refreshLogin(HttpServletRequest request, RefreshLoginRequest refreshRequest)
+            throws TokenIsExpiredException, TokenNotFoundException, InvalidRefreshTokenException,
+            UserNotFoundException, IncorrectPasswordException {
+
+        if (!jwtService.validateRefreshToken(refreshRequest.getRefreshToken())) {
             throw new InvalidRefreshTokenException();
         }
 
-        String userNumber = jwtService.getRefreshTokenClaims(request.getRefreshToken()).getSubject();
-
+        String userNumber = jwtService.getRefreshTokenClaims(refreshRequest.getRefreshToken()).getSubject();
         Optional<SecurityUser> optionalSecurityUser = securityUserRepository.findByUserNumber(userNumber);
-
         if (optionalSecurityUser.isEmpty()) {
             throw new UserNotFoundException();
         }
-        if (!passwordEncoder.matches(request.getPassword(), optionalSecurityUser.get().getPassword())) {
-            throw new IncorrectPasswordException();
-        }
+
         SecurityUser user = optionalSecurityUser.get();
 
-        LoginMetadataDTO metadata = new LoginMetadataDTO();
-        BeanUtils.copyProperties(request, metadata);  // Spring framework'ten gelir
+        if (!passwordEncoder.matches(refreshRequest.getPassword(), user.getPassword())) {
+            throw new IncorrectPasswordException();
+        }
+
+        LoginMetadataDTO metadata = extractClientMetadata(request);
+
         applyLoginMetadataToUser(user, metadata);
-        // 5. Admin’i kaydet
         securityUserRepository.save(user);
 
         LocalDateTime issuedAt = LocalDateTime.now();
@@ -209,8 +228,8 @@ public class AuthManager implements AuthService {
 
         String newAccessToken = jwtService.generateAccessToken(
                 user,
-                request.getIpAddress(),
-                request.getDeviceInfo(),
+                metadata.getIpAddress(),
+                metadata.getDeviceInfo(),
                 accessExpiry
         );
 
@@ -219,11 +238,12 @@ public class AuthManager implements AuthService {
                 issuedAt,
                 accessExpiry,
                 issuedAt,
-                request.getIpAddress(),
-                request.getDeviceInfo(),
+                metadata.getIpAddress(),
+                metadata.getDeviceInfo(),
                 TokenType.ACCESS
         );
     }
+
 
     @Override
     public ResponseMessage resendVerifyCode(String telephone) throws UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException {
@@ -235,10 +255,11 @@ public class AuthManager implements AuthService {
 
     @Override
     @Transactional
-    public TokenResponseDTO login(LoginRequestDTO loginRequestDTO)
+    public TokenResponseDTO login(LoginRequestDTO loginRequestDTO, HttpServletRequest request)
             throws NotFoundUserException, UserDeletedException, UserNotActiveException,
             IncorrectPasswordException, UserRoleNotAssignedException, PhoneNotVerifiedException,
-            UnrecognizedDeviceException, AdminNotApprovedException, UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException {
+            UnrecognizedDeviceException, AdminNotApprovedException, UserNotFoundException,
+            VerificationCodeStillValidException, VerificationCooldownException {
 
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
         loginRequestDTO.setTelephone(normalizedPhone);
@@ -255,39 +276,35 @@ public class AuthManager implements AuthService {
         }
 
         if (securityUser instanceof User user) {
-            if (!user.isActive()) {
-                throw new UserNotActiveException();
-            }
+            if (!user.isActive()) throw new UserNotActiveException();
+
+            LoginMetadataDTO metadata = extractClientMetadata(request);
 
             if (!user.isPhoneVerified()) {
-                sendLoginVerificationCode(user.getUserNumber(), loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
+                sendLoginVerificationCode(user.getUserNumber(), metadata.getIpAddress(), metadata.getDeviceInfo());
                 throw new PhoneNotVerifiedException();
             }
 
-            String currentDevice = loginRequestDTO.getDeviceInfo();
+            String currentDevice = metadata.getDeviceInfo();
             String lastDevice = null;
 
             List<LoginHistory> loginHistory = user.getLoginHistory();
             if (loginHistory != null && !loginHistory.isEmpty()) {
-                lastDevice = loginHistory.get(0).getDevice();  // En güncel giriş
+                lastDevice = loginHistory.get(0).getDevice();
             }
 
             if (lastDevice != null && !lastDevice.equals(currentDevice)) {
-                sendLoginVerificationCode(user.getUserNumber(), loginRequestDTO.getIpAddress(), loginRequestDTO.getDeviceInfo());
+                sendLoginVerificationCode(user.getUserNumber(), metadata.getIpAddress(), metadata.getDeviceInfo());
                 throw new UnrecognizedDeviceException();
             }
 
-            // ✔ Token oluştur
-            TokenResponseDTO tokenResponseDTO = generateTokenResponse(
+        TokenResponseDTO tokenResponseDTO = generateTokenResponse(
                     user,
-                    loginRequestDTO.getIpAddress(),
-                    loginRequestDTO.getDeviceInfo()
+                    metadata.getIpAddress(),
+                    metadata.getDeviceInfo()
             );
 
-            LoginMetadataDTO metadata = new LoginMetadataDTO();
-            BeanUtils.copyProperties(loginRequestDTO, metadata);  // Spring framework'ten gelir
             applyLoginMetadataToUser(user, metadata);
-
             securityUserRepository.save(user);
 
             return tokenResponseDTO;
@@ -295,6 +312,29 @@ public class AuthManager implements AuthService {
 
         throw new NotFoundUserException();
     }
+
+    private String extractClientIp(HttpServletRequest request) {
+        String xfHeader = request.getHeader("X-Forwarded-For");
+        if (xfHeader == null) {
+            return request.getRemoteAddr();
+        }
+        return xfHeader.split(",")[0];  // Eğer proxy varsa ilk IP gerçek istemcidir
+    }
+    public LoginMetadataDTO extractClientMetadata(HttpServletRequest request) {
+        String ipAddress = extractClientIp(request);
+        String userAgent = request.getHeader("User-Agent"); // Tarayıcı / OS bilgisi
+        String acceptLanguage = request.getHeader("Accept-Language"); // Cihaz dil tercihi
+        String referer = request.getHeader("Referer"); // Geldiği sayfa varsa
+        String xRealIp = request.getHeader("X-Real-IP"); // Bazı proxy'ler burayı da doldurur
+
+        return LoginMetadataDTO.builder()
+                .ipAddress(ipAddress)
+                .deviceInfo(userAgent) // Gelişmiş cihaz bilgisi
+                .platform(request.getHeader("Sec-CH-UA-Platform")) // Modern tarayıcılarda platform bilgisi
+                .appVersion(request.getHeader("App-Version")) // Mobil uygulamalar gönderirse
+                .build();
+    }
+
 
     public void applyLoginMetadataToUser(SecurityUser user, LoginMetadataDTO metadata) {
         LoginHistory history = LoginHistory.builder()
@@ -435,7 +475,9 @@ public class AuthManager implements AuthService {
     }
 
     @Override
-    public TokenDTO updateAccessToken(UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) throws UserNotFoundException, InvalidRefreshTokenException, TokenIsExpiredException, TokenNotFoundException {
+    public TokenDTO updateAccessToken(UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO, HttpServletRequest request)
+            throws UserNotFoundException, InvalidRefreshTokenException, TokenIsExpiredException, TokenNotFoundException {
+
         if (!jwtService.validateRefreshToken(updateAccessTokenRequestDTO.getRefreshToken())) {
             throw new InvalidRefreshTokenException();
         }
@@ -444,11 +486,11 @@ public class AuthManager implements AuthService {
 
         SecurityUser user = securityUserRepository.findByUserNumber(userNumber)
                 .orElseThrow(UserNotFoundException::new);
-        LoginMetadataDTO metadata = new LoginMetadataDTO();
-        BeanUtils.copyProperties(updateAccessTokenRequestDTO, metadata);  // Spring framework'ten gelir
+
+        LoginMetadataDTO metadata = extractClientMetadata(request);
+
         applyLoginMetadataToUser(user, metadata);
 
-        // ✔ Kalıcı hale getir
         securityUserRepository.save(user);
 
         LocalDateTime issuedAt = LocalDateTime.now();
@@ -456,8 +498,8 @@ public class AuthManager implements AuthService {
 
         String newAccessToken = jwtService.generateAccessToken(
                 user,
-                updateAccessTokenRequestDTO.getIpAddress(),
-                updateAccessTokenRequestDTO.getDeviceInfo(),
+                metadata.getIpAddress(),
+                metadata.getDeviceInfo(),
                 accessExpiry
         );
 
@@ -466,11 +508,12 @@ public class AuthManager implements AuthService {
                 issuedAt,
                 accessExpiry,
                 issuedAt,
-                updateAccessTokenRequestDTO.getIpAddress(),
-                updateAccessTokenRequestDTO.getDeviceInfo(),
+                metadata.getIpAddress(),
+                metadata.getDeviceInfo(),
                 TokenType.ACCESS
         );
     }
+
 
 
 }

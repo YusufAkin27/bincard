@@ -6,7 +6,6 @@ import lombok.Data;
 public class LoginPhoneVerifyCodeRequest {
     private String code;
 
-    private String ipAddress;
     private String deviceInfo;
     private String platform;
     private String appVersion;
