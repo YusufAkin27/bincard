@@ -2,6 +2,7 @@ package akin.city_card.bus.repository;
 
 import akin.city_card.bus.model.BusRide;
 import akin.city_card.bus.model.RideStatus;
+import akin.city_card.buscard.model.BusCard;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.LocalDateTime;
@@ -13,4 +14,6 @@ public interface BusRideRepository extends JpaRepository<BusRide,Long> {
     List<BusRide> findByBoardingTimeBetweenAndBusDriverUserNumberAndStatus(LocalDateTime start, LocalDateTime end, String username, RideStatus rideStatus);
 
     List<BusRide> findByBusDriverUserNumberAndStatus(String username, RideStatus rideStatus);
+
+    BusRide findTopByBusCardOrderByBoardingTimeDesc(BusCard card);
 }
