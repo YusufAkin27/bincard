@@ -62,7 +62,6 @@ public class UserConverterImpl implements UserConverter {
 
                 .profilePicture(profile != null ? profile.getProfilePicture() : null)
 
-                // Varsa ek profil alanları:
                 .nationalId(user.getNationalId())
                 .birthDate(user.getBirthDate())
 

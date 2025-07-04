@@ -90,6 +90,8 @@ public class UserManager implements UserService {
         userRules.checkPhoneIsUnique(request.getTelephone());
 
         User user = userConverter.convertUserToCreateUser(request);
+        System.out.println(user.toString());
+
         userRepository.save(user);
 
         sendVerificationCode(user, request.getIpAddress(), request.getUserAgent(), VerificationPurpose.REGISTER);
