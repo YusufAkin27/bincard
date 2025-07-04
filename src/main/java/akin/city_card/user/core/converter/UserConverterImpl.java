@@ -1,5 +1,7 @@
 package akin.city_card.user.core.converter;
 
+import akin.city_card.security.entity.DeviceInfo;
+import akin.city_card.security.entity.ProfileInfo;
 import akin.city_card.security.entity.Role;
 import akin.city_card.user.core.request.CreateUserRequest;
 import akin.city_card.user.core.response.UserDTO;
@@ -20,39 +22,56 @@ public class UserConverterImpl implements UserConverter {
 
     @Override
     public User convertUserToCreateUser(CreateUserRequest request) {
-        return User.builder()
+
+        // Profil bilgilerini oluştur
+        ProfileInfo profileInfo = ProfileInfo.builder()
                 .name(request.getFirstName())
-                .surname(request.getLastName())//+90 ile başlıcak
-                .userNumber(request.getTelephone()) // username olarak kullanılacak
+                .surname(request.getLastName())
+                .build();
+
+        // Cihaz bilgilerini oluştur
+        DeviceInfo deviceInfo = DeviceInfo.builder()
+                .deviceUuid(request.getDeviceUuid())
+                .ipAddress(request.getIpAddress())
+                .fcmToken(request.getFcmToken())
+                .build();
+
+        // Kullanıcı nesnesini oluştur
+        return User.builder()
+                .userNumber(request.getTelephone())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .roles(Collections.singleton(Role.USER)) // Varsayılan kullanıcı rolü
-                .isActive(false) // Henüz doğrulanmadı
+                .roles(Collections.singleton(Role.USER))
+                .isActive(false)
                 .allowNegativeBalance(false)
                 .negativeBalanceLimit(0.0)
                 .emailVerified(false)
                 .walletActivated(false)
                 .autoTopUpEnabled(false)
                 .phoneVerified(false)
-                .ipAddress(request.getIpAddress()) // Mobil uygulamadan gelen
-                .deviceUuid(request.getDeviceUuid())
-                .fcmToken(request.getFcmToken())
+                .profileInfo(profileInfo)
+                .deviceInfo(deviceInfo)
                 .build();
     }
+
     @Override
     public UserDTO convertUserToDTO(User user) {
+        ProfileInfo profile = user.getProfileInfo();
+
         return UserDTO.builder()
-                .name(user.getName())
-                .surname(user.getSurname())
-                .email(user.getEmail())
+                .name(profile != null ? profile.getName() : null)
+                .surname(profile != null ? profile.getSurname() : null)
+                .email(profile != null ? profile.getEmail() : null)
                 .phoneNumber(user.getUserNumber())
 
                 .phoneVerified(user.isPhoneVerified())
                 .emailVerified(user.isEmailVerified())
 
-                .profilePicture(user.getProfilePicture())
+                .profilePicture(profile != null ? profile.getProfilePicture() : null)
 
+                // Varsa ek profil alanları:
                 .nationalId(user.getNationalId())
                 .birthDate(user.getBirthDate())
+
                 .walletActivated(user.isWalletActivated())
 
                 .allowNegativeBalance(user.isAllowNegativeBalance())

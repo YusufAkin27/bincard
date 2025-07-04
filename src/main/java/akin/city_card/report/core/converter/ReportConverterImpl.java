@@ -32,7 +32,7 @@ public class ReportConverterImpl implements ReportConverter {
         return AdminReportDTO.builder()
                 .id(report.getId())
                 .userId(report.getUser().getId())
-                .userName(report.getUser().getName())
+                .userName(report.getUser().getProfileInfo().getName())
                 .category(report.getCategory())
                 .message(report.getMessage())
                 .photoUrls(report.getPhotos().stream().map(ReportPhoto::getImageUrl).toList())
@@ -62,9 +62,9 @@ public class ReportConverterImpl implements ReportConverter {
                 .id(response.getId())
                 .responseMessage(response.getResponseMessage())
                 .admin(response.getAdmin() != null ?
-                        new SimpleAdminDTO(response.getAdmin().getId(), response.getAdmin().getName()) : null)
+                        new SimpleAdminDTO(response.getAdmin().getId(), response.getAdmin().getProfileInfo().getName()) : null)
                 .user(response.getUser() != null ?
-                        new SimpleUserDTO(response.getUser().getId(), response.getUser().getName()) : null)
+                        new SimpleUserDTO(response.getUser().getId(), response.getUser().getProfileInfo().getName()) : null)
                 .replies(response.getReplies().stream()
                         .map(this::convertToAdminResponseDTO)
                         .toList())
@@ -80,8 +80,8 @@ public class ReportConverterImpl implements ReportConverter {
         return UserReportResponseDTO.builder()
                 .id(response.getId())
                 .responseMessage(response.getResponseMessage())
-                .admin(response.getAdmin() != null ? new SimpleAdminDTO(response.getAdmin().getId(), response.getAdmin().getName()) : null)
-                .user(response.getUser() != null ? new SimpleUserDTO(response.getUser().getId(), response.getUser().getName()) : null)
+                .admin(response.getAdmin() != null ? new SimpleAdminDTO(response.getAdmin().getId(), response.getAdmin().getProfileInfo().getName()) : null)
+                .user(response.getUser() != null ? new SimpleUserDTO(response.getUser().getId(), response.getUser().getProfileInfo().getName()) : null)
                 .replies(response.getReplies().stream().map(this::convertToUserResponseDTO).toList())
                 .respondedAt(response.getRespondedAt())
                 .build();

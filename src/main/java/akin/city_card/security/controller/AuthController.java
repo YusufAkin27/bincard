@@ -25,17 +25,17 @@ public class AuthController {
 
 
     @PostMapping("/login")
-    public TokenResponseDTO login(@RequestBody LoginRequestDTO loginRequestDTO) throws UserNotActiveException, UserRoleNotAssignedException, UserDeletedException, NotFoundUserException, IncorrectPasswordException, UnrecognizedDeviceException, PhoneNotVerifiedException, AdminNotApprovedException {
+    public TokenResponseDTO login(@RequestBody LoginRequestDTO loginRequestDTO) throws UserNotActiveException, UserRoleNotAssignedException, UserDeletedException, NotFoundUserException, IncorrectPasswordException, UnrecognizedDeviceException, PhoneNotVerifiedException, AdminNotApprovedException, UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException {
         return authService.login(loginRequestDTO);
     }
 
     @PostMapping("/admin-login")
-    public ResponseMessage adminLogin(@RequestBody LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserNotActiveException, UserRoleNotAssignedException, UserDeletedException, AdminNotFoundException, AdminNotApprovedException, NotFoundUserException {
+    public ResponseMessage adminLogin(@RequestBody LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserNotActiveException, UserRoleNotAssignedException, UserDeletedException, AdminNotFoundException, AdminNotApprovedException, NotFoundUserException, UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException {
         return authService.adminLogin(loginRequestDTO);
     }
 
     @PostMapping("/superadmin-login")
-    public ResponseMessage superadminLogin(@RequestBody LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserNotActiveException, UserRoleNotAssignedException, UserDeletedException, SuperAdminNotFoundException {
+    public ResponseMessage superadminLogin(@RequestBody LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserNotActiveException, UserRoleNotAssignedException, UserDeletedException, SuperAdminNotFoundException, UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException {
         return authService.superadminLogin(loginRequestDTO);
     }
 
@@ -48,6 +48,10 @@ public class AuthController {
     @PostMapping("/refresh")
     public TokenDTO updateAccessToken(@RequestBody UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) throws TokenIsExpiredException, TokenNotFoundException, UserNotFoundException, InvalidRefreshTokenException {
         return authService.updateAccessToken(updateAccessTokenRequestDTO);
+    }
+    @PostMapping("/resend-verify-code")
+    public ResponseMessage resendVerifyCode(@RequestParam String telephone) throws UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException {
+        return authService.resendVerifyCode(telephone);
     }
 
     @PostMapping("/refresh-login")

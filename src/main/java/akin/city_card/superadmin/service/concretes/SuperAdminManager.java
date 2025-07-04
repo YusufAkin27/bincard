@@ -97,7 +97,7 @@ public class SuperAdminManager implements SuperAdminService {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(23, 59, 59);
 
-        List<BusRide> rides = busRideRepository.findByRideTimeBetweenAndBusDriverUserNumber(start, end, username);
+        List<BusRide> rides = busRideRepository.findByBoardingTimeBetweenAndBusDriverUserNumber(start, end, username);
 
         Map<String, BigDecimal> incomePerBus = new HashMap<>();
 
@@ -186,9 +186,9 @@ public class SuperAdminManager implements SuperAdminService {
         List<AuditLog> logs;
 
         if (actionType != null) {
-            logs = auditLogRepository.findByUsernameAndActionAndTimestampBetween(username, actionType, from, to);
+            logs = auditLogRepository.findByTelephoneAndActionAndTimestampBetween(username, actionType, from, to);
         } else {
-            logs = auditLogRepository.findByUsernameAndTimestampBetween(username, from, to);
+            logs = auditLogRepository.findByTelephoneAndTimestampBetween(username, from, to);
         }
 
         List<AuditLogDTO> dtoList = logs.stream().map(auditLogConverter::mapToDto).toList();

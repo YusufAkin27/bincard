@@ -9,10 +9,6 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     User findByUserNumber(String username) throws UserNotFoundException;
 
-    boolean existsByUserNumber(String telephone);
-
-    boolean existsByEmail(String email);
-
     boolean existsByNationalId(String nationalId);
 
 

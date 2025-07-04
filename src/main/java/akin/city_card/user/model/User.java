@@ -35,11 +35,6 @@ public class User extends SecurityUser {
     @Column(name = "birth_date")
     private LocalDate birthDate;
 
-    @CreationTimestamp
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PasswordResetToken> resetTokens = new ArrayList<>();

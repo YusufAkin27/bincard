@@ -1,5 +1,6 @@
 package akin.city_card;
 
+import akin.city_card.security.entity.ProfileInfo;
 import akin.city_card.security.entity.Role;
 import akin.city_card.superadmin.model.SuperAdmin;
 import akin.city_card.superadmin.repository.SuperAdminRepository;
@@ -23,25 +24,25 @@ public class SuperAdminInitializer implements CommandLineRunner {
         String defaultPassword = "123456";
 
         SuperAdmin exists = superAdminRepository.findByUserNumber(defaultPhone);
-
         if (exists != null) {
             System.out.println("✅ SuperAdmin zaten mevcut.");
             return;
         }
 
+        // Yeni profil bilgisi oluştur
+        ProfileInfo profileInfo = ProfileInfo.builder()
+                .name("Super")
+                .surname("Admin")
+                .email("superadmin@example.com")
+                .build();
+
         SuperAdmin superAdmin = new SuperAdmin();
         superAdmin.setUserNumber(defaultPhone);
         superAdmin.setPassword(passwordEncoder.encode(defaultPassword));
-        superAdmin.setRoles(Set.of(Role.SUPERADMIN, Role.ADMIN, Role.USER, Role.DRVIER)); // Roller
+        superAdmin.setRoles(Set.of(Role.SUPERADMIN, Role.ADMIN, Role.USER, Role.DRVIER));
         superAdmin.setActive(true);
         superAdmin.setDeleted(false);
-
-        // Zorunlu alanlar:
-        superAdmin.setName("Super");
-        superAdmin.setSurname("Admin");
-
-        // Opsiyonel ama varsa doldurulabilir:
-        superAdmin.setEmail("superadmin@example.com");
+        superAdmin.setProfileInfo(profileInfo); // ➕ burası önemli
         superAdmin.setEmailVerified(true);
         superAdmin.setPhoneVerified(true);
 
@@ -49,4 +50,5 @@ public class SuperAdminInitializer implements CommandLineRunner {
 
         System.out.println("🚀 SuperAdmin başarıyla oluşturuldu → " + defaultPhone + " / " + defaultPassword);
     }
+
 }

@@ -57,8 +57,8 @@ public class UserManager implements UserService {
 
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(request.getTelephone());
         request.setTelephone(normalizedPhone);
-        if (securityUserRepository.existsByUserNumber(request.getTelephone())){
-            throw  new PhoneNumberAlreadyExistsException();
+        if (securityUserRepository.existsByUserNumber(request.getTelephone())) {
+            throw new PhoneNumberAlreadyExistsException();
         }
         userRules.checkPhoneIsUnique(request.getTelephone());
 
@@ -118,7 +118,6 @@ public class UserManager implements UserService {
         }
 
 
-
         if (!verificationCode.getCode().equals(request.getCode())) {
             verificationCodeRepository.save(verificationCode);
 
@@ -129,11 +128,10 @@ public class UserManager implements UserService {
             user.setPhoneVerified(true);
             user.setActive(true);
             userRepository.save(user);
-        }else {
+        } else {
             throw new UserNotFoundException();
 
         }
-
 
 
         verificationCode.setUsed(true);
@@ -156,18 +154,18 @@ public class UserManager implements UserService {
         boolean isUpdated = false;
 
         if (updateProfileRequest.getName() != null &&
-                !updateProfileRequest.getName().equals(user.getName())) {
-            user.setName(updateProfileRequest.getName());
+                !updateProfileRequest.getName().equals(user.getProfileInfo().getName())) {
+            user.getProfileInfo().setName(updateProfileRequest.getName());
             isUpdated = true;
         }
 
         if (updateProfileRequest.getSurname() != null &&
-                !updateProfileRequest.getSurname().equals(user.getSurname())) {
-            user.setSurname(updateProfileRequest.getSurname());
+                !updateProfileRequest.getSurname().equals(user.getProfileInfo().getSurname())) {
+            user.getProfileInfo().setSurname(updateProfileRequest.getSurname());
             isUpdated = true;
         }
         if (updateProfileRequest.getEmail() != null && !updateProfileRequest.getEmail().isBlank()) {
-            user.setEmail(user.getEmail().trim().toLowerCase());
+            user.getProfileInfo().setEmail(user.getProfileInfo().getEmail().trim().toLowerCase());
             isUpdated = true;
         }
 
@@ -211,7 +209,7 @@ public class UserManager implements UserService {
             CompletableFuture<String> futureUrl = mediaUploadService.uploadAndOptimizeMedia(file);
             String imageUrl = futureUrl.get();
 
-            user.setProfilePicture(imageUrl);
+            user.getProfileInfo().setProfilePicture(imageUrl);
 
             userRepository.save(user);
 
@@ -262,7 +260,7 @@ public class UserManager implements UserService {
     public ResponseMessage resetPassword(PasswordResetRequest request)
             throws PasswordResetTokenNotFoundException,
             PasswordResetTokenExpiredException,
-            PasswordResetTokenIsUsedException,  SamePasswordException {
+            PasswordResetTokenIsUsedException, SamePasswordException {
 
         PasswordResetToken passwordResetToken = passwordResetTokenRepository
                 .findByToken(request.getResetToken())
@@ -408,7 +406,7 @@ public class UserManager implements UserService {
 
         passwordResetTokenRepository.save(passwordResetToken);
 
-        return new ResponseMessage(resetTokenUUID+"",true);
+        return new ResponseMessage(resetTokenUUID + "", true);
     }
 
 

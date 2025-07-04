@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 public interface AuthService {
 
 
-    TokenResponseDTO login(LoginRequestDTO loginRequestDTO) throws NotFoundUserException, IncorrectPasswordException, UserDeletedException, UserNotActiveException, UserRoleNotAssignedException, PhoneNotVerifiedException, UnrecognizedDeviceException, AdminNotApprovedException;
+    TokenResponseDTO login(LoginRequestDTO loginRequestDTO) throws NotFoundUserException, IncorrectPasswordException, UserDeletedException, UserNotActiveException, UserRoleNotAssignedException, PhoneNotVerifiedException, UnrecognizedDeviceException, AdminNotApprovedException, UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException;
 
     TokenDTO updateAccessToken(UpdateAccessTokenRequestDTO updateAccessTokenRequestDTO) throws TokenIsExpiredException, TokenNotFoundException, UserNotFoundException, InvalidRefreshTokenException;
 
@@ -22,9 +22,11 @@ public interface AuthService {
 
     TokenResponseDTO phoneVerify(LoginPhoneVerifyCodeRequest phoneVerifyCode) throws ExpiredVerificationCodeException, InvalidVerificationCodeException, UsedVerificationCodeException, CancelledVerificationCodeException;
 
-    ResponseMessage adminLogin(LoginRequestDTO loginRequestDTO) throws NotFoundUserException, IncorrectPasswordException, UserRoleNotAssignedException, UserDeletedException, AdminNotApprovedException, UserNotActiveException, AdminNotFoundException;
+    ResponseMessage adminLogin(LoginRequestDTO loginRequestDTO) throws NotFoundUserException, IncorrectPasswordException, UserRoleNotAssignedException, UserDeletedException, AdminNotApprovedException, UserNotActiveException, AdminNotFoundException, UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException;
 
-    ResponseMessage superadminLogin(LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserRoleNotAssignedException, UserNotActiveException, UserDeletedException, SuperAdminNotFoundException;
+    ResponseMessage superadminLogin(LoginRequestDTO loginRequestDTO) throws IncorrectPasswordException, UserRoleNotAssignedException, UserNotActiveException, UserDeletedException, SuperAdminNotFoundException, UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException;
 
     TokenDTO refreshLogin(RefreshLoginRequest request) throws TokenIsExpiredException, TokenNotFoundException, InvalidRefreshTokenException, UserNotFoundException, IncorrectPasswordException;
+
+    ResponseMessage resendVerifyCode(String telephone) throws UserNotFoundException, VerificationCodeStillValidException, VerificationCooldownException;
 }

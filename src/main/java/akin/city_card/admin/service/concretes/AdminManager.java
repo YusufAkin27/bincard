@@ -7,6 +7,9 @@ import akin.city_card.admin.core.response.AuditLogDTO;
 import akin.city_card.admin.core.response.LoginHistoryDTO;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.Admin;
+import akin.city_card.admin.model.AdminApprovalRequest;
+import akin.city_card.admin.model.ApprovalStatus;
+import akin.city_card.admin.repository.AdminApprovalRequestRepository;
 import akin.city_card.admin.repository.AdminRepository;
 import akin.city_card.admin.service.abstracts.AdminService;
 import akin.city_card.location.core.response.LocationDTO;
@@ -14,6 +17,8 @@ import akin.city_card.location.exceptions.NoLocationFoundException;
 import akin.city_card.location.model.Location;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.entity.DeviceInfo;
+import akin.city_card.security.entity.ProfileInfo;
 import akin.city_card.security.entity.Role;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.user.core.request.ChangePasswordRequest;
@@ -38,42 +43,66 @@ public class AdminManager implements AdminService {
     private final PasswordEncoder passwordEncoder;
     private final AdminRepository adminRepository;
     private final LoginHistoryRepository loginHistoryRepository;
-
+    private final AdminApprovalRequestRepository adminApprovalRequestRepository;
     @Override
     @Transactional
     public ResponseMessage signUp(CreateAdminRequest adminRequest) throws PhoneIsNotValidException, PhoneNumberAlreadyExistsException {
+        // Telefon numarası doğrulaması
         if (!PhoneNumberFormatter.PhoneValid(adminRequest.getTelephone())) {
             throw new PhoneIsNotValidException();
         }
 
+        // Telefon numarası zaten kayıtlı mı kontrolü
         if (securityUserRepository.existsByUserNumber(adminRequest.getTelephone())) {
             throw new PhoneNumberAlreadyExistsException();
         }
 
+        // Telefon numarasını normalize et
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(adminRequest.getTelephone());
         adminRequest.setTelephone(normalizedPhone);
+
+
+        DeviceInfo deviceInfo = DeviceInfo.builder()
+                .deviceUuid(adminRequest.getDeviceUuid())
+                .ipAddress(adminRequest.getIpAddress())
+                .fcmToken(adminRequest.getFcmToken()) // Eğer varsa
+                .build();
+
+        ProfileInfo profileInfo = ProfileInfo.builder()
+                .name(adminRequest.getName())
+                .surname(adminRequest.getSurname())
+                .email(adminRequest.getEmail())
+                .build();
 
         Admin admin = Admin.builder()
                 .roles(Collections.singleton(Role.ADMIN))
                 .password(passwordEncoder.encode(adminRequest.getPassword()))
-                .ipAddress(adminRequest.getIpAddress())
-                .deviceUuid(adminRequest.getDeviceUuid())
-                .userNumber(adminRequest.getTelephone())
-                .superAdminApproved(true)
+                .deviceInfo(deviceInfo)
+                .profileInfo(profileInfo)
+                .userNumber(normalizedPhone)
+                .superAdminApproved(false)   // Süper admin onayı bekleniyor
                 .isDeleted(false)
                 .isActive(true)
-                .name(adminRequest.getName())
-                .surname(adminRequest.getSurname())
-                .email(adminRequest.getEmail())
-                .phoneVerified(true)
-                .emailVerified(false)
+                .phoneVerified(true)         // Telefon doğrulama durumu
+                .emailVerified(false)        // E-posta doğrulama durumu
                 .build();
 
-        // Kaydet
+        // Admin kaydet
         adminRepository.save(admin);
 
+        // Admin onay talebi oluştur ve kaydet
+        AdminApprovalRequest approvalRequest = AdminApprovalRequest.builder()
+                .admin(admin)
+                .status(ApprovalStatus.PENDING)
+                .requestedAt(LocalDateTime.now())
+                .build();
+
+        adminApprovalRequestRepository.save(approvalRequest);
+
+        // Kullanıcıya bilgi döndür
         return new ResponseMessage("Kayıt başarılı. Super admin onayı bekleniyor.", true);
     }
+
 
     @Override
     @Transactional
@@ -117,23 +146,30 @@ public class AdminManager implements AdminService {
 
         boolean updated = false;
 
+        // ProfileInfo null olabilir, önce kontrol et
+        if (admin.getProfileInfo() == null) {
+            admin.setProfileInfo(new ProfileInfo());
+        }
+
+        ProfileInfo profile = admin.getProfileInfo();
+
         if (request.getName() != null && !request.getName().isBlank()) {
-            admin.setName(request.getName().trim());
+            profile.setName(request.getName().trim());
             updated = true;
         }
 
         if (request.getSurname() != null && !request.getSurname().isBlank()) {
-            admin.setSurname(request.getSurname().trim());
-            updated = true;
-        }
-        if (request.getEmail() != null && !request.getEmail().isBlank()) {
-            admin.setEmail(request.getEmail().trim().toLowerCase());
+            profile.setSurname(request.getSurname().trim());
             updated = true;
         }
 
+        if (request.getEmail() != null && !request.getEmail().isBlank()) {
+            profile.setEmail(request.getEmail().trim().toLowerCase());
+            updated = true;
+        }
 
         if (!updated) {
-            return new ResponseMessage("Güncellenicek hiç bir veri bulunamadı", false);
+            return new ResponseMessage("Güncellenecek herhangi bir veri bulunamadı.", false);
         }
 
         adminRepository.save(admin);
@@ -142,13 +178,38 @@ public class AdminManager implements AdminService {
     }
 
 
+
     @Override
     public ResponseMessage updateDeviceInfo(UpdateDeviceInfoRequest request, String username) throws AdminNotFoundException {
         Admin admin = findByUserNumber(username);
 
-        admin.setFcmToken(request.getFcmToken());
-        admin.setDeviceUuid(request.getDeviceUuid());
-        admin.setIpAddress(request.getIpAddress());
+        DeviceInfo deviceInfo = admin.getDeviceInfo();
+        if (deviceInfo == null) {
+            deviceInfo = new DeviceInfo();
+        }
+
+        boolean updated = false;
+
+        if (request.getFcmToken() != null && !request.getFcmToken().isBlank()) {
+            deviceInfo.setFcmToken(request.getFcmToken());
+            updated = true;
+        }
+
+        if (request.getDeviceUuid() != null && !request.getDeviceUuid().isBlank()) {
+            deviceInfo.setDeviceUuid(request.getDeviceUuid());
+            updated = true;
+        }
+
+        if (request.getIpAddress() != null && !request.getIpAddress().isBlank()) {
+            deviceInfo.setIpAddress(request.getIpAddress());
+            updated = true;
+        }
+
+        if (!updated) {
+            return new ResponseMessage("Güncellenecek cihaz bilgisi bulunamadı.", false);
+        }
+
+        admin.setDeviceInfo(deviceInfo);
         adminRepository.save(admin);
 
         return new ResponseMessage("Cihaz bilgileri başarıyla güncellendi.", true);

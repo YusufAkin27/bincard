@@ -18,7 +18,7 @@ public class AuditLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String adminUserNumber; // Hangi admin yaptı
+    private String telephone; // Hangi admin yaptı
 
     @Enumerated(EnumType.STRING)
     private ActionType action; // LOGIN, DELETE_USER, UPDATE_PROFILE vs.

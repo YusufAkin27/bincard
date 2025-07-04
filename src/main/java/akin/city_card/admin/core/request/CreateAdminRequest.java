@@ -18,7 +18,7 @@ public class CreateAdminRequest {
     private String email;
     private String ipAddress;
     private String deviceUuid;
-
+    private String fcmToken;
 
 
     private String userAgent;

@@ -1,19 +1,18 @@
 package akin.city_card.security.dto;
 
-import lombok.Data;
+import lombok.*;
 
 @Data
-public class LoginPhoneVerifyCodeRequest {
-    private String code;
-
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class LoginMetadataDTO {
     private String ipAddress;
     private String deviceInfo;
-    private String platform;
-    private String appVersion;
     private String deviceUuid;
     private String fcmToken;
-
-    // Konum bilgileri
+    private String platform;
+    private String appVersion;
     private Double latitude;
     private Double longitude;
 }

@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface BusRideRepository extends JpaRepository<BusRide,Long> {
-    List<BusRide> findByRideTimeBetweenAndBusDriverUserNumber(LocalDateTime start, LocalDateTime end, String username);
+    List<BusRide> findByBoardingTimeBetweenAndBusDriverUserNumber(LocalDateTime start, LocalDateTime end, String username);
 
     List<BusRide> findByBoardingTimeBetweenAndBusDriverUserNumberAndStatus(LocalDateTime start, LocalDateTime end, String username, RideStatus rideStatus);
 

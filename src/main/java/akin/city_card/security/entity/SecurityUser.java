@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 @Inheritance(strategy = InheritanceType.JOINED)
 public class SecurityUser implements UserDetails {
 
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -41,50 +42,17 @@ public class SecurityUser implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Set<Role> roles;
 
-    private String fcmToken;
-
-    @Column(name = "device_uuid")
-    private String deviceUuid;
-
-    @Column(name = "ip_address")
-    private String ipAddress;
-
-    @Column(name = "last_known_lat")
-    private Double lastKnownLatitude;
-
-    @Column(name = "last_known_lng")
-    private Double lastKnownLongitude;
-
-    @Column(name = "last_location_updated_at")
-    private LocalDateTime lastLocationUpdatedAt;
-
-    // 🔽 ORTAK ALANLAR (hepsi buraya taşındı)
-
-    @Column(length = 50)
-    private String name;
-
-    @Column( length = 50)
-    private String surname;
+    @Embedded
+    private DeviceInfo deviceInfo;
 
 
+    @Embedded
+    private ProfileInfo profileInfo;
 
-    @Column(nullable = false)
     private boolean isActive = true;
-
-    @Column(nullable = false)
     private boolean isDeleted = false;
-
-    @Column(name = "email")
-    private String email;
-
-    @Column(name = "email_verified")
     private boolean emailVerified = false;
-
-    @Column(name = "phone_verified")
     private boolean phoneVerified = false;
-
-    @Column(name = "profile_picture")
-    private String profilePicture = "https://w7.pngwing.com/pngs/177/551/png-transparent-user-interface-design-computer-icons-default-stephen-salazar-graphy-user-interface-design-computer-wallpaper-sphere-thumbnail.png";
 
     @CreationTimestamp
     private LocalDateTime createdAt;
@@ -96,9 +64,19 @@ public class SecurityUser implements UserDetails {
     @OrderBy("loginAt DESC")
     private List<LoginHistory> loginHistory = new ArrayList<>();
 
+    // Kullanıcının konum geçmişi
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("recordedAt DESC")
     private List<Location> locationHistory = new ArrayList<>();
+
+    // Kullanıcının son bilinen konumu
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "last_location_id")
+    private Location lastKnownLocation;
+
+    private LocalDateTime lastLocationUpdatedAt;
+
+
 
     // ✅ Constructor (roller ile birlikte)
     public SecurityUser(String userNumber, Set<Role> roles) {
