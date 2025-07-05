@@ -66,7 +66,7 @@ public class UserController {
 
     //sms doğrulama
     @PostMapping("/verify/phone")
-    public ResponseMessage verifyPhone(@RequestBody VerificationCodeRequest verificationCodeRequest) throws UserNotFoundException {
+    public ResponseMessage verifyPhone(@Valid @RequestBody VerificationCodeRequest verificationCodeRequest) throws UserNotFoundException {
         return userService.verifyPhone(verificationCodeRequest);
     }
 
@@ -78,7 +78,7 @@ public class UserController {
 
     // ✅ Adım 2: Telefon numarasını doğrulama (kod girilerek)
     @PostMapping("/password/verify-code")
-    public ResponseMessage verifyResetCode(@RequestBody VerificationCodeRequest verificationCodeRequest)
+    public ResponseMessage verifyResetCode(@Valid @RequestBody VerificationCodeRequest verificationCodeRequest)
             throws UserNotFoundException, ExpiredVerificationCodeException, InvalidOrUsedVerificationCodeException {
         return userService.verifyPhoneForPasswordReset(verificationCodeRequest);
     }
@@ -97,7 +97,12 @@ public class UserController {
 
     // Telefon için yeniden doğrulama kodu gönderme
     @PostMapping("/verify/phone/resend")
-    public ResponseMessage resendPhoneVerification(@RequestBody ResendPhoneVerificationRequest request) throws UserNotFoundException {
+    public ResponseMessage resendPhoneVerification(@RequestBody ResendPhoneVerificationRequest request, HttpServletRequest httpServletRequest) throws UserNotFoundException {
+        String ipAddress = extractClientIp(httpServletRequest);
+        String userAgent = httpServletRequest.getHeader("User-Agent");
+
+        request.setIpAddress(ipAddress);
+        request.setUserAgent(userAgent);
         return userService.resendPhoneVerificationCode(request);
     }
 

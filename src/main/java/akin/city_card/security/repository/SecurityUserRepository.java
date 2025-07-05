@@ -11,4 +11,5 @@ public interface SecurityUserRepository extends JpaRepository<SecurityUser, Long
     boolean existsByUserNumber(String telephone);
 
     boolean existsByProfileInfoEmail(String email);
+
 }

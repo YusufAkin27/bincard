@@ -1,5 +1,6 @@
 package akin.city_card.user.core.request;
 
+import akin.city_card.validations.ValidTelephone;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,6 +12,7 @@ import lombok.NoArgsConstructor;
 public class ResendPhoneVerificationRequest {
 
 
+    @ValidTelephone
     private String telephone;
 
     private String ipAddress;     // Client IP

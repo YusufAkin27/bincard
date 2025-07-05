@@ -1,9 +1,11 @@
 package akin.city_card.security.dto;
 
+import akin.city_card.validations.ValidVerifyCode;
 import lombok.Data;
 
 @Data
 public class LoginPhoneVerifyCodeRequest {
+    @ValidVerifyCode
     private String code;
 
     private String deviceInfo;

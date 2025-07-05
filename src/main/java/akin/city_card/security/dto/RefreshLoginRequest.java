@@ -1,5 +1,6 @@
 package akin.city_card.security.dto;
 
+import akin.city_card.validations.ValidPassword;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
@@ -7,6 +8,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class RefreshLoginRequest {
     private String refreshToken;
+    @ValidPassword
     private String password;
     private String ipAddress;
     private String deviceInfo;

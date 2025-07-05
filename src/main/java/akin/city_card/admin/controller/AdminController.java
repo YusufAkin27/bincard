@@ -61,7 +61,7 @@ public class AdminController {
     }
 
     @PutMapping("/location")
-    public ResponseMessage updateLocation(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdateLocationRequest request) throws AdminNotFoundException {
+    public ResponseMessage updateLocation(@AuthenticationPrincipal UserDetails userDetails, @RequestBody @Valid UpdateLocationRequest request) throws AdminNotFoundException {
         return adminService.updateLocation(request, userDetails.getUsername());
     }
 

@@ -42,5 +42,5 @@ public class CreateNewsRequest {
     @NotNull(message = "Haber türü zorunludur")
     private NewsType type;
 
-    private boolean allowFeedback = true;
+    private boolean allowFeedback ;
 }

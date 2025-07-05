@@ -1,7 +1,5 @@
 package akin.city_card.user.service.concretes;
 
-import akin.city_card.admin.core.response.AuditLogDTO;
-import akin.city_card.admin.model.AuditLog;
 import akin.city_card.admin.repository.AuditLogRepository;
 import akin.city_card.buscard.core.converter.BusCardConverter;
 import akin.city_card.buscard.core.request.FavoriteCardRequest;
@@ -15,7 +13,6 @@ import akin.city_card.mail.MailService;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.notification.core.request.NotificationPreferencesDTO;
 import akin.city_card.notification.model.NotificationPreferences;
-import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotActiveException;
@@ -36,7 +33,6 @@ import akin.city_card.user.model.User;
 import akin.city_card.user.repository.AutoTopUpConfigRepository;
 import akin.city_card.user.repository.PasswordResetTokenRepository;
 import akin.city_card.user.repository.UserRepository;
-import akin.city_card.user.rules.UserRules;
 import akin.city_card.user.service.abstracts.UserService;
 import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
 import akin.city_card.verification.exceptions.InvalidOrUsedVerificationCodeException;
@@ -73,7 +69,6 @@ public class UserManager implements UserService {
     private final SmsService smsService;
     private final MailService mailService;
     private final MediaUploadService mediaUploadService;
-    private final UserRules userRules;
     private final VerificationCodeRepository verificationCodeRepository;
     private final PasswordEncoder passwordEncoder;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
@@ -88,21 +83,14 @@ public class UserManager implements UserService {
 
     @Override
     @Transactional
-    public ResponseMessage create(CreateUserRequest request) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException, VerificationCodeStillValidException {
-
+    public ResponseMessage create(CreateUserRequest request) throws VerificationCodeStillValidException {
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(request.getTelephone());
         request.setTelephone(normalizedPhone);
 
-        Optional<SecurityUser> existingUserOpt = securityUserRepository.findByUserNumber(request.getTelephone());
+        Optional<SecurityUser> existingUserOpt = securityUserRepository.findByUserNumber(normalizedPhone);
 
-        if (existingUserOpt.isPresent()) {
+        if (existingUserOpt.isPresent() && !existingUserOpt.get().isEnabled()) {
             SecurityUser existingUser = existingUserOpt.get();
-
-            if (existingUser.isEnabled()) {
-                throw new PhoneNumberAlreadyExistsException();
-            }
-
-            LocalDateTime now = LocalDateTime.now();
 
             VerificationCode lastCode = verificationCodeRepository.findAll().stream()
                     .filter(vc -> vc.getUser().getId().equals(existingUser.getId()) &&
@@ -110,28 +98,25 @@ public class UserManager implements UserService {
                     .max(Comparator.comparing(VerificationCode::getCreatedAt))
                     .orElse(null);
 
-            if (lastCode != null && !lastCode.isUsed() && !lastCode.isCancelled() && lastCode.getExpiresAt().isAfter(now)) {
+            if (lastCode != null && !lastCode.isUsed() && !lastCode.isCancelled()
+                    && lastCode.getExpiresAt().isAfter(LocalDateTime.now())) {
                 throw new VerificationCodeStillValidException();
             }
 
             verificationCodeRepository.cancelAllActiveCodes(existingUser.getId(), VerificationPurpose.REGISTER);
-
             sendVerificationCode(existingUser, request.getIpAddress(), request.getUserAgent(), VerificationPurpose.REGISTER);
 
             return new ResponseMessage("Telefon numarası daha önce kayıt olmuş ancak aktif edilmemiş. Yeni doğrulama kodu gönderildi.", true);
         }
 
-        userRules.checkPhoneIsUnique(request.getTelephone());
-
         User user = userConverter.convertUserToCreateUser(request);
-        System.out.println(user.toString());
-
         userRepository.save(user);
 
         sendVerificationCode(user, request.getIpAddress(), request.getUserAgent(), VerificationPurpose.REGISTER);
 
         return new ResponseMessage("Kullanıcı başarıyla oluşturuldu. Doğrulama kodu SMS olarak gönderildi.", true);
     }
+
 
     private void sendVerificationCode(SecurityUser user, String ipAddress, String userAgent, VerificationPurpose purpose) {
         String code = randomSixDigit();
