@@ -41,6 +41,12 @@ public class BusCard {
     @JoinColumn(name = "user_id")
     private User user;
 
+    //kartı kimler favori kartlarına eklemiş
+    @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserFavoriteCard> favoredByUsers;
+
+
+
     @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Activity> activities;
 

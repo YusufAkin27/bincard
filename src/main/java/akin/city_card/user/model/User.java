@@ -1,6 +1,7 @@
 package akin.city_card.user.model;
 
 import akin.city_card.buscard.model.BusCard;
+import akin.city_card.buscard.model.UserFavoriteCard;
 import akin.city_card.news.model.NewsLike;
 import akin.city_card.news.model.NewsViewHistory;
 import akin.city_card.notification.model.NotificationPreferences;
@@ -53,13 +54,9 @@ public class User extends SecurityUser {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<BusCard> busCards;
 
-    @ManyToMany(cascade = CascadeType.ALL)
-    @JoinTable(
-            name = "user_favorite_cards",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "bus_card_id")
-    )
-    private List<BusCard> favoriteCards;
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserFavoriteCard> favoriteCards;
+
 
     @ManyToMany(cascade = CascadeType.ALL)
     @JoinTable(

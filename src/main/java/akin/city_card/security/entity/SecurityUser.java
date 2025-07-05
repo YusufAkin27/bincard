@@ -1,9 +1,12 @@
 package akin.city_card.security.entity;
 
+import akin.city_card.admin.model.AuditLog;
 import akin.city_card.location.model.Location;
 import akin.city_card.user.model.LoginHistory;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -68,12 +71,15 @@ public class SecurityUser implements UserDetails {
     @OrderBy("recordedAt DESC")
     private List<Location> locationHistory = new ArrayList<>();
 
+
+    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    private List<AuditLog> auditLogs = new ArrayList<>();
+
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_location_id")
     private Location lastKnownLocation;
 
     private LocalDateTime lastLocationUpdatedAt;
-
 
 
     public SecurityUser(String userNumber, Set<Role> roles) {

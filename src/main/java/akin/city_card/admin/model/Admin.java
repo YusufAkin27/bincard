@@ -28,8 +28,6 @@ public class Admin extends SecurityUser {
     @Column(name = "registered_at", nullable = false, updatable = false)
     private LocalDateTime registeredAt;
 
-    @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    private List<AuditLog> auditLogs = new ArrayList<>();
 
     @PrePersist
     protected void onCreate() {

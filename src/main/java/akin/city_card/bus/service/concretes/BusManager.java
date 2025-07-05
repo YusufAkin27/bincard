@@ -19,11 +19,10 @@ import akin.city_card.bus.model.RideStatus;
 import akin.city_card.bus.repository.BusLocationRepository;
 import akin.city_card.bus.repository.BusRepository;
 import akin.city_card.bus.repository.BusRideRepository;
-import akin.city_card.bus.service.abstracts.BusLocationService;
 import akin.city_card.bus.service.abstracts.BusService;
 import akin.city_card.buscard.model.BusCard;
 import akin.city_card.buscard.model.CardType;
-import akin.city_card.buscard.repository.CardRepository;
+import akin.city_card.buscard.repository.BusCardRepository;
 import akin.city_card.driver.model.Driver;
 import akin.city_card.driver.repository.DriverRepository;
 import akin.city_card.response.DataResponseMessage;
@@ -31,8 +30,6 @@ import akin.city_card.response.ResponseMessage;
 import akin.city_card.route.model.Route;
 import akin.city_card.route.repository.RouteRepository;
 import akin.city_card.security.exception.UserNotFoundException;
-import akin.city_card.station.model.Station;
-import akin.city_card.station.repository.StationRepository;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -59,7 +56,7 @@ public class BusManager implements BusService {
     private final BusRepository busRepository;
     private final UserRepository userRepository;
     private final BusLocationRepository busLocationRepository;
-    private  final CardRepository cardRepository;
+    private  final BusCardRepository busCardRepository;
     private final BusRideRepository   busRideRepository;
 
 
@@ -313,7 +310,7 @@ public class BusManager implements BusService {
         Bus bus = busRepository.findById(busId)
                 .orElseThrow(() -> new BusNotFoundException(busId));
 
-        BusCard card = cardRepository.findById(cardId)
+        BusCard card = busCardRepository.findById(cardId)
                 .orElseThrow(() -> new CardNotFoundException(cardId));
 
         if (!card.isActive() || !card.getUser().getUserNumber().equals(username)) {
@@ -344,7 +341,7 @@ public class BusManager implements BusService {
 
         // 7. Bakiyeyi düş
         card.setBalance(card.getBalance().subtract(BigDecimal.valueOf(fare)));
-        cardRepository.save(card);
+        busCardRepository.save(card);
 
 
 

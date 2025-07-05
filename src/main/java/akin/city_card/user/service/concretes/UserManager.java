@@ -1,7 +1,17 @@
 package akin.city_card.user.service.concretes;
 
+import akin.city_card.buscard.core.converter.BusCardConverter;
+import akin.city_card.buscard.core.request.FavoriteCardRequest;
+import akin.city_card.buscard.core.response.FavoriteBusCardDTO;
+import akin.city_card.buscard.model.BusCard;
+import akin.city_card.buscard.model.UserFavoriteCard;
+import akin.city_card.buscard.repository.BusCardRepository;
 import akin.city_card.cloudinary.MediaUploadService;
+import akin.city_card.mail.EmailMessage;
 import akin.city_card.mail.MailService;
+import akin.city_card.news.exceptions.UnauthorizedAreaException;
+import akin.city_card.notification.core.request.NotificationPreferencesDTO;
+import akin.city_card.notification.model.NotificationPreferences;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotActiveException;
@@ -9,12 +19,17 @@ import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.security.exception.VerificationCodeStillValidException;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.sms.SmsService;
+import akin.city_card.user.core.converter.AutoTopUpConverter;
 import akin.city_card.user.core.converter.UserConverter;
 import akin.city_card.user.core.request.*;
+import akin.city_card.user.core.response.AutoTopUpConfigDTO;
 import akin.city_card.user.core.response.UserDTO;
+import akin.city_card.user.core.response.UserExportDTO;
 import akin.city_card.user.exceptions.*;
+import akin.city_card.user.model.AutoTopUpConfig;
 import akin.city_card.user.model.PasswordResetToken;
 import akin.city_card.user.model.User;
+import akin.city_card.user.repository.AutoTopUpConfigRepository;
 import akin.city_card.user.repository.PasswordResetTokenRepository;
 import akin.city_card.user.repository.UserRepository;
 import akin.city_card.user.rules.UserRules;
@@ -25,8 +40,17 @@ import akin.city_card.verification.model.VerificationChannel;
 import akin.city_card.verification.model.VerificationCode;
 import akin.city_card.verification.model.VerificationPurpose;
 import akin.city_card.verification.repository.VerificationCodeRepository;
+import akin.city_card.wallet.core.converter.WalletConverter;
+import akin.city_card.wallet.core.response.WalletDTO;
+import akin.city_card.wallet.exceptions.WalletIsEmptyException;
+import akin.city_card.wallet.model.Wallet;
+import akin.city_card.wallet.repository.WalletRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -50,7 +74,12 @@ public class UserManager implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final SecurityUserRepository securityUserRepository;
-
+    private final BusCardConverter busCardConverter;
+    private final BusCardRepository busCardRepository;
+    private final WalletRepository walletRepository;
+    private final WalletConverter walletConverter;
+    private final AutoTopUpConfigRepository autoTopUpConfigRepository;
+    private final AutoTopUpConverter autoTopUpConverter;
 
     @Override
     @Transactional
@@ -125,7 +154,6 @@ public class UserManager implements UserService {
 
         System.out.println("📩 Yeni kayıt doğrulama kodu: " + code);
     }
-
 
 
     @Override
@@ -441,10 +469,198 @@ public class UserManager implements UserService {
 
     @Override
     public boolean updateFCMToken(String fcmToken, String username) throws UserNotFoundException {
-        User user=userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username);
         user.getDeviceInfo().setFcmToken(fcmToken);
         return true;
     }
+
+    @Override
+    public Page<UserDTO> getAllUsers(String username, int page, int size)
+            throws UserNotActiveException, UnauthorizedAreaException {
+
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
+                .orElseThrow(UserNotActiveException::new);
+
+        if (securityUser.getRoles() == null ||
+                securityUser.getRoles().stream().noneMatch(role ->
+                        role.name().equals("ADMIN") || role.name().equals("SUPERADMIN"))) {
+            throw new UnauthorizedAreaException();
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<User> userPage = userRepository.findAll(pageable);
+
+        return userPage.map(userConverter::convertUserToDTO);
+    }
+
+
+    @Override
+    public Page<UserDTO> searchUser(String username, String query, int page, int size)
+            throws UserNotActiveException, UnauthorizedAreaException, UserNotFoundException {
+
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
+                .orElseThrow(UserNotActiveException::new);
+
+        if (securityUser.getRoles() == null ||
+                securityUser.getRoles().stream().noneMatch(role ->
+                        role.name().equals("ADMIN") || role.name().equals("SUPERADMIN"))) {
+            throw new UnauthorizedAreaException();
+        }
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+
+        Page<User> results = userRepository.searchByQuery(query.toLowerCase(), pageable);
+
+        if (results.isEmpty()) {
+            throw new UserNotFoundException();
+        }
+
+        return results.map(userConverter::convertUserToDTO);
+    }
+
+    @Override
+    public List<FavoriteBusCardDTO> getFavoriteCards(String username) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+        List<UserFavoriteCard> busCards = user.getFavoriteCards();
+        return busCards.stream().map(busCardConverter::favoriteBusCardToDTO).toList();
+
+    }
+
+    @Override
+    public ResponseMessage addFavoriteCard(String username, FavoriteCardRequest request) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+
+        BusCard busCard = busCardRepository.findById(request.getBusCardId())
+                .orElseThrow(() -> new RuntimeException("BusCard bulunamadı"));
+
+        boolean alreadyFavorited = user.getFavoriteCards().stream()
+                .anyMatch(fav -> fav.getBusCard().getId().equals(busCard.getId()));
+        if (alreadyFavorited) {
+            return new ResponseMessage("Bu kart zaten favorilerde.", false);
+        }
+
+        UserFavoriteCard favorite = new UserFavoriteCard();
+        favorite.setUser(user);
+        favorite.setBusCard(busCard);
+        favorite.setNickname(request.getNickname());
+
+        user.getFavoriteCards().add(favorite);
+        userRepository.save(user);
+
+        return new ResponseMessage("Kart favorilere başarıyla eklendi.", true);
+    }
+
+    @Override
+    public ResponseMessage removeFavoriteCard(String username, Long cardId) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+
+        List<UserFavoriteCard> favoriteCards = user.getFavoriteCards();
+        boolean isSuccess = favoriteCards.removeIf(fav ->
+                fav.getBusCard() != null && fav.getBusCard().getId().equals(cardId)
+        );
+
+        if (isSuccess) {
+            userRepository.save(user);
+        }
+
+        return new ResponseMessage("Favoriden silme işlemi " + (isSuccess ? "başarılı" : "başarısız"), isSuccess);
+    }
+
+    @Override
+    public WalletDTO getWallet(String username) throws WalletIsEmptyException, UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+
+        Wallet wallet = user.getWallet();
+        if (wallet == null) {
+            throw new WalletIsEmptyException();
+        }
+        return walletConverter.convertToDTO(wallet);
+    }
+
+    @Override
+    public ResponseMessage updateNotificationPreferences(String username, NotificationPreferencesDTO preferencesDto) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+
+
+        NotificationPreferences preferences = user.getNotificationPreferences();
+
+        if (preferences == null) {
+            preferences = new NotificationPreferences();
+        }
+        if (preferencesDto.getNotifyBeforeMinutes() != null && preferencesDto.getNotifyBeforeMinutes() < 0) {
+            return new ResponseMessage("Bildirim süresi negatif olamaz", false);
+        }
+
+        preferences.setPushEnabled(preferencesDto.isPushEnabled());
+        preferences.setSmsEnabled(preferencesDto.isSmsEnabled());
+        preferences.setEmailEnabled(preferencesDto.isEmailEnabled());
+        preferences.setNotifyBeforeMinutes(preferencesDto.getNotifyBeforeMinutes());
+        preferences.setFcmActive(preferencesDto.isFcmActive());
+
+        user.setNotificationPreferences(preferences);
+        userRepository.save(user);
+
+        return new ResponseMessage("Bildirim tercihleri güncellendi", true);
+    }
+
+    @Override
+    public List<AutoTopUpConfigDTO> getAutoTopUpConfigs(String username) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+
+
+        List<AutoTopUpConfig> configs = autoTopUpConfigRepository.findByUser(user);
+
+        return configs.stream()
+                .map(autoTopUpConverter::convertToDTO)
+                .toList();
+    }
+
+    @Override
+    public UserExportDTO exportUserData(String username) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+
+        UserExportDTO dto = userConverter.convertUserToExportDTO(user);
+
+        String emailBody = buildEmailBodyFromDTO(dto);
+
+        EmailMessage emailMessage = new EmailMessage();
+        emailMessage.setToEmail(user.getProfileInfo().getEmail()); // Email varsa
+        emailMessage.setSubject("Hesap Bilgileriniz");
+        emailMessage.setBody(emailBody);
+        emailMessage.setHtml(false);
+
+        mailService.queueEmail(emailMessage);
+
+        return dto;
+    }
+
+    private String buildEmailBodyFromDTO(UserExportDTO dto) {
+        StringBuilder sb = new StringBuilder();
+
+        sb.append("Sayın ").append(dto.getFullName() != null ? dto.getFullName() : "Kullanıcı").append(",\n\n");
+        sb.append("City Card hesabınıza ait bilgiler aşağıda yer almaktadır:\n\n");
+
+        sb.append("──────────────────────────────\n");
+        sb.append("Kullanıcı ID      : ").append(dto.getId()).append("\n");
+        sb.append("Kullanıcı No      : ").append(dto.getUserNumber() != null ? dto.getUserNumber() : "—").append("\n");
+        sb.append("TC Kimlik No      : ").append(dto.getNationalId() != null ? dto.getNationalId() : "—").append("\n");
+        sb.append("Doğum Tarihi      : ").append(dto.getBirthDate() != null ? dto.getBirthDate() : "—").append("\n");
+        sb.append("Cüzdan Aktif      : ").append(dto.isWalletActivated() ? "Evet" : "Hayır").append("\n");
+        sb.append("Negatif Bakiye İzin: ").append(dto.isAllowNegativeBalance() ? "Evet" : "Hayır").append("\n");
+        sb.append("Negatif Bakiye Limit: ").append(dto.getNegativeBalanceLimit() != null ? dto.getNegativeBalanceLimit() : "0.0").append("\n");
+        sb.append("Otomatik Yükleme   : ").append(dto.isAutoTopUpEnabled() ? "Aktif" : "Pasif").append("\n");
+        sb.append("Hesap Oluşturulma : ").append(dto.getCreatedAt() != null ? dto.getCreatedAt() : "—").append("\n");
+        sb.append("Son Güncelleme    : ").append(dto.getUpdatedAt() != null ? dto.getUpdatedAt() : "—").append("\n");
+        sb.append("──────────────────────────────\n\n");
+
+        sb.append("Herhangi bir sorunuz için bizimle iletişime geçebilirsiniz.\n");
+        sb.append("City Card Ekibi olarak sizi aramızda görmekten mutluluk duyuyoruz.\n\n");
+        sb.append("İyi günler dileriz.");
+
+        return sb.toString();
+    }
+
 
 
     public String randomSixDigit() {
