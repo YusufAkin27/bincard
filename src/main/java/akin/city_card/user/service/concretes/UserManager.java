@@ -1,5 +1,8 @@
 package akin.city_card.user.service.concretes;
 
+import akin.city_card.admin.core.response.AuditLogDTO;
+import akin.city_card.admin.model.AuditLog;
+import akin.city_card.admin.repository.AuditLogRepository;
 import akin.city_card.buscard.core.converter.BusCardConverter;
 import akin.city_card.buscard.core.request.FavoriteCardRequest;
 import akin.city_card.buscard.core.response.FavoriteBusCardDTO;
@@ -12,6 +15,7 @@ import akin.city_card.mail.MailService;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.notification.core.request.NotificationPreferencesDTO;
 import akin.city_card.notification.model.NotificationPreferences;
+import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotActiveException;
@@ -80,6 +84,7 @@ public class UserManager implements UserService {
     private final WalletConverter walletConverter;
     private final AutoTopUpConfigRepository autoTopUpConfigRepository;
     private final AutoTopUpConverter autoTopUpConverter;
+    private AuditLogRepository auditLogRepository;
 
     @Override
     @Transactional
@@ -634,6 +639,22 @@ public class UserManager implements UserService {
 
         return dto;
     }
+/*
+    @Override
+    public List<AuditLogDTO> getUserActivityLog(String username, Pageable pageable) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+
+
+        Page<AuditLog> auditLogs = auditLogRepository.findByUser_UserNumberOrderByTimestampDesc(username, pageable);
+
+        return auditLogs.stream()
+                .map(autoTopUpConverter::convertToDTO) // Eğer farklı bir converter ise ona göre değiştir
+                .toList();
+    }
+
+
+
+ */
 
     private String buildEmailBodyFromDTO(UserExportDTO dto) {
         StringBuilder sb = new StringBuilder();
@@ -660,7 +681,6 @@ public class UserManager implements UserService {
 
         return sb.toString();
     }
-
 
 
     public String randomSixDigit() {

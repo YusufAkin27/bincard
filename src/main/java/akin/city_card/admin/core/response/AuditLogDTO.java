@@ -1,6 +1,7 @@
 package akin.city_card.admin.core.response;
 
 import akin.city_card.admin.model.ActionType;
+import akin.city_card.security.entity.DeviceInfo;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -20,4 +21,6 @@ public class AuditLogDTO {
 
     private String ipAddress;
     private String deviceInfo;
+
+
 }

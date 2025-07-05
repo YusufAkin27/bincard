@@ -186,9 +186,9 @@ public class SuperAdminManager implements SuperAdminService {
         List<AuditLog> logs;
 
         if (actionType != null) {
-            logs = auditLogRepository.findByTelephoneAndActionAndTimestampBetween(username, actionType, from, to);
+            logs = auditLogRepository.findByUser_UserNumberAndActionAndTimestampBetween(username, actionType, from, to);
         } else {
-            logs = auditLogRepository.findByTelephoneAndTimestampBetween(username, from, to);
+            logs = auditLogRepository.findByUser_UserNumberAndTimestampBetween(username, from, to);
         }
 
         List<AuditLogDTO> dtoList = logs.stream().map(auditLogConverter::mapToDto).toList();

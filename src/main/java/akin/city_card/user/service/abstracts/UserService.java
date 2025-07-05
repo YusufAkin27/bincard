@@ -1,10 +1,11 @@
 package akin.city_card.user.service.abstracts;
 
+import akin.city_card.admin.core.response.AuditLogDTO;
 import akin.city_card.buscard.core.request.FavoriteCardRequest;
-import akin.city_card.buscard.core.response.BusCardDTO;
 import akin.city_card.buscard.core.response.FavoriteBusCardDTO;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.notification.core.request.NotificationPreferencesDTO;
+import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
@@ -20,11 +21,11 @@ import akin.city_card.wallet.core.response.WalletDTO;
 import akin.city_card.wallet.exceptions.WalletIsEmptyException;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 
 public interface UserService {
 
@@ -77,4 +78,5 @@ public interface UserService {
     List<AutoTopUpConfigDTO> getAutoTopUpConfigs(String username) throws UserNotFoundException;
 
     UserExportDTO exportUserData(String username) throws UserNotFoundException;
+
 }

@@ -25,6 +25,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -239,10 +242,14 @@ public class UserController {
         return userService.deleteGeoAlert(userDetails.getUsername(), alertId);
     }
 
-    // Şifre değişiklikleri, giriş-çıkış, profil güncellemeleri vs.
+
+
     @GetMapping("/activity-log")
-    public DataResponseMessage<List<AuditLogDTO>> getUserActivityLog(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-        return userService.getUserActivityLog(userDetails.getUsername());
+    public Page<AuditLogDTO> getUserActivityLog(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 10, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable
+    ) throws UserNotFoundException {
+        return userService.getUserActivityLog(userDetails.getUsername(), pageable);
     }
 
  */
