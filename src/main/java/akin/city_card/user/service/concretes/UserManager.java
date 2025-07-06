@@ -47,6 +47,7 @@ import akin.city_card.wallet.model.Wallet;
 import akin.city_card.wallet.repository.WalletRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -191,13 +192,13 @@ public class UserManager implements UserService {
 
     @Override
     public UserDTO getProfile(String username) throws UserNotFoundException {
-        return userConverter.convertUserToDTO(userRepository.findByUserNumber(username));
+        return userConverter.convertUserToDTO(findByUsername(username));
     }
 
     @Override
     @Transactional
     public ResponseMessage updateProfile(String username, UpdateProfileRequest updateProfileRequest) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = findByUsername(username);
 
         boolean isUpdated = false;
 
@@ -226,10 +227,19 @@ public class UserManager implements UserService {
         return new ResponseMessage("Herhangi bir değişiklik yapılmadı.", false);
     }
 
+    @Cacheable(value = "users", key = "#username")
+    public User findByUsername(String username) throws UserNotFoundException {
+        System.out.println("Veritabanından çağrılıyor ve cache'e eklenecek: " + username);
+        User user = userRepository.findByUserNumber(username);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+        return user;
+    }
 
     @Override
     public ResponseMessage deactivateUser(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = findByUsername(username);
         user.setActive(false);
         user.setDeleted(true);
         return new ResponseMessage("Kullanıcı hesabı silindi.", true);
@@ -251,7 +261,7 @@ public class UserManager implements UserService {
     public ResponseMessage updateProfilePhoto(String username, MultipartFile file)
             throws PhotoSizeLargerException, IOException, UserNotFoundException {
 
-        User user = userRepository.findByUserNumber(username);
+        User user = findByUsername(username);
 
         try {
             CompletableFuture<String> futureUrl = mediaUploadService.uploadAndOptimizeMedia(file);
@@ -348,7 +358,7 @@ public class UserManager implements UserService {
     public ResponseMessage changePassword(String username, ChangePasswordRequest request)
             throws UserIsDeletedException, UserNotActiveException, UserNotFoundException, PasswordsDoNotMatchException, InvalidNewPasswordException, IncorrectCurrentPasswordException, SamePasswordException {
 
-        User user = userRepository.findByUserNumber(username);
+        User user = findByUsername(username);
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -385,7 +395,7 @@ public class UserManager implements UserService {
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(resendPhoneVerification.getTelephone());
         resendPhoneVerification.setTelephone(normalizedPhone);
 
-        User user = userRepository.findByUserNumber(resendPhoneVerification.getTelephone());
+        User user = findByUsername(resendPhoneVerification.getTelephone());
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -459,7 +469,7 @@ public class UserManager implements UserService {
 
     @Override
     public boolean updateFCMToken(String fcmToken, String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = findByUsername(username);
         user.getDeviceInfo().setFcmToken(fcmToken);
         return true;
     }
@@ -511,7 +521,7 @@ public class UserManager implements UserService {
 
     @Override
     public List<FavoriteBusCardDTO> getFavoriteCards(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = findByUsername(username);
         List<UserFavoriteCard> busCards = user.getFavoriteCards();
         return busCards.stream().map(busCardConverter::favoriteBusCardToDTO).toList();
 
@@ -519,7 +529,7 @@ public class UserManager implements UserService {
 
     @Override
     public ResponseMessage addFavoriteCard(String username, FavoriteCardRequest request) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = findByUsername(username);
 
         BusCard busCard = busCardRepository.findById(request.getBusCardId())
                 .orElseThrow(() -> new RuntimeException("BusCard bulunamadı"));
@@ -543,7 +553,7 @@ public class UserManager implements UserService {
 
     @Override
     public ResponseMessage removeFavoriteCard(String username, Long cardId) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = findByUsername(username);
 
         List<UserFavoriteCard> favoriteCards = user.getFavoriteCards();
         boolean isSuccess = favoriteCards.removeIf(fav ->
@@ -559,7 +569,7 @@ public class UserManager implements UserService {
 
     @Override
     public WalletDTO getWallet(String username) throws WalletIsEmptyException, UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = findByUsername(username);
 
         Wallet wallet = user.getWallet();
         if (wallet == null) {
@@ -570,7 +580,7 @@ public class UserManager implements UserService {
 
     @Override
     public ResponseMessage updateNotificationPreferences(String username, NotificationPreferencesDTO preferencesDto) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = findByUsername(username);
 
 
         NotificationPreferences preferences = user.getNotificationPreferences();
@@ -596,7 +606,7 @@ public class UserManager implements UserService {
 
     @Override
     public List<AutoTopUpConfigDTO> getAutoTopUpConfigs(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = findByUsername(username);
 
 
         List<AutoTopUpConfig> configs = autoTopUpConfigRepository.findByUser(user);
@@ -608,7 +618,7 @@ public class UserManager implements UserService {
 
     @Override
     public UserExportDTO exportUserData(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = findByUsername(username);
 
         UserExportDTO dto = userConverter.convertUserToExportDTO(user);
 

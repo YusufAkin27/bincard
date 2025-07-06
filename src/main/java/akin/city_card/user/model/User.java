@@ -15,6 +15,7 @@ import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -28,7 +29,8 @@ import java.util.List;
 @SuperBuilder
 @Table(name = "users")
 @PrimaryKeyJoinColumn(name = "id")
-public class User extends SecurityUser {
+public class User extends SecurityUser    {
+
 
     @Column(name = "national_id", length = 11, unique = true)
     private String nationalId;
