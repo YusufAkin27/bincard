@@ -6,6 +6,7 @@ import akin.city_card.admin.model.AdminApprovalRequest;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.SuperAdminNotFoundException;
+import akin.city_card.superadmin.core.response.AdminApprovalRequestDTO;
 import akin.city_card.superadmin.exceptions.AdminApprovalRequestNotFoundException;
 import akin.city_card.superadmin.exceptions.RequestAlreadyProcessedException;
 import akin.city_card.superadmin.service.abstracts.SuperAdminService;
@@ -33,16 +34,16 @@ public class SuperAdminController {
 
 
     @GetMapping("/admin-requests/pending")
-    public DataResponseMessage<List<AdminApprovalRequest>> getPendingAdminRequests(
+    public DataResponseMessage<List<AdminApprovalRequestDTO>> getPendingAdminRequests(
             @AuthenticationPrincipal UserDetails userDetails,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) throws SuperAdminNotFoundException {
         return superAdminService.getPendingAdminRequest(userDetails.getUsername(), pageable);
     }
 
-    @PostMapping("/admin-requests/{adminId}/approve")
+    @PostMapping("/admin-requests/{requestId}/approve")
     public ResponseMessage approveAdminRequest(@AuthenticationPrincipal UserDetails userDetails,
-                                               @PathVariable Long adminId) throws AdminNotFoundException, AdminApprovalRequestNotFoundException, RequestAlreadyProcessedException {
-        return superAdminService.approveAdminRequest(userDetails.getUsername(), adminId);
+                                               @PathVariable Long requestId) throws AdminNotFoundException, AdminApprovalRequestNotFoundException, RequestAlreadyProcessedException {
+        return superAdminService.approveAdminRequest(userDetails.getUsername(), requestId);
     }
     @PostMapping("/admin-requests/{adminId}/reject")
     public ResponseMessage rejectAdminRequest(@AuthenticationPrincipal UserDetails userDetails,

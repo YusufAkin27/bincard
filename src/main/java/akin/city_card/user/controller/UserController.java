@@ -1,12 +1,9 @@
 package akin.city_card.user.controller;
 
-import akin.city_card.admin.core.response.AuditLogDTO;
 import akin.city_card.buscard.core.request.FavoriteCardRequest;
-import akin.city_card.buscard.core.response.BusCardDTO;
 import akin.city_card.buscard.core.response.FavoriteBusCardDTO;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.notification.core.request.NotificationPreferencesDTO;
-import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
@@ -25,9 +22,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.web.PageableDefault;
+import org.springframework.http.CacheControl;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @RestController
 @RequestMapping("/v1/api/user")
@@ -131,6 +128,7 @@ public class UserController {
                                               MultipartFile file) throws UserNotFoundException, PhotoSizeLargerException, IOException {
         return userService.updateProfilePhoto(userDetails.getUsername(), file);
     }
+
     // 5. Hesap pasifleştirme (soft delete gibi)
     @DeleteMapping("/deactivate")
     public ResponseMessage deactivateUser(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
@@ -138,17 +136,31 @@ public class UserController {
     }
 
     @PatchMapping("/update-fcm-token")
-    public boolean updateFCMToken(@RequestParam String fcmToken,@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-        return userService.updateFCMToken(fcmToken,userDetails.getUsername());
+    public boolean updateFCMToken(@RequestParam String fcmToken, @AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+        return userService.updateFCMToken(fcmToken, userDetails.getUsername());
     }
+
     // Tüm kullanıcıları sayfalı listeleme
-// Tüm kullanıcıları sayfalı listeleme
-    @GetMapping("/admin/all")
-    public Page<UserDTO> getAllUsers(@AuthenticationPrincipal UserDetails userDetails,
-                                     @RequestParam(defaultValue = "0") int page,
-                                     @RequestParam(defaultValue = "10") int size)
+    @GetMapping("/all")
+    public ResponseEntity<?> getAllUsers(@AuthenticationPrincipal UserDetails userDetails,
+                                         @RequestParam(defaultValue = "0") int page,
+                                         @RequestParam(defaultValue = "10") int size,
+                                         @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch)
             throws UserNotActiveException, UnauthorizedAreaException {
-        return userService.getAllUsers(userDetails.getUsername(), page, size);
+
+        Page<UserDTO> userPage = userService.getAllUsers(userDetails.getUsername(), page, size);
+
+        String etagValue = Integer.toHexString(userPage.getContent().hashCode());
+        String etag = "\"" + etagValue + "\"";
+
+        if (etag.equals(ifNoneMatch)) {
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED).eTag(etag).build();
+        }
+
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.maxAge(60, TimeUnit.SECONDS)) // İsteğe göre ayarlanabilir
+                .eTag(etag)
+                .body(userPage);
     }
 
     // Tek sorgu ile kullanıcı arama (sayfalı)
@@ -198,66 +210,67 @@ public class UserController {
     public List<AutoTopUpConfigDTO> getAutoTopUpConfigs(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
         return userService.getAutoTopUpConfigs(userDetails.getUsername());
     }
-/*
-    @PostMapping("/auto-top-up")
-    public ResponseMessage addAutoTopUpConfig(@AuthenticationPrincipal UserDetails userDetails,
-                                              @RequestBody AutoTopUpConfigRequest configRequest) throws UserNotFoundException {
-        return userService.addAutoTopUpConfig(userDetails.getUsername(), configRequest);
-    }
 
-    @DeleteMapping("/auto-top-up/{configId}")
-    public ResponseMessage deleteAutoTopUpConfig(@AuthenticationPrincipal UserDetails userDetails,
-                                                 @PathVariable UUID configId) throws UserNotFoundException {
-        return userService.deleteAutoTopUpConfig(userDetails.getUsername(), configId);
-    }
+    /*
+        @PostMapping("/auto-top-up")
+        public ResponseMessage addAutoTopUpConfig(@AuthenticationPrincipal UserDetails userDetails,
+                                                  @RequestBody AutoTopUpConfigRequest configRequest) throws UserNotFoundException {
+            return userService.addAutoTopUpConfig(userDetails.getUsername(), configRequest);
+        }
 
-    // DÜŞÜK BAKİYE UYARISI
-    @PutMapping("/balance-alert")
-    public ResponseMessage setLowBalanceAlert(@AuthenticationPrincipal UserDetails userDetails,
-                                              @RequestBody LowBalanceAlertRequest request) throws UserNotFoundException {
-        return userService.setLowBalanceThreshold(userDetails.getUsername(), request.getCardId(), request.getThreshold());
-    }
+        @DeleteMapping("/auto-top-up/{configId}")
+        public ResponseMessage deleteAutoTopUpConfig(@AuthenticationPrincipal UserDetails userDetails,
+                                                     @PathVariable UUID configId) throws UserNotFoundException {
+            return userService.deleteAutoTopUpConfig(userDetails.getUsername(), configId);
+        }
 
-    // ARAMA GEÇMİŞİ
-    @GetMapping("/search-history")
-    public List<SearchHistoryDTO> getSearchHistory(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-        return userService.getSearchHistory(userDetails.getUsername());
-    }
+        // DÜŞÜK BAKİYE UYARISI
+        @PutMapping("/balance-alert")
+        public ResponseMessage setLowBalanceAlert(@AuthenticationPrincipal UserDetails userDetails,
+                                                  @RequestBody LowBalanceAlertRequest request) throws UserNotFoundException {
+            return userService.setLowBalanceThreshold(userDetails.getUsername(), request.getCardId(), request.getThreshold());
+        }
 
-    @DeleteMapping("/search-history")
-    public ResponseMessage clearSearchHistory(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-        return userService.clearSearchHistory(userDetails.getUsername());
-    }
+        // ARAMA GEÇMİŞİ
+        @GetMapping("/search-history")
+        public List<SearchHistoryDTO> getSearchHistory(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+            return userService.getSearchHistory(userDetails.getUsername());
+        }
 
-    // KONUMA DAYALI UYARILAR
-    @GetMapping("/geo-alerts")
-    public List<GeoAlertDTO> getGeoAlerts(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-        return userService.getGeoAlerts(userDetails.getUsername());
-    }
+        @DeleteMapping("/search-history")
+        public ResponseMessage clearSearchHistory(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+            return userService.clearSearchHistory(userDetails.getUsername());
+        }
 
-    @PostMapping("/geo-alerts")
-    public ResponseMessage addGeoAlert(@AuthenticationPrincipal UserDetails userDetails,
-                                       @RequestBody GeoAlertRequest alertRequest) throws UserNotFoundException {
-        return userService.addGeoAlert(userDetails.getUsername(), alertRequest);
-    }
+        // KONUMA DAYALI UYARILAR
+        @GetMapping("/geo-alerts")
+        public List<GeoAlertDTO> getGeoAlerts(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+            return userService.getGeoAlerts(userDetails.getUsername());
+        }
 
-    @DeleteMapping("/geo-alerts/{alertId}")
-    public ResponseMessage deleteGeoAlert(@AuthenticationPrincipal UserDetails userDetails,
-                                          @PathVariable UUID alertId) throws UserNotFoundException {
-        return userService.deleteGeoAlert(userDetails.getUsername(), alertId);
-    }
+        @PostMapping("/geo-alerts")
+        public ResponseMessage addGeoAlert(@AuthenticationPrincipal UserDetails userDetails,
+                                           @RequestBody GeoAlertRequest alertRequest) throws UserNotFoundException {
+            return userService.addGeoAlert(userDetails.getUsername(), alertRequest);
+        }
+
+        @DeleteMapping("/geo-alerts/{alertId}")
+        public ResponseMessage deleteGeoAlert(@AuthenticationPrincipal UserDetails userDetails,
+                                              @PathVariable UUID alertId) throws UserNotFoundException {
+            return userService.deleteGeoAlert(userDetails.getUsername(), alertId);
+        }
 
 
 
-    @GetMapping("/activity-log")
-    public Page<AuditLogDTO> getUserActivityLog(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PageableDefault(size = 10, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable
-    ) throws UserNotFoundException {
-        return userService.getUserActivityLog(userDetails.getUsername(), pageable);
-    }
+        @GetMapping("/activity-log")
+        public Page<AuditLogDTO> getUserActivityLog(
+                @AuthenticationPrincipal UserDetails userDetails,
+                @PageableDefault(size = 10, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable
+        ) throws UserNotFoundException {
+            return userService.getUserActivityLog(userDetails.getUsername(), pageable);
+        }
 
- */
+     */
     @GetMapping("/export")
     public UserExportDTO exportUserData(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
         return userService.exportUserData(userDetails.getUsername());

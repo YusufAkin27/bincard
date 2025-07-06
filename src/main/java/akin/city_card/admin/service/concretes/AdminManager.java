@@ -47,17 +47,10 @@ public class AdminManager implements AdminService {
     @Override
     @Transactional
     public ResponseMessage signUp(CreateAdminRequest adminRequest) throws PhoneIsNotValidException, PhoneNumberAlreadyExistsException {
-        // Telefon numarası doğrulaması
         if (!PhoneNumberFormatter.PhoneValid(adminRequest.getTelephone())) {
             throw new PhoneIsNotValidException();
         }
 
-        // Telefon numarası zaten kayıtlı mı kontrolü
-        if (securityUserRepository.existsByUserNumber(adminRequest.getTelephone())) {
-            throw new PhoneNumberAlreadyExistsException();
-        }
-
-        // Telefon numarasını normalize et
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(adminRequest.getTelephone());
         adminRequest.setTelephone(normalizedPhone);
 
@@ -99,7 +92,6 @@ public class AdminManager implements AdminService {
 
         adminApprovalRequestRepository.save(approvalRequest);
 
-        // Kullanıcıya bilgi döndür
         return new ResponseMessage("Kayıt başarılı. Super admin onayı bekleniyor.", true);
     }
 

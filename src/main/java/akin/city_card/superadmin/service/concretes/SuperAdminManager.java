@@ -13,6 +13,8 @@ import akin.city_card.bus.repository.BusRideRepository;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.SuperAdminNotFoundException;
+import akin.city_card.superadmin.core.converter.AdminApprovalRequestConverter;
+import akin.city_card.superadmin.core.response.AdminApprovalRequestDTO;
 import akin.city_card.superadmin.exceptions.AdminApprovalRequestNotFoundException;
 import akin.city_card.superadmin.exceptions.RequestAlreadyProcessedException;
 import akin.city_card.superadmin.model.SuperAdmin;
@@ -39,16 +41,17 @@ public class SuperAdminManager implements SuperAdminService {
     private final BusRideRepository busRideRepository;
     private final AuditLogRepository auditLogRepository;
     private final AuditLogConverter auditLogConverter;
+    private final AdminApprovalRequestConverter adminApprovalRequestConverter;
 
 
     @Override
-    public ResponseMessage approveAdminRequest(String username, Long adminId) throws AdminNotFoundException, AdminApprovalRequestNotFoundException, RequestAlreadyProcessedException {
+    public ResponseMessage approveAdminRequest(String username, Long requestId) throws AdminNotFoundException, AdminApprovalRequestNotFoundException, RequestAlreadyProcessedException {
         SuperAdmin superAdmin = superAdminRepository.findByUserNumber(username);
         if (superAdmin == null) {
             throw new AdminNotFoundException();
         }
         List<AdminApprovalRequest> adminApprovalRequests = adminApprovalRequestRepository.findAll();
-        AdminApprovalRequest request = adminApprovalRequests.stream().filter(adminApprovalRequest -> adminApprovalRequest.getAdmin().getId().equals(adminId)).findFirst().orElseThrow(AdminApprovalRequestNotFoundException::new);
+        AdminApprovalRequest request = adminApprovalRequests.stream().filter(adminApprovalRequest -> adminApprovalRequest.getId().equals(requestId)).findFirst().orElseThrow(AdminApprovalRequestNotFoundException::new);
 
         if (request.getStatus() != ApprovalStatus.PENDING) {
             throw new RequestAlreadyProcessedException();
@@ -61,6 +64,9 @@ public class SuperAdminManager implements SuperAdminService {
 
         Admin admin = request.getAdmin();
         admin.setActive(true);
+        admin.setSuperAdminApproved(true);
+        admin.setApprovedAt(LocalDateTime.now());
+        admin.setRegisteredAt(LocalDateTime.now());
         adminRepository.save(admin);
 
         return new ResponseMessage("Admin request approved successfully", true);
@@ -155,7 +161,7 @@ public class SuperAdminManager implements SuperAdminService {
 
 
     @Override
-    public DataResponseMessage<List<AdminApprovalRequest>> getPendingAdminRequest(String username, Pageable pageable) throws SuperAdminNotFoundException {
+    public DataResponseMessage<List<AdminApprovalRequestDTO>> getPendingAdminRequest(String username, Pageable pageable) throws SuperAdminNotFoundException {
         SuperAdmin superAdmin = superAdminRepository.findByUserNumber(username);
         if (superAdmin == null) {
             throw new SuperAdminNotFoundException();
@@ -164,7 +170,7 @@ public class SuperAdminManager implements SuperAdminService {
         Page<AdminApprovalRequest> pendingRequests = adminApprovalRequestRepository
                 .findByStatus(ApprovalStatus.PENDING, pageable);
 
-        return new DataResponseMessage<>("başarılı", true, pendingRequests.getContent());
+        return new DataResponseMessage<>("başarılı", true, pendingRequests.map(adminApprovalRequestConverter::toDTO).getContent());
     }
 
     @Override

@@ -37,6 +37,7 @@ public class AdminApprovalRequest {
     private LocalDateTime requestedAt;
 
     private LocalDateTime updateAt;
+    private LocalDateTime createdAt;
 
     // Onay durumu
     @Enumerated(EnumType.STRING)

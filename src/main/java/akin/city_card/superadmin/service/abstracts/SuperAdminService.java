@@ -8,6 +8,7 @@ import akin.city_card.admin.model.AuditLog;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.SuperAdminNotFoundException;
+import akin.city_card.superadmin.core.response.AdminApprovalRequestDTO;
 import akin.city_card.superadmin.exceptions.AdminApprovalRequestNotFoundException;
 import akin.city_card.superadmin.exceptions.RequestAlreadyProcessedException;
 import org.hibernate.query.Page;
@@ -20,7 +21,7 @@ import java.util.Map;
 
 public interface SuperAdminService {
 
-    ResponseMessage approveAdminRequest(String username, Long adminId) throws AdminNotFoundException, AdminApprovalRequestNotFoundException, RequestAlreadyProcessedException;
+    ResponseMessage approveAdminRequest(String username, Long requestId) throws AdminNotFoundException, AdminApprovalRequestNotFoundException, RequestAlreadyProcessedException;
 
     ResponseMessage rejectAdminRequest(String username, Long adminId) throws AdminNotFoundException, RequestAlreadyProcessedException, AdminApprovalRequestNotFoundException;
 
@@ -32,7 +33,7 @@ public interface SuperAdminService {
 
     DataResponseMessage<Map<String, BigDecimal>> getIncomeSummary(String username);
 
-    DataResponseMessage<List<AdminApprovalRequest>> getPendingAdminRequest(String username, Pageable pageable) throws SuperAdminNotFoundException;
+    DataResponseMessage<List<AdminApprovalRequestDTO>> getPendingAdminRequest(String username, Pageable pageable) throws SuperAdminNotFoundException;
 
     DataResponseMessage<List<AuditLogDTO>> getAuditLogs(String fromDate, String toDate, String action, String username);
 

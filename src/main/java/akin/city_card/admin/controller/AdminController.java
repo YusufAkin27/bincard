@@ -32,8 +32,8 @@ public class AdminController {
     // 1. Kullanıcı kayıt
     @PostMapping("/sign-up")
     public ResponseMessage signUp(@Valid @RequestBody CreateAdminRequest adminRequest)
-            throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException,
-            InvalidPhoneNumberFormatException, PhoneIsNotValidException {
+            throws  PhoneNumberAlreadyExistsException,
+             PhoneIsNotValidException {
         return adminService.signUp(adminRequest);
     }
 

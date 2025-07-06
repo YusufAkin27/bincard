@@ -51,7 +51,12 @@ public class SecurityConfig {
 
         // Sadece admin için yollar
         String[] adminPaths = {
-                "/v1/api/admin/**"
+                "/v1/api/admin/**",
+                "/v1/api/user/all",
+        };
+        String[] superAdminPaths = {
+                "/v1/api/super-admin/**",
+                "/v1/api/user/all",
         };
 
         // Öğrenci rolleri için yollar
