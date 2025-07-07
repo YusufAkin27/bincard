@@ -16,12 +16,12 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     User findByUserNumber(String username) throws UserNotFoundException;
 
-    boolean existsByNationalId(String nationalId);
+    boolean existsByIdentityInfo_NationalId(String nationalId);
 
 
     @Query("""
        SELECT u FROM User u
-       WHERE LOWER(u.nationalId) LIKE %:query%
+       WHERE LOWER(u.identityInfo.nationalId) LIKE %:query%
           OR LOWER(u.userNumber) LIKE %:query%
           OR LOWER(u.profileInfo.email) LIKE %:query%
           OR LOWER(u.profileInfo.name) LIKE %:query%

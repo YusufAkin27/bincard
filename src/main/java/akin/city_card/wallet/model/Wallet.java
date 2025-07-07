@@ -71,8 +71,8 @@ public class Wallet extends AuditableEntity {
             try {
                 String base = "CW" // CityWallet prefix
                         + "-" + user.getId()
-                        + "-" + user.getNationalId().substring(0, 3)
-                        + "-" + user.getBirthDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
+                        + "-" + user.getIdentityInfo().getNationalId().substring(0, 3)
+                        + "-" + user.getIdentityInfo().getBirthDate().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd"))
                         + "-" + System.currentTimeMillis();
 
                 MessageDigest digest = MessageDigest.getInstance("SHA-256");

@@ -32,11 +32,8 @@ import java.util.List;
 @PrimaryKeyJoinColumn(name = "id")
 public class User extends SecurityUser {
 
-    @Column(name = "national_id", length = 11, unique = true)
-    private String nationalId;
-
-    @Column(name = "birth_date")
-    private LocalDate birthDate;
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private UserIdentityInfo identityInfo;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore

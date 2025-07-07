@@ -20,6 +20,6 @@ public class UniqueNationalIdValidator implements ConstraintValidator<UniqueNati
         if (nationalId == null || nationalId.isBlank()) {
             return true;
         }
-        return !userRepository.existsByNationalId(nationalId);
+        return !userRepository.existsByIdentityInfo_NationalId(nationalId);
     }
 }

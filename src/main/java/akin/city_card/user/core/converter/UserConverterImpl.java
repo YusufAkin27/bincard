@@ -7,7 +7,6 @@ import akin.city_card.user.core.request.CreateUserRequest;
 import akin.city_card.user.core.response.CacheUserDTO;
 import akin.city_card.user.core.response.GeoAlertDTO;
 import akin.city_card.user.core.response.SearchHistoryDTO;
-import akin.city_card.user.core.response.UserExportDTO;
 import akin.city_card.user.model.GeoAlert;
 import akin.city_card.user.model.SearchHistory;
 import akin.city_card.user.model.User;
@@ -45,8 +44,8 @@ public class UserConverterImpl implements UserConverter {
 
                 .phoneVerified(user.isPhoneVerified())
                 .emailVerified(user.isEmailVerified())
-                .birthDate(user.getBirthDate())
-                .nationalId(user.getNationalId())
+                .birthDate(user.getIdentityInfo() != null ? user.getIdentityInfo().getBirthDate() : null)
+                .nationalId(user.getIdentityInfo() != null ? user.getIdentityInfo().getNationalId() : null)
 
                 .walletActivated(user.isWalletActivated())
                 .allowNegativeBalance(user.isAllowNegativeBalance())
@@ -123,8 +122,6 @@ public class UserConverterImpl implements UserConverter {
                 .deviceInfo(deviceInfo)
                 .build();
     }
-
-
 
 
 }
