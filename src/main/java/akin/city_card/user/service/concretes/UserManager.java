@@ -729,6 +729,7 @@ public class UserManager implements UserService {
     }
 
     @Override
+    @JsonView(Views.User.class)
     public List<SearchHistoryDTO> getSearchHistory(String username) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
         return user.getSearchHistory().stream().filter(SearchHistory::isActive).map(userConverter::toSearchHistoryDTO).toList();
@@ -746,6 +747,7 @@ public class UserManager implements UserService {
     }
 
     @Override
+    @JsonView(Views.User.class)
     public List<GeoAlertDTO> getGeoAlerts(String username) throws UserNotFoundException {
         return userRepository.findByUserNumber(username).getGeoAlerts().stream().filter(GeoAlert::isActive).map(userConverter::toGeoAlertDTO).toList();
     }
@@ -789,6 +791,7 @@ public class UserManager implements UserService {
     }
 
     @Override
+    @JsonView(Views.User.class)
     public Page<AuditLogDTO> getUserActivityLog(String username, Pageable pageable) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
         Page<AuditLog> auditLogsPage = auditLogRepository.findByUser(user, pageable);
