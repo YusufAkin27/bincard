@@ -1,7 +1,7 @@
 package akin.city_card.wallet.core.response;
 
-import akin.city_card.wallet.model.Currency;
 import akin.city_card.wallet.model.WalletStatus;
+import io.craftgate.model.Currency;
 import lombok.Builder;
 import lombok.Data;
 

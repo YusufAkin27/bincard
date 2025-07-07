@@ -1,6 +1,7 @@
 package akin.city_card.wallet.model;
 
 import akin.city_card.user.model.User;
+import io.craftgate.model.Currency;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -14,6 +15,8 @@ import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static io.craftgate.model.Currency.TRY;
 
 @Entity
 @Table(name = "wallets")
