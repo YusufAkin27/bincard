@@ -29,7 +29,7 @@ public class BusController {
 
     // --- GENEL ---
 
-    @GetMapping
+    @GetMapping("/getAllBus")
     public DataResponseMessage<List<BusDTO>> getAllBuses(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundException {
         return busService.getAllBuses(userDetails.getUsername());
     }
@@ -114,20 +114,20 @@ public class BusController {
 
     // --- ROTA / DURAKLAR / MESAFE ---
 
-    @PutMapping("/{busId}/route")
+    @PutMapping("/{busId}/route")//kontrol edilecek
     public ResponseMessage assignRouteToBus(@PathVariable Long busId,
                                             @RequestBody AssignRouteRequest request,
                                             @AuthenticationPrincipal UserDetails userDetails) {
         return busService.assignRoute(busId, request.getRouteId(), userDetails.getUsername());
     }
 
-    @GetMapping("/{busId}/route/stations")
+    @GetMapping("/{busId}/route/stations")//kontrol edilecek
     public DataResponseMessage<List<StationDTO>> getRouteStations(@PathVariable Long busId,
                                                                   @AuthenticationPrincipal UserDetails userDetails) {
         return busService.getRouteStations(busId, userDetails.getUsername());
     }
 
-    @GetMapping("/{busId}/eta")
+    @GetMapping("/{busId}/eta")//kontrol edilecek
     public DataResponseMessage<Double> getEstimatedTimeToStation(@PathVariable Long busId,
                                                                  @RequestParam Long stationId,
                                                                  @AuthenticationPrincipal UserDetails userDetails) {

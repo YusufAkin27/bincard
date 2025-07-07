@@ -45,7 +45,7 @@ public class SuperAdminController {
                                                @PathVariable Long requestId) throws AdminNotFoundException, AdminApprovalRequestNotFoundException, RequestAlreadyProcessedException {
         return superAdminService.approveAdminRequest(userDetails.getUsername(), requestId);
     }
-    @PostMapping("/admin-requests/{adminId}/reject")
+    @PostMapping("/admin-requests/{adminId}/reject") //Çalışmıyor Managera Bakınız
     public ResponseMessage rejectAdminRequest(@AuthenticationPrincipal UserDetails userDetails,
                                               @PathVariable Long adminId) throws AdminNotFoundException, AdminApprovalRequestNotFoundException, RequestAlreadyProcessedException {
         return superAdminService.rejectAdminRequest(userDetails.getUsername(), adminId);

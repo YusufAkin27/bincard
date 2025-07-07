@@ -80,7 +80,7 @@ public class SuperAdminManager implements SuperAdminService {
             throw new AdminNotFoundException();
         }
         List<AdminApprovalRequest> adminApprovalRequests = adminApprovalRequestRepository.findAll();
-        AdminApprovalRequest request = adminApprovalRequests.stream().filter(adminApprovalRequest -> adminApprovalRequest.getAdmin().getId().equals(adminId)).findFirst().orElseThrow(AdminApprovalRequestNotFoundException::new);
+        /*Admin Bulunamadığı için İsteği reddedilmiyor*/AdminApprovalRequest request = adminApprovalRequests.stream().filter(adminApprovalRequest -> adminApprovalRequest.getAdmin().getId().equals(adminId)).findFirst().orElseThrow(AdminApprovalRequestNotFoundException::new);
 
         if (request.getStatus() != ApprovalStatus.PENDING) {
             throw new RequestAlreadyProcessedException();
