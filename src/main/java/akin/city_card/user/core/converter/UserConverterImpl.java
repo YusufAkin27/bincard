@@ -5,7 +5,11 @@ import akin.city_card.security.entity.ProfileInfo;
 import akin.city_card.security.entity.Role;
 import akin.city_card.user.core.request.CreateUserRequest;
 import akin.city_card.user.core.response.CacheUserDTO;
+import akin.city_card.user.core.response.GeoAlertDTO;
+import akin.city_card.user.core.response.SearchHistoryDTO;
 import akin.city_card.user.core.response.UserExportDTO;
+import akin.city_card.user.model.GeoAlert;
+import akin.city_card.user.model.SearchHistory;
 import akin.city_card.user.model.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -61,6 +65,36 @@ public class UserConverterImpl implements UserConverter {
                 .build();
     }
 
+    @Override
+    public SearchHistoryDTO toSearchHistoryDTO(SearchHistory searchHistory) {
+        return SearchHistoryDTO.builder()
+                .userId(searchHistory.getUser().getId())
+                .query(searchHistory.getQuery())
+                .active(searchHistory.isActive())
+                .createdAt(searchHistory.getCreatedAt())
+                .deletedAt(searchHistory.getDeletedAt())
+                .deleted(searchHistory.isDeleted())
+                .searchType(searchHistory.getSearchType())
+                .searchedAt(searchHistory.getSearchedAt())
+                .id(searchHistory.getId())
+                .build();
+    }
+
+    @Override
+    public GeoAlertDTO toGeoAlertDTO(GeoAlert geoAlert) {
+        return GeoAlertDTO.builder()
+                .id(geoAlert.getId())
+                .alertName(geoAlert.getAlertName())
+                .stationId(geoAlert.getStation().getId())
+                .radiusMeters(geoAlert.getRadiusMeters())
+                .routeId(geoAlert.getRoute().getId())
+                .updatedAt(geoAlert.getUpdatedAt())
+                .userId(geoAlert.getUser().getId())
+                .createdAt(geoAlert.getCreatedAt())
+                .notifyBeforeMinutes(geoAlert.getNotifyBeforeMinutes())
+                .build();
+
+    }
 
 
     @Override
@@ -91,30 +125,6 @@ public class UserConverterImpl implements UserConverter {
     }
 
 
-    @Override
-    public UserExportDTO convertUserToExportDTO(User user) {
-        if (user == null) return null;
-
-        UserExportDTO dto = new UserExportDTO();
-        dto.setId(user.getId());
-        dto.setUserNumber(user.getUserNumber());
-        dto.setNationalId(user.getNationalId());
-        dto.setBirthDate(user.getBirthDate());
-        dto.setWalletActivated(user.isWalletActivated());
-        dto.setAllowNegativeBalance(user.isAllowNegativeBalance());
-        dto.setNegativeBalanceLimit(user.getNegativeBalanceLimit());
-        dto.setAutoTopUpEnabled(user.isAutoTopUpEnabled());
-        dto.setCreatedAt(user.getCreatedAt());
-        dto.setUpdatedAt(user.getUpdatedAt());
-
-        // profileInfo embedded ise null kontrolü yapıp ekleyebilirsin
-        if (user.getProfileInfo() != null) {
-            dto.setFullName(user.getProfileInfo().getName() + " " + user.getProfileInfo().getSurname());
-            dto.setEmail(user.getProfileInfo().getEmail());
-        }
-
-        return dto;
-    }
 
 
 }

@@ -1,5 +1,6 @@
 package akin.city_card.route.model;
 
+import akin.city_card.bus.model.Bus;
 import akin.city_card.station.model.Station;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -20,5 +21,9 @@ public class Route {
 
     @ManyToMany
     private List<Station> stations;
+    // Bir rotaya ait birçok otobüs olabilir
+
+    @OneToMany(mappedBy = "route", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private List<Bus> buses;
 }
 

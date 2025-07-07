@@ -1,9 +1,14 @@
 package akin.city_card.user.service.concretes;
 
+import akin.city_card.admin.core.converter.AuditLogConverter;
+import akin.city_card.admin.core.response.AuditLogDTO;
+import akin.city_card.admin.model.AuditLog;
 import akin.city_card.admin.repository.AuditLogRepository;
+import akin.city_card.bus.exceptions.RouteNotFoundException;
 import akin.city_card.buscard.core.converter.BusCardConverter;
 import akin.city_card.buscard.core.request.FavoriteCardRequest;
 import akin.city_card.buscard.core.response.FavoriteBusCardDTO;
+import akin.city_card.buscard.exceptions.BusCardNotFoundException;
 import akin.city_card.buscard.model.BusCard;
 import akin.city_card.buscard.model.UserFavoriteCard;
 import akin.city_card.buscard.repository.BusCardRepository;
@@ -13,25 +18,29 @@ import akin.city_card.mail.MailService;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.notification.core.request.NotificationPreferencesDTO;
 import akin.city_card.notification.model.NotificationPreferences;
+import akin.city_card.redis.CachedUserLookupService;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.route.exceptions.RouteNotFoundStationException;
+import akin.city_card.route.model.Route;
+import akin.city_card.route.repository.RouteRepository;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.security.exception.VerificationCodeStillValidException;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.sms.SmsService;
+import akin.city_card.station.exceptions.StationNotFoundException;
+import akin.city_card.station.model.Station;
+import akin.city_card.station.repository.StationRepository;
 import akin.city_card.user.core.converter.AutoTopUpConverter;
 import akin.city_card.user.core.converter.UserConverter;
 import akin.city_card.user.core.request.*;
 import akin.city_card.user.core.response.*;
 import akin.city_card.user.exceptions.*;
-import akin.city_card.user.model.AutoTopUpConfig;
-import akin.city_card.user.model.PasswordResetToken;
-import akin.city_card.user.model.User;
+import akin.city_card.user.model.*;
 import akin.city_card.user.repository.AutoTopUpConfigRepository;
 import akin.city_card.user.repository.PasswordResetTokenRepository;
 import akin.city_card.user.repository.UserRepository;
-import akin.city_card.redis.CachedUserLookupService;
 import akin.city_card.user.service.abstracts.UserService;
 import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
 import akin.city_card.verification.exceptions.InvalidOrUsedVerificationCodeException;
@@ -81,6 +90,9 @@ public class UserManager implements UserService {
     private final AutoTopUpConverter autoTopUpConverter;
     private AuditLogRepository auditLogRepository;
     private final CachedUserLookupService cachedUserLookupService;
+    private final RouteRepository routeRepository;
+    private final StationRepository stationRepository;
+    private final  AuditLogConverter auditLogConverter;
 
 
     @Override
@@ -193,7 +205,7 @@ public class UserManager implements UserService {
     @Override
     @JsonView(Views.User.class)
     public CacheUserDTO getProfile(String username) throws UserNotFoundException {
-     return cachedUserLookupService.findByUsername(username);
+        return cachedUserLookupService.findByUsername(username);
     }
 
 
@@ -230,7 +242,6 @@ public class UserManager implements UserService {
 
         return new ResponseMessage("Herhangi bir değişiklik yapılmadı.", false);
     }
-
 
 
     @Override
@@ -661,6 +672,129 @@ public class UserManager implements UserService {
 
         return cacheUserDTO;
     }
+
+    @Override
+    @Transactional
+    public ResponseMessage addAutoTopUpConfig(String username, AutoTopUpConfigRequest configRequest) throws UserNotFoundException, BusCardNotFoundException, WalletIsEmptyException {
+        User user = userRepository.findByUserNumber(username);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+        Optional<BusCard> busCard = busCardRepository.findById(configRequest.getBusCard());
+        if (busCard.isEmpty()) {
+            throw new BusCardNotFoundException();
+        }
+        Wallet wallet = user.getWallet();
+        if (wallet == null) {
+            throw new WalletIsEmptyException();
+        }
+        AutoTopUpConfig autoTopUpConfig = new AutoTopUpConfig();
+        autoTopUpConfig.setAmount(configRequest.getAmount());
+        autoTopUpConfig.setBusCard(busCard.get());
+        autoTopUpConfig.setThreshold(configRequest.getThreshold());
+        autoTopUpConfig.setUser(user);
+        autoTopUpConfig.setWallet(wallet);
+        autoTopUpConfig.setLastTopUpAt(null);
+        autoTopUpConfig.setCreatedAt(LocalDateTime.now());
+        autoTopUpConfig.setActive(true);
+        autoTopUpConfig.setAutoTopUpLogs(new ArrayList<>());
+        autoTopUpConfigRepository.save(autoTopUpConfig);
+        return new ResponseMessage("otomatik ödeme alındı", true);
+    }
+
+    @Override
+    @Transactional
+    public ResponseMessage deleteAutoTopUpConfig(String username, Long configId) throws AutoTopUpConfigNotFoundException, UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+        AutoTopUpConfig autoTopUpConfig = user.getAutoTopUpConfigs().stream().filter(a -> a.getId().equals(configId)).findFirst().orElseThrow(AutoTopUpConfigNotFoundException::new);
+        autoTopUpConfig.setActive(false);
+        autoTopUpConfigRepository.save(autoTopUpConfig);
+        return new ResponseMessage("otomatik ödeme kapatıldı", true);
+    }
+
+    @Override
+    public ResponseMessage setLowBalanceThreshold(String username, LowBalanceAlertRequest request) throws UserNotFoundException, BusCardNotFoundException, AlreadyBusCardLowBalanceException {
+        User user = userRepository.findByUserNumber(username);
+        Optional<BusCard> busCard = busCardRepository.findById(request.getBusCardId());
+        if (busCard.isEmpty()) {
+            throw new BusCardNotFoundException();
+        }
+        boolean isPresent = user.getLowBalanceAlerts().containsKey(busCard.get());
+        if (isPresent) {
+            throw new AlreadyBusCardLowBalanceException();
+        }
+        user.getLowBalanceAlerts().put(busCard.get(), request.getLowBalance());
+
+        return new ResponseMessage("düşük bakiye uyarısı ayarlandı", true);
+    }
+
+    @Override
+    public List<SearchHistoryDTO> getSearchHistory(String username) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+        return user.getSearchHistory().stream().filter(SearchHistory::isActive).map(userConverter::toSearchHistoryDTO).toList();
+    }
+
+    @Override
+    public ResponseMessage clearSearchHistory(String username) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+        for (SearchHistory searchHistory : user.getSearchHistory()) {
+            searchHistory.setActive(false);
+            searchHistory.setDeleted(true);
+            searchHistory.setDeletedAt(LocalDateTime.now());
+        }
+        return new ResponseMessage("arama geçmişi silindi", true);
+    }
+
+    @Override
+    public List<GeoAlertDTO> getGeoAlerts(String username) throws UserNotFoundException {
+        return userRepository.findByUserNumber(username).getGeoAlerts().stream().filter(GeoAlert::isActive).map(userConverter::toGeoAlertDTO).toList();
+    }
+
+    @Override
+    public ResponseMessage addGeoAlert(String username, GeoAlertRequest alertRequest) throws UserNotFoundException, RouteNotFoundException, StationNotFoundException, RouteNotFoundStationException {
+        User user = userRepository.findByUserNumber(username);
+        Optional<Route> route = routeRepository.findById(alertRequest.getRouteId());
+        if (route.isEmpty()) {
+            throw new RouteNotFoundException(route.get().getId());
+        }
+        Optional<Station> station = stationRepository.findById(alertRequest.getStationId());
+        if (station.isEmpty()) {
+            throw new StationNotFoundException();
+        }
+        if (!route.get().getStations().contains(station.get())) {
+            throw new RouteNotFoundStationException();
+        }
+        GeoAlert geoAlert = new GeoAlert();
+        geoAlert.setUser(user);
+        geoAlert.setAlertName(alertRequest.getAlertName());
+        geoAlert.setActive(true);
+        geoAlert.setRoute(route.get());
+        geoAlert.setStation(station.get());
+        geoAlert.setNotifyBeforeMinutes(alertRequest.getNotifyBeforeMinutes());
+        geoAlert.setRadiusMeters(alertRequest.getRadiusMeters());
+        geoAlert.setCreatedAt(LocalDateTime.now());
+        geoAlert.setUpdatedAt(LocalDateTime.now());
+        user.getGeoAlerts().add(geoAlert);
+        return new ResponseMessage("araç konum uyarısı eklendi", true);
+    }
+
+    @Override
+    public ResponseMessage deleteGeoAlert(String username, Long alertId) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+        boolean isDeleted = user.getGeoAlerts().removeIf(g -> g.getId().equals(alertId));
+        if (isDeleted) {
+            return new ResponseMessage(alertId + "araç konum uyarısı silindi", true);
+        }
+        return new ResponseMessage("araç konum uyarısı bulunamadı", true);
+    }
+
+    @Override
+    public Page<AuditLogDTO> getUserActivityLog(String username, Pageable pageable) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+        Page<AuditLog> auditLogsPage = auditLogRepository.findByUser(user, pageable);
+        return auditLogsPage.map(auditLogConverter::mapToDto);
+    }
+
 
     private String buildEmailBodyFromCacheDTO(CacheUserDTO dto) {
         StringBuilder sb = new StringBuilder();

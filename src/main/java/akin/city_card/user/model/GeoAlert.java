@@ -1,9 +1,14 @@
 package akin.city_card.user.model;
 
-import akin.city_card.buscard.model.BusCard;
+import akin.city_card.route.model.Route;
+import akin.city_card.station.model.Station;
 import akin.city_card.user.model.User;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import java.time.LocalDateTime;
 
 @Entity
 @Getter
@@ -11,6 +16,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Table(name = "geo_alert")
 public class GeoAlert {
 
     @Id
@@ -22,22 +28,34 @@ public class GeoAlert {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Opsiyonel olarak hangi kartla ilişkili
+    // Uyarı hangi rotaya ait
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "bus_card_id")
-    private BusCard busCard;
+    @JoinColumn(name = "route_id", nullable = false)
+    private Route route;
 
-    private double latitude;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "station_id", nullable = false)
+    private Station station;
 
-    private double longitude;
+    @Builder.Default
+    @Column(nullable = false)
+    private double radiusMeters = 300; // Varsayılan 300m
 
-    private double radiusMeters = 300; // Varsayılan olarak 300m
-
+    @Builder.Default
+    @Column(nullable = false)
     private int notifyBeforeMinutes = 5;
 
+    @Builder.Default
+    @Column(nullable = false)
     private boolean active = true;
 
+    @Column(length = 100, nullable = false)
     private String alertName; // Kullanıcı dostu isim
 
+    @CreationTimestamp
+    @Column(updatable = false)
+    private LocalDateTime createdAt;
 
+    @UpdateTimestamp
+    private LocalDateTime updatedAt;
 }

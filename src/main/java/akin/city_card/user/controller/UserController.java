@@ -1,17 +1,20 @@
 package akin.city_card.user.controller;
 
+import akin.city_card.admin.core.response.AuditLogDTO;
+import akin.city_card.bus.exceptions.RouteNotFoundException;
 import akin.city_card.buscard.core.request.FavoriteCardRequest;
 import akin.city_card.buscard.core.response.FavoriteBusCardDTO;
+import akin.city_card.buscard.exceptions.BusCardNotFoundException;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.notification.core.request.NotificationPreferencesDTO;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.route.exceptions.RouteNotFoundStationException;
 import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.security.exception.VerificationCodeStillValidException;
+import akin.city_card.station.exceptions.StationNotFoundException;
 import akin.city_card.user.core.request.*;
-import akin.city_card.user.core.response.AutoTopUpConfigDTO;
-import akin.city_card.user.core.response.CacheUserDTO;
-import akin.city_card.user.core.response.UserExportDTO;
+import akin.city_card.user.core.response.*;
 import akin.city_card.user.exceptions.*;
 import akin.city_card.user.service.abstracts.UserService;
 import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
@@ -22,6 +25,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -211,24 +217,23 @@ public class UserController {
         return userService.getAutoTopUpConfigs(userDetails.getUsername());
     }
 
-    /*
         @PostMapping("/auto-top-up")
         public ResponseMessage addAutoTopUpConfig(@AuthenticationPrincipal UserDetails userDetails,
-                                                  @RequestBody AutoTopUpConfigRequest configRequest) throws UserNotFoundException {
+                                                  @RequestBody AutoTopUpConfigRequest configRequest) throws UserNotFoundException, BusCardNotFoundException, WalletIsEmptyException {
             return userService.addAutoTopUpConfig(userDetails.getUsername(), configRequest);
         }
 
         @DeleteMapping("/auto-top-up/{configId}")
         public ResponseMessage deleteAutoTopUpConfig(@AuthenticationPrincipal UserDetails userDetails,
-                                                     @PathVariable UUID configId) throws UserNotFoundException {
+                                                     @PathVariable Long configId) throws UserNotFoundException, AutoTopUpConfigNotFoundException {
             return userService.deleteAutoTopUpConfig(userDetails.getUsername(), configId);
         }
 
         // DÜŞÜK BAKİYE UYARISI
         @PutMapping("/balance-alert")
         public ResponseMessage setLowBalanceAlert(@AuthenticationPrincipal UserDetails userDetails,
-                                                  @RequestBody LowBalanceAlertRequest request) throws UserNotFoundException {
-            return userService.setLowBalanceThreshold(userDetails.getUsername(), request.getCardId(), request.getThreshold());
+                                                  @RequestBody LowBalanceAlertRequest request) throws UserNotFoundException, BusCardNotFoundException, AlreadyBusCardLowBalanceException {
+            return userService.setLowBalanceThreshold(userDetails.getUsername(),request);
         }
 
         // ARAMA GEÇMİŞİ
@@ -250,13 +255,13 @@ public class UserController {
 
         @PostMapping("/geo-alerts")
         public ResponseMessage addGeoAlert(@AuthenticationPrincipal UserDetails userDetails,
-                                           @RequestBody GeoAlertRequest alertRequest) throws UserNotFoundException {
+                                           @RequestBody GeoAlertRequest alertRequest) throws UserNotFoundException, StationNotFoundException, RouteNotFoundException, RouteNotFoundStationException {
             return userService.addGeoAlert(userDetails.getUsername(), alertRequest);
         }
 
         @DeleteMapping("/geo-alerts/{alertId}")
         public ResponseMessage deleteGeoAlert(@AuthenticationPrincipal UserDetails userDetails,
-                                              @PathVariable UUID alertId) throws UserNotFoundException {
+                                              @PathVariable Long alertId) throws UserNotFoundException {
             return userService.deleteGeoAlert(userDetails.getUsername(), alertId);
         }
 
@@ -270,7 +275,7 @@ public class UserController {
             return userService.getUserActivityLog(userDetails.getUsername(), pageable);
         }
 
-     */
+
     @GetMapping("/export")
     public CacheUserDTO exportUserData(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
         return userService.exportUserData(userDetails.getUsername());

@@ -1,17 +1,20 @@
 package akin.city_card.user.service.abstracts;
 
+import akin.city_card.admin.core.response.AuditLogDTO;
+import akin.city_card.bus.exceptions.RouteNotFoundException;
 import akin.city_card.buscard.core.request.FavoriteCardRequest;
 import akin.city_card.buscard.core.response.FavoriteBusCardDTO;
+import akin.city_card.buscard.exceptions.BusCardNotFoundException;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.notification.core.request.NotificationPreferencesDTO;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.route.exceptions.RouteNotFoundStationException;
 import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.security.exception.VerificationCodeStillValidException;
+import akin.city_card.station.exceptions.StationNotFoundException;
 import akin.city_card.user.core.request.*;
-import akin.city_card.user.core.response.AutoTopUpConfigDTO;
-import akin.city_card.user.core.response.CacheUserDTO;
-import akin.city_card.user.core.response.UserExportDTO;
+import akin.city_card.user.core.response.*;
 import akin.city_card.user.exceptions.*;
 import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
 import akin.city_card.verification.exceptions.InvalidOrUsedVerificationCodeException;
@@ -19,6 +22,7 @@ import akin.city_card.wallet.core.response.WalletDTO;
 import akin.city_card.wallet.exceptions.WalletIsEmptyException;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -76,4 +80,21 @@ public interface UserService {
 
     CacheUserDTO exportUserData(String username) throws UserNotFoundException;
 
+    ResponseMessage addAutoTopUpConfig(String username, AutoTopUpConfigRequest configRequest) throws UserNotFoundException, BusCardNotFoundException, WalletIsEmptyException;
+
+    ResponseMessage deleteAutoTopUpConfig(String username, Long configId) throws AutoTopUpConfigNotFoundException, UserNotFoundException;
+
+    ResponseMessage setLowBalanceThreshold(String username, LowBalanceAlertRequest request) throws UserNotFoundException, BusCardNotFoundException, AlreadyBusCardLowBalanceException;
+
+    List<SearchHistoryDTO> getSearchHistory(String username) throws UserNotFoundException;
+
+    ResponseMessage clearSearchHistory(String username) throws UserNotFoundException;
+
+    List<GeoAlertDTO> getGeoAlerts(String username) throws UserNotFoundException;
+
+    ResponseMessage addGeoAlert(String username, GeoAlertRequest alertRequest) throws UserNotFoundException, RouteNotFoundException, StationNotFoundException, RouteNotFoundStationException;
+
+    ResponseMessage deleteGeoAlert(String username, Long alertId) throws UserNotFoundException;
+
+    Page<AuditLogDTO> getUserActivityLog(String username, Pageable pageable) throws UserNotFoundException;
 }
