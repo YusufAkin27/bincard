@@ -1,18 +1,16 @@
 package akin.city_card.user.service.abstracts;
 
-import akin.city_card.admin.core.response.AuditLogDTO;
 import akin.city_card.buscard.core.request.FavoriteCardRequest;
 import akin.city_card.buscard.core.response.FavoriteBusCardDTO;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.notification.core.request.NotificationPreferencesDTO;
-import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.security.exception.VerificationCodeStillValidException;
 import akin.city_card.user.core.request.*;
 import akin.city_card.user.core.response.AutoTopUpConfigDTO;
-import akin.city_card.user.core.response.UserDTO;
+import akin.city_card.user.core.response.CacheUserDTO;
 import akin.city_card.user.core.response.UserExportDTO;
 import akin.city_card.user.exceptions.*;
 import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
@@ -21,7 +19,6 @@ import akin.city_card.wallet.core.response.WalletDTO;
 import akin.city_card.wallet.exceptions.WalletIsEmptyException;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -31,7 +28,7 @@ public interface UserService {
 
     ResponseMessage create(CreateUserRequest createUserRequest) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException, VerificationCodeStillValidException;
 
-    UserDTO getProfile(String username) throws UserNotFoundException;
+    CacheUserDTO getProfile(String username) throws UserNotFoundException;
 
     ResponseMessage updateProfile(String username, UpdateProfileRequest updateProfileRequest) throws UserNotFoundException;
 
@@ -59,10 +56,10 @@ public interface UserService {
     boolean updateFCMToken(String fcmToken, String username) throws UserNotFoundException;
 
 
-    Page<UserDTO> getAllUsers(String username, int page, int size)
+    Page<CacheUserDTO> getAllUsers(String username, int page, int size)
             throws UserNotActiveException, UnauthorizedAreaException;
 
-    Page<UserDTO> searchUser(String username, String query, int page, int size)
+    Page<CacheUserDTO> searchUser(String username, String query, int page, int size)
             throws UserNotFoundException, UnauthorizedAreaException, UserNotActiveException;
 
     List<FavoriteBusCardDTO> getFavoriteCards(String username) throws UserNotFoundException;
@@ -73,10 +70,10 @@ public interface UserService {
 
     WalletDTO getWallet(String username) throws WalletIsEmptyException, UserNotFoundException;
 
-    ResponseMessage updateNotificationPreferences(String username, NotificationPreferencesDTO preferences) throws UserNotFoundException;
+    CacheUserDTO updateNotificationPreferences(String username, NotificationPreferencesDTO preferences) throws UserNotFoundException;
 
     List<AutoTopUpConfigDTO> getAutoTopUpConfigs(String username) throws UserNotFoundException;
 
-    UserExportDTO exportUserData(String username) throws UserNotFoundException;
+    CacheUserDTO exportUserData(String username) throws UserNotFoundException;
 
 }

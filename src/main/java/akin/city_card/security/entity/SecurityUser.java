@@ -3,6 +3,7 @@ package akin.city_card.security.entity;
 import akin.city_card.admin.model.AuditLog;
 import akin.city_card.location.model.Location;
 import akin.city_card.user.model.LoginHistory;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -32,7 +33,6 @@ import java.util.stream.Collectors;
 public class SecurityUser implements UserDetails, Serializable {
     private static final long serialVersionUID = 1L;
 
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -41,6 +41,7 @@ public class SecurityUser implements UserDetails, Serializable {
     private String userNumber;
 
     @Column(nullable = false)
+    @JsonIgnore
     private String password;
 
     @ElementCollection(fetch = FetchType.EAGER)
@@ -67,20 +68,25 @@ public class SecurityUser implements UserDetails, Serializable {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("loginAt DESC")
+    @JsonIgnore
     private List<LoginHistory> loginHistory = new ArrayList<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("recordedAt DESC")
+    @JsonIgnore
     private List<Location> locationHistory = new ArrayList<>();
 
 
     @OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JsonIgnore
     private List<AuditLog> auditLogs = new ArrayList<>();
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "last_location_id")
+    @JsonIgnore
     private Location lastKnownLocation;
 
+    @JsonIgnore
     private LocalDateTime lastLocationUpdatedAt;
 
 
@@ -90,6 +96,7 @@ public class SecurityUser implements UserDetails, Serializable {
     }
 
     @Override
+    @JsonIgnore
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()
                 .map(role -> new SimpleGrantedAuthority(role.getAuthority()))
@@ -102,16 +109,19 @@ public class SecurityUser implements UserDetails, Serializable {
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonExpired() {
         return isAccountNonExpired();
     }
 
     @Override
+    @JsonIgnore
     public boolean isAccountNonLocked() {
         return isAccountNonLocked();
     }
 
     @Override
+    @JsonIgnore
     public boolean isCredentialsNonExpired() {
         return isCredentialsNonExpired();
     }

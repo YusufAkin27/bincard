@@ -1,5 +1,6 @@
 package akin.city_card.user.repository;
 
+import akin.city_card.buscard.model.UserFavoriteCard;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.model.User;
 import org.springframework.data.domain.Page;
@@ -28,4 +29,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
        """)
     Page<User> searchByQuery(@Param("query") String query, Pageable pageable);
 
+    @Query("SELECT ufc FROM UserFavoriteCard ufc WHERE ufc.user.userNumber = :username")
+    List<UserFavoriteCard> findFavoriteCardsByUserNumber(@Param("username") String username);
 }

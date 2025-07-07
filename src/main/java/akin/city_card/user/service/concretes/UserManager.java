@@ -23,9 +23,7 @@ import akin.city_card.sms.SmsService;
 import akin.city_card.user.core.converter.AutoTopUpConverter;
 import akin.city_card.user.core.converter.UserConverter;
 import akin.city_card.user.core.request.*;
-import akin.city_card.user.core.response.AutoTopUpConfigDTO;
-import akin.city_card.user.core.response.UserDTO;
-import akin.city_card.user.core.response.UserExportDTO;
+import akin.city_card.user.core.response.*;
 import akin.city_card.user.exceptions.*;
 import akin.city_card.user.model.AutoTopUpConfig;
 import akin.city_card.user.model.PasswordResetToken;
@@ -33,6 +31,7 @@ import akin.city_card.user.model.User;
 import akin.city_card.user.repository.AutoTopUpConfigRepository;
 import akin.city_card.user.repository.PasswordResetTokenRepository;
 import akin.city_card.user.repository.UserRepository;
+import akin.city_card.user.service.abstracts.CachedUserLookupService;
 import akin.city_card.user.service.abstracts.UserService;
 import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
 import akin.city_card.verification.exceptions.InvalidOrUsedVerificationCodeException;
@@ -45,8 +44,10 @@ import akin.city_card.wallet.core.response.WalletDTO;
 import akin.city_card.wallet.exceptions.WalletIsEmptyException;
 import akin.city_card.wallet.model.Wallet;
 import akin.city_card.wallet.repository.WalletRepository;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -81,6 +82,8 @@ public class UserManager implements UserService {
     private final AutoTopUpConfigRepository autoTopUpConfigRepository;
     private final AutoTopUpConverter autoTopUpConverter;
     private AuditLogRepository auditLogRepository;
+    private final CachedUserLookupService cachedUserLookupService;
+
 
     @Override
     @Transactional
@@ -189,16 +192,17 @@ public class UserManager implements UserService {
         return new ResponseMessage("Telefon numarası başarıyla doğrulandı. Hesabınız aktif hale getirildi.", true);
     }
 
-
     @Override
-    public UserDTO getProfile(String username) throws UserNotFoundException {
-        return userConverter.convertUserToDTO(findByUsername(username));
+    @JsonView(Views.User.class)
+    public CacheUserDTO getProfile(String username) throws UserNotFoundException {
+     return cachedUserLookupService.findByUsername(username);
     }
+
 
     @Override
     @Transactional
     public ResponseMessage updateProfile(String username, UpdateProfileRequest updateProfileRequest) throws UserNotFoundException {
-        User user = findByUsername(username);
+        User user = userRepository.findByUserNumber(username);
 
         boolean isUpdated = false;
 
@@ -214,32 +218,26 @@ public class UserManager implements UserService {
             isUpdated = true;
         }
         if (updateProfileRequest.getEmail() != null && !updateProfileRequest.getEmail().isBlank()) {
-            user.getProfileInfo().setEmail(user.getProfileInfo().getEmail().trim().toLowerCase());
+            // Burada eski email yerine güncellenen email set edilmeli, yanlış setlenmiş
+            user.getProfileInfo().setEmail(updateProfileRequest.getEmail().trim().toLowerCase());
             isUpdated = true;
         }
 
-
         if (isUpdated) {
             userRepository.save(user);
+
+
             return new ResponseMessage("Profil başarıyla güncellendi.", true);
         }
 
         return new ResponseMessage("Herhangi bir değişiklik yapılmadı.", false);
     }
 
-    @Cacheable(value = "users", key = "#username")
-    public User findByUsername(String username) throws UserNotFoundException {
-        System.out.println("Veritabanından çağrılıyor ve cache'e eklenecek: " + username);
-        User user = userRepository.findByUserNumber(username);
-        if (user == null) {
-            throw new UserNotFoundException();
-        }
-        return user;
-    }
+
 
     @Override
     public ResponseMessage deactivateUser(String username) throws UserNotFoundException {
-        User user = findByUsername(username);
+        User user = userRepository.findByUserNumber(username);
         user.setActive(false);
         user.setDeleted(true);
         return new ResponseMessage("Kullanıcı hesabı silindi.", true);
@@ -261,7 +259,7 @@ public class UserManager implements UserService {
     public ResponseMessage updateProfilePhoto(String username, MultipartFile file)
             throws PhotoSizeLargerException, IOException, UserNotFoundException {
 
-        User user = findByUsername(username);
+        User user = userRepository.findByUserNumber(username);
 
         try {
             CompletableFuture<String> futureUrl = mediaUploadService.uploadAndOptimizeMedia(file);
@@ -358,7 +356,7 @@ public class UserManager implements UserService {
     public ResponseMessage changePassword(String username, ChangePasswordRequest request)
             throws UserIsDeletedException, UserNotActiveException, UserNotFoundException, PasswordsDoNotMatchException, InvalidNewPasswordException, IncorrectCurrentPasswordException, SamePasswordException {
 
-        User user = findByUsername(username);
+        User user = userRepository.findByUserNumber(username);
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -395,7 +393,7 @@ public class UserManager implements UserService {
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(resendPhoneVerification.getTelephone());
         resendPhoneVerification.setTelephone(normalizedPhone);
 
-        User user = findByUsername(resendPhoneVerification.getTelephone());
+        User user = userRepository.findByUserNumber(resendPhoneVerification.getTelephone());
         if (user == null) {
             throw new UserNotFoundException();
         }
@@ -411,7 +409,6 @@ public class UserManager implements UserService {
 
          */
 
-        // Doğrulama kodu bilgisi oluştur ve kaydet
         VerificationCode verificationCode = new VerificationCode();
         verificationCode.setCode(code);
         verificationCode.setCreatedAt(LocalDateTime.now());
@@ -424,7 +421,6 @@ public class UserManager implements UserService {
         verificationCode.setIpAddress(resendPhoneVerification.getIpAddress());
         verificationCode.setUserAgent(resendPhoneVerification.getUserAgent());
 
-        // Burada null olma ihtimaline karşı verificationCodes listesini kontrol et
         if (user.getVerificationCodes() == null) {
             user.setVerificationCodes(new ArrayList<>());
         }
@@ -469,13 +465,14 @@ public class UserManager implements UserService {
 
     @Override
     public boolean updateFCMToken(String fcmToken, String username) throws UserNotFoundException {
-        User user = findByUsername(username);
+        User user = userRepository.findByUserNumber(username);
         user.getDeviceInfo().setFcmToken(fcmToken);
         return true;
     }
 
     @Override
-    public Page<UserDTO> getAllUsers(String username, int page, int size)
+    @JsonView(Views.SuperAdmin.class)
+    public Page<CacheUserDTO> getAllUsers(String username, int page, int size)
             throws UserNotActiveException, UnauthorizedAreaException {
 
         SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
@@ -491,12 +488,13 @@ public class UserManager implements UserService {
 
         Page<User> userPage = userRepository.findAll(pageable);
 
-        return userPage.map(userConverter::convertUserToDTO);
+        return userPage.map(userConverter::toCacheUserDTO);
     }
 
 
     @Override
-    public Page<UserDTO> searchUser(String username, String query, int page, int size)
+    @JsonView(Views.SuperAdmin.class)
+    public Page<CacheUserDTO> searchUser(String username, String query, int page, int size)
             throws UserNotActiveException, UnauthorizedAreaException, UserNotFoundException {
 
         SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
@@ -516,34 +514,41 @@ public class UserManager implements UserService {
             throw new UserNotFoundException();
         }
 
-        return results.map(userConverter::convertUserToDTO);
+        return results.map(userConverter::toCacheUserDTO);
     }
 
     @Override
-    public List<FavoriteBusCardDTO> getFavoriteCards(String username) throws UserNotFoundException {
-        User user = findByUsername(username);
-        List<UserFavoriteCard> busCards = user.getFavoriteCards();
-        return busCards.stream().map(busCardConverter::favoriteBusCardToDTO).toList();
-
+    public List<FavoriteBusCardDTO> getFavoriteCards(String username) {
+        List<UserFavoriteCard> favoriteCards = userRepository.findFavoriteCardsByUserNumber(username);
+        return favoriteCards.stream().map(busCardConverter::favoriteBusCardToDTO).toList();
     }
 
+
     @Override
+    @Transactional
     public ResponseMessage addFavoriteCard(String username, FavoriteCardRequest request) throws UserNotFoundException {
-        User user = findByUsername(username);
+        CacheUserDTO cacheUserDTO = cachedUserLookupService.findByUsername(username);
+        if (cacheUserDTO == null) {
+            throw new UserNotFoundException();
+        }
+
+        User user = userRepository.findById(cacheUserDTO.getId())
+                .orElseThrow(UserNotFoundException::new);
 
         BusCard busCard = busCardRepository.findById(request.getBusCardId())
-                .orElseThrow(() -> new RuntimeException("BusCard bulunamadı"));
+                .orElseThrow(() -> new RuntimeException("BusCard bulunamadı - ID: " + request.getBusCardId()));
 
         boolean alreadyFavorited = user.getFavoriteCards().stream()
                 .anyMatch(fav -> fav.getBusCard().getId().equals(busCard.getId()));
         if (alreadyFavorited) {
-            return new ResponseMessage("Bu kart zaten favorilerde.", false);
+            return new ResponseMessage("Bu kart zaten favorilerinizde.", false);
         }
 
         UserFavoriteCard favorite = new UserFavoriteCard();
         favorite.setUser(user);
         favorite.setBusCard(busCard);
         favorite.setNickname(request.getNickname());
+        favorite.setCreated(LocalDateTime.now());
 
         user.getFavoriteCards().add(favorite);
         userRepository.save(user);
@@ -553,7 +558,7 @@ public class UserManager implements UserService {
 
     @Override
     public ResponseMessage removeFavoriteCard(String username, Long cardId) throws UserNotFoundException {
-        User user = findByUsername(username);
+        User user = userRepository.findByUserNumber(username);
 
         List<UserFavoriteCard> favoriteCards = user.getFavoriteCards();
         boolean isSuccess = favoriteCards.removeIf(fav ->
@@ -569,7 +574,7 @@ public class UserManager implements UserService {
 
     @Override
     public WalletDTO getWallet(String username) throws WalletIsEmptyException, UserNotFoundException {
-        User user = findByUsername(username);
+        User user = userRepository.findByUserNumber(username);
 
         Wallet wallet = user.getWallet();
         if (wallet == null) {
@@ -579,18 +584,19 @@ public class UserManager implements UserService {
     }
 
     @Override
-    public ResponseMessage updateNotificationPreferences(String username, NotificationPreferencesDTO preferencesDto) throws UserNotFoundException {
-        User user = findByUsername(username);
+    @Transactional
+    @JsonView(Views.User.class)
+    public CacheUserDTO updateNotificationPreferences(String username, NotificationPreferencesDTO preferencesDto)
+            throws UserNotFoundException {
 
-
-        NotificationPreferences preferences = user.getNotificationPreferences();
-
-        if (preferences == null) {
-            preferences = new NotificationPreferences();
-        }
         if (preferencesDto.getNotifyBeforeMinutes() != null && preferencesDto.getNotifyBeforeMinutes() < 0) {
-            return new ResponseMessage("Bildirim süresi negatif olamaz", false);
+            throw new IllegalArgumentException("Bildirim süresi negatif olamaz");
         }
+
+        User user = userRepository.findByUserNumber(username);
+
+        NotificationPreferences preferences = Optional.ofNullable(user.getNotificationPreferences())
+                .orElseGet(NotificationPreferences::new);
 
         preferences.setPushEnabled(preferencesDto.isPushEnabled());
         preferences.setSmsEnabled(preferencesDto.isSmsEnabled());
@@ -601,39 +607,22 @@ public class UserManager implements UserService {
         user.setNotificationPreferences(preferences);
         userRepository.save(user);
 
-        return new ResponseMessage("Bildirim tercihleri güncellendi", true);
+
+        return userConverter.toCacheUserDTO(user);
     }
 
     @Override
     public List<AutoTopUpConfigDTO> getAutoTopUpConfigs(String username) throws UserNotFoundException {
-        User user = findByUsername(username);
+        User user = userRepository.findByUserNumber(username);
 
-
-        List<AutoTopUpConfig> configs = autoTopUpConfigRepository.findByUser(user);
+        List<AutoTopUpConfig> configs = user.getAutoTopUpConfigs();
 
         return configs.stream()
                 .map(autoTopUpConverter::convertToDTO)
                 .toList();
     }
 
-    @Override
-    public UserExportDTO exportUserData(String username) throws UserNotFoundException {
-        User user = findByUsername(username);
 
-        UserExportDTO dto = userConverter.convertUserToExportDTO(user);
-
-        String emailBody = buildEmailBodyFromDTO(dto);
-
-        EmailMessage emailMessage = new EmailMessage();
-        emailMessage.setToEmail(user.getProfileInfo().getEmail()); // Email varsa
-        emailMessage.setSubject("Hesap Bilgileriniz");
-        emailMessage.setBody(emailBody);
-        emailMessage.setHtml(false);
-
-        mailService.queueEmail(emailMessage);
-
-        return dto;
-    }
 /*
     @Override
     public List<AuditLogDTO> getUserActivityLog(String username, Pageable pageable) throws UserNotFoundException {
@@ -651,23 +640,52 @@ public class UserManager implements UserService {
 
  */
 
-    private String buildEmailBodyFromDTO(UserExportDTO dto) {
+    @Override
+    @JsonView(Views.User.class)
+    public CacheUserDTO exportUserData(String username) throws UserNotFoundException {
+        if (username == null) {
+            throw new IllegalArgumentException("Username cannot be null");
+        }
+
+        CacheUserDTO cacheUserDTO = cachedUserLookupService.findByUsername(username);
+
+        if (cacheUserDTO.getEmail() != null) {
+            String emailBody = buildEmailBodyFromCacheDTO(cacheUserDTO);
+
+            EmailMessage emailMessage = new EmailMessage();
+            emailMessage.setToEmail(cacheUserDTO.getEmail());
+            emailMessage.setSubject("Hesap Bilgileriniz");
+            emailMessage.setBody(emailBody);
+            emailMessage.setHtml(false);
+
+            mailService.queueEmail(emailMessage);
+        }
+
+        return cacheUserDTO;
+    }
+
+    private String buildEmailBodyFromCacheDTO(CacheUserDTO dto) {
         StringBuilder sb = new StringBuilder();
 
-        sb.append("Sayın ").append(dto.getFullName() != null ? dto.getFullName() : "Kullanıcı").append(",\n\n");
+        String fullName = (dto.getName() != null && dto.getSurname() != null) ?
+                dto.getName() + " " + dto.getSurname() : "Kullanıcı";
+
+        sb.append("Sayın ").append(fullName).append(",\n\n");
         sb.append("City Card hesabınıza ait bilgiler aşağıda yer almaktadır:\n\n");
 
         sb.append("──────────────────────────────\n");
         sb.append("Kullanıcı ID      : ").append(dto.getId()).append("\n");
         sb.append("Kullanıcı No      : ").append(dto.getUserNumber() != null ? dto.getUserNumber() : "—").append("\n");
+        sb.append("Ad                : ").append(dto.getName() != null ? dto.getName() : "—").append("\n");
+        sb.append("Soyad             : ").append(dto.getSurname() != null ? dto.getSurname() : "—").append("\n");
+        sb.append("E-posta           : ").append(dto.getEmail() != null ? dto.getEmail() : "—").append("\n");
+        sb.append("Telefon           : ").append(dto.getPhoneNumber() != null ? dto.getPhoneNumber() : "—").append("\n");
         sb.append("TC Kimlik No      : ").append(dto.getNationalId() != null ? dto.getNationalId() : "—").append("\n");
         sb.append("Doğum Tarihi      : ").append(dto.getBirthDate() != null ? dto.getBirthDate() : "—").append("\n");
         sb.append("Cüzdan Aktif      : ").append(dto.isWalletActivated() ? "Evet" : "Hayır").append("\n");
         sb.append("Negatif Bakiye İzin: ").append(dto.isAllowNegativeBalance() ? "Evet" : "Hayır").append("\n");
         sb.append("Negatif Bakiye Limit: ").append(dto.getNegativeBalanceLimit() != null ? dto.getNegativeBalanceLimit() : "0.0").append("\n");
         sb.append("Otomatik Yükleme   : ").append(dto.isAutoTopUpEnabled() ? "Aktif" : "Pasif").append("\n");
-        sb.append("Hesap Oluşturulma : ").append(dto.getCreatedAt() != null ? dto.getCreatedAt() : "—").append("\n");
-        sb.append("Son Güncelleme    : ").append(dto.getUpdatedAt() != null ? dto.getUpdatedAt() : "—").append("\n");
         sb.append("──────────────────────────────\n\n");
 
         sb.append("Herhangi bir sorunuz için bizimle iletişime geçebilirsiniz.\n");
@@ -676,7 +694,6 @@ public class UserManager implements UserService {
 
         return sb.toString();
     }
-
 
     public String randomSixDigit() {
         Random random = new Random();

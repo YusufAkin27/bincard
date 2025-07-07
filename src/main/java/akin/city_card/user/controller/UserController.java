@@ -10,7 +10,7 @@ import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.security.exception.VerificationCodeStillValidException;
 import akin.city_card.user.core.request.*;
 import akin.city_card.user.core.response.AutoTopUpConfigDTO;
-import akin.city_card.user.core.response.UserDTO;
+import akin.city_card.user.core.response.CacheUserDTO;
 import akin.city_card.user.core.response.UserExportDTO;
 import akin.city_card.user.exceptions.*;
 import akin.city_card.user.service.abstracts.UserService;
@@ -110,7 +110,7 @@ public class UserController {
 
     // 2. Profil görüntüleme
     @GetMapping("/profile")
-    public UserDTO getProfile(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+    public CacheUserDTO getProfile(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
         return userService.getProfile(userDetails.getUsername());
     }
 
@@ -148,7 +148,7 @@ public class UserController {
                                          @RequestHeader(value = "If-None-Match", required = false) String ifNoneMatch)
             throws UserNotActiveException, UnauthorizedAreaException {
 
-        Page<UserDTO> userPage = userService.getAllUsers(userDetails.getUsername(), page, size);
+        Page<CacheUserDTO> userPage = userService.getAllUsers(userDetails.getUsername(), page, size);
 
         String etagValue = Integer.toHexString(userPage.getContent().hashCode());
         String etag = "\"" + etagValue + "\"";
@@ -165,7 +165,7 @@ public class UserController {
 
     // Tek sorgu ile kullanıcı arama (sayfalı)
     @GetMapping("/admin/search")
-    public Page<UserDTO> searchUser(@RequestParam String query,
+    public Page<CacheUserDTO> searchUser(@RequestParam String query,
                                     @AuthenticationPrincipal UserDetails userDetails,
                                     @RequestParam(defaultValue = "0") int page,
                                     @RequestParam(defaultValue = "10") int size)
@@ -200,7 +200,7 @@ public class UserController {
 
     // BİLDİRİM TERCİHLERİ
     @PutMapping("/notification-preferences")
-    public ResponseMessage updateNotificationPreferences(@AuthenticationPrincipal UserDetails userDetails,
+    public CacheUserDTO updateNotificationPreferences(@AuthenticationPrincipal UserDetails userDetails,
                                                          @RequestBody NotificationPreferencesDTO preferences) throws UserNotFoundException {
         return userService.updateNotificationPreferences(userDetails.getUsername(), preferences);
     }
@@ -272,7 +272,7 @@ public class UserController {
 
      */
     @GetMapping("/export")
-    public UserExportDTO exportUserData(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+    public CacheUserDTO exportUserData(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
         return userService.exportUserData(userDetails.getUsername());
     }
 

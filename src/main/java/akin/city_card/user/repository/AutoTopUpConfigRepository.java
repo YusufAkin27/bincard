@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface AutoTopUpConfigRepository extends JpaRepository<AutoTopUpConfig,Long> {
     List<AutoTopUpConfig> findByUser(User user);
+
+    List<AutoTopUpConfig> findByUserId(Long id);
 }

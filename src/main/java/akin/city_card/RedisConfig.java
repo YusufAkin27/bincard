@@ -10,16 +10,20 @@ import org.springframework.data.redis.connection.RedisConnectionFactory;
 import java.time.Duration;
 
 @Configuration
-@ConditionalOnProperty(name = "app.redis.enabled", havingValue = "true", matchIfMissing = false)
+@ConditionalOnProperty(
+        name = "app.redis.enabled",
+        havingValue = "true",
+        matchIfMissing = false // false yapıldı: `app.redis.enabled` tanımsızsa Redis açılmaz
+)
 public class RedisConfig {
 
     @Bean
     public RedisCacheManager cacheManager(RedisConnectionFactory redisConnectionFactory) {
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(
-                    RedisCacheConfiguration.defaultCacheConfig()
-                        .entryTtl(Duration.ofMinutes(10)) // her key 10 dk cache'te kalır
-                        .disableCachingNullValues()
+                        RedisCacheConfiguration.defaultCacheConfig()
+                                .entryTtl(Duration.ofMinutes(10)) // Her key 10 dk cache'te kalır
+                                .disableCachingNullValues()
                 )
                 .build();
     }

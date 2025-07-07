@@ -6,12 +6,14 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 @Embeddable
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ProfileInfo {
+public class ProfileInfo implements Serializable {
     private String name;
     private String surname;
     private String email;

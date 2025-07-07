@@ -5,6 +5,8 @@ import akin.city_card.user.model.User;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Data
 @Table(name = "user_favorite_cards")
@@ -23,4 +25,5 @@ public class UserFavoriteCard {
     private BusCard busCard;
 
     private String nickname;
+    private LocalDateTime created;
 }
