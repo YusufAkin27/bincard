@@ -1,4 +1,4 @@
-package akin.city_card;
+package akin.city_card.redis;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;

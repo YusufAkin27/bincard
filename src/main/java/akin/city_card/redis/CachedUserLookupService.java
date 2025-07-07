@@ -1,6 +1,5 @@
-package akin.city_card.user.service.abstracts;
+package akin.city_card.redis;
 
-import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.core.converter.UserConverter;
 import akin.city_card.user.core.response.CacheUserDTO;
