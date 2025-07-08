@@ -1,5 +1,6 @@
 package akin.city_card.wallet.service.concretes;
 
+import akin.city_card.bus.exceptions.UnauthorizedAccessException;
 import akin.city_card.cloudinary.MediaUploadService;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.response.DataResponseMessage;
@@ -7,6 +8,8 @@ import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.security.repository.SecurityUserRepository;
+import akin.city_card.user.core.converter.UserConverter;
+import akin.city_card.user.core.response.IdentityVerificationRequestDTO;
 import akin.city_card.user.exceptions.FileFormatCouldNotException;
 import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
@@ -23,6 +26,7 @@ import akin.city_card.wallet.core.request.ApproveIdentityRequest;
 import akin.city_card.wallet.core.request.CreateWalletRequest;
 import akin.city_card.wallet.core.request.TopUpBalanceRequest;
 import akin.city_card.wallet.core.request.WalletTransferRequest;
+import akin.city_card.wallet.core.response.TransferDetailsDTO;
 import akin.city_card.wallet.core.response.WalletActivityDTO;
 import akin.city_card.wallet.core.response.WalletDTO;
 import akin.city_card.wallet.core.response.WalletStatsDTO;
@@ -66,6 +70,7 @@ public class WalletManager implements WalletService {
     private final WalletTransactionRepository walletTransactionRepository;
     private final WalletStatusLogRepository walletStatusLogRepository;
     private final WalletConverter walletConverter;
+    private final UserConverter userConverter;
 
 
     @Override
@@ -371,9 +376,27 @@ public class WalletManager implements WalletService {
 
 
     @Override
-    public DataResponseMessage<?> getTransferDetail(String username, Long id) {
-        return null;
+    public DataResponseMessage<TransferDetailsDTO> getTransferDetail(String username, Long id) throws UnauthorizedAccessException, UserNotFoundException, TransferNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+
+        WalletTransfer transfer = walletTransferRepository.findById(id)
+                .orElseThrow(TransferNotFoundException::new);
+
+        Long userWalletId = user.getWallet() != null ? user.getWallet().getId() : null;
+
+        if (!transfer.getSenderWallet().getId().equals(userWalletId) &&
+                !transfer.getReceiverWallet().getId().equals(userWalletId)) {
+            throw new UnauthorizedAccessException();
+        }
+
+        TransferDetailsDTO dto = walletConverter.convertToTransferDTO(transfer);
+
+        return new DataResponseMessage<>( "transfer",true,dto);
     }
+
 
     @Override
     public DataResponseMessage<List<BigDecimal>> getBalanceHistory(String username, LocalDate start, LocalDate end) {
@@ -464,6 +487,53 @@ public class WalletManager implements WalletService {
     public DataResponseMessage<byte[]> exportTransactionsPDF(String username, LocalDate start, LocalDate end) {
         return null;
     }
+    @Override
+    public DataResponseMessage<Page<IdentityVerificationRequestDTO>> getIdentityRequests(
+            String username,
+            RequestStatus status,
+            LocalDate startDate,
+            LocalDate endDate,
+            int page,
+            int size,
+            String sortBy,
+            String sortDir) throws UserNotFoundException, UnauthorizedAreaException {
+
+        Optional<SecurityUser> admin = securityUserRepository.findByUserNumber(username);
+        if (admin.isEmpty()) {
+            throw new UserNotFoundException();
+        }
+
+        boolean isAdmin = admin.get().getRoles().contains("ADMIN") || admin.get().getRoles().contains("SUPERADMIN");
+        if (!isAdmin) {
+            throw new UnauthorizedAreaException();
+        }
+
+        if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
+            throw new IllegalArgumentException("Bitiş tarihi, başlangıç tarihinden önce olamaz.");
+        }
+
+        Sort sort = Sort.by(Sort.Direction.fromString(sortDir.toUpperCase()), sortBy);
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        LocalDateTime start = startDate != null ? startDate.atStartOfDay() : LocalDate.MIN.atStartOfDay();
+        LocalDateTime end = endDate != null ? endDate.plusDays(1).atStartOfDay().minusNanos(1) : LocalDateTime.now();
+
+        Page<IdentityVerificationRequest> resultPage;
+
+        if (status != null) {
+            resultPage = identityVerificationRequestRepository
+                    .findAllByStatusAndRequestedAtBetween(status, start, end, pageable);
+        } else {
+            resultPage = identityVerificationRequestRepository
+                    .findAllByRequestedAtBetween(start, end, pageable);
+        }
+
+        Page<IdentityVerificationRequestDTO> dtoPage = resultPage.map(userConverter::convertToVerificationRequestDTO);
+
+        return new DataResponseMessage<>("Kimlik doğrulama başvuruları başarıyla getirildi.", true, dtoPage);
+    }
+
 
     @Override
     @Transactional
@@ -635,6 +705,7 @@ public class WalletManager implements WalletService {
         return new ResponseMessage("Kimlik doğrulama başvurusu başarıyla " +
                 (request.isApproved() ? "onaylandı." : "reddedildi."), true);
     }
+
 
     public boolean createWalletForUser(User user) throws AlreadyWalletUserException {
         if (user.getWallet() != null) {

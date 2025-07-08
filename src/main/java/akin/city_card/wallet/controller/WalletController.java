@@ -1,13 +1,17 @@
 package akin.city_card.wallet.controller;
 
+import akin.city_card.bus.exceptions.UnauthorizedAccessException;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.core.response.IdentityVerificationRequestDTO;
 import akin.city_card.user.exceptions.FileFormatCouldNotException;
 import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.exceptions.VideoSizeLargerException;
+import akin.city_card.user.model.IdentityVerificationRequest;
+import akin.city_card.user.model.RequestStatus;
 import akin.city_card.wallet.core.request.*;
 import akin.city_card.wallet.core.response.QRCodeDTO;
 import akin.city_card.wallet.core.response.WalletActivityDTO;
@@ -19,6 +23,7 @@ import akin.city_card.wallet.service.abstracts.QRCodeService;
 import akin.city_card.wallet.service.abstracts.WalletService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -53,6 +58,21 @@ public class WalletController {
             @AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException, IdentityVerificationRequestNotFoundException, UnauthorizedAreaException, AlreadyWalletUserException {
         return walletService.approveOrReject(request, userDetails.getUsername());
     }
+    @GetMapping("/identity-requests")
+    public DataResponseMessage<Page<IdentityVerificationRequestDTO>> getIdentityRequests(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(required = false) RequestStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "requestedAt") String sortBy,
+            @RequestParam(defaultValue = "desc") String sortDir
+    ) throws UserNotFoundException, UnauthorizedAreaException {
+        return walletService.getIdentityRequests(
+                userDetails.getUsername(), status, startDate, endDate, page, size, sortBy, sortDir
+        );
+    }
 
     @GetMapping("/balance")
     public DataResponseMessage<BigDecimal> getBalance(@AuthenticationPrincipal UserDetails user) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException {
@@ -81,7 +101,7 @@ public class WalletController {
             @AuthenticationPrincipal UserDetails user,
             @RequestParam(required = false) WalletActivityType type,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) throws UserNotFoundException {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) throws UserNotFoundException, WalletNotFoundException {
         return walletService.getActivities(user.getUsername(), type, start, end);
     }
 
@@ -97,7 +117,7 @@ public class WalletController {
     @GetMapping("/transfer/{id}")
     public DataResponseMessage<?> getTransferDetail(
             @AuthenticationPrincipal UserDetails user,
-            @PathVariable Long id) {
+            @PathVariable Long id) throws UserNotFoundException, TransferNotFoundException, UnauthorizedAccessException {
         return walletService.getTransferDetail(user.getUsername(), id);
     }
 

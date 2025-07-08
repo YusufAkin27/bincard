@@ -4,12 +4,8 @@ import akin.city_card.security.entity.DeviceInfo;
 import akin.city_card.security.entity.ProfileInfo;
 import akin.city_card.security.entity.Role;
 import akin.city_card.user.core.request.CreateUserRequest;
-import akin.city_card.user.core.response.CacheUserDTO;
-import akin.city_card.user.core.response.GeoAlertDTO;
-import akin.city_card.user.core.response.SearchHistoryDTO;
-import akin.city_card.user.model.GeoAlert;
-import akin.city_card.user.model.SearchHistory;
-import akin.city_card.user.model.User;
+import akin.city_card.user.core.response.*;
+import akin.city_card.user.model.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -22,6 +18,55 @@ import java.util.stream.Collectors;
 public class UserConverterImpl implements UserConverter {
 
     private final PasswordEncoder passwordEncoder;
+
+    @Override
+    public UserIdentityInfoDTO toUserIdentityInfoDTO(UserIdentityInfo entity) {
+        if (entity == null) return null;
+
+        String approvedByPhone = null;
+        if (entity.getApprovedBy() != null) {
+            approvedByPhone = entity.getApprovedBy().getUserNumber();
+        }
+
+        String userPhone = null;
+        if (entity.getUser() != null) {
+            userPhone = entity.getUser().getUserNumber();
+        }
+
+        return UserIdentityInfoDTO.builder()
+                .id(entity.getId())
+                .frontCardPhoto(entity.getFrontCardPhoto())
+                .backCardPhoto(entity.getBackCardPhoto())
+                .nationalId(entity.getNationalId())
+                .serialNumber(entity.getSerialNumber())
+                .birthDate(entity.getBirthDate())
+                .gender(entity.getGender())
+                .motherName(entity.getMotherName())
+                .fatherName(entity.getFatherName())
+                .approved(entity.getApproved())
+                .approvedAt(entity.getApprovedAt())
+                .approvedByPhone(approvedByPhone)
+                .userPhone(userPhone)
+                .build();
+    }
+    @Override
+    public IdentityVerificationRequestDTO convertToVerificationRequestDTO(IdentityVerificationRequest entity) {
+        if (entity == null) return null;
+
+        return IdentityVerificationRequestDTO.builder()
+                .id(entity.getId())
+                .identityInfo(toUserIdentityInfoDTO(entity.getIdentityInfo()))
+                .requestedByPhone(
+                        entity.getRequestedBy() != null
+                                ? entity.getRequestedBy().getUserNumber()
+                                : null
+                )
+                .requestedAt(entity.getRequestedAt())
+                .status(entity.getStatus())
+                .build();
+    }
+
+
 
     @Override
     public CacheUserDTO toCacheUserDTO(User user) {

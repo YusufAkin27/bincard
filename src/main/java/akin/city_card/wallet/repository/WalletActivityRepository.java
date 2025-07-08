@@ -9,7 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface WalletActivityRepository extends JpaRepository<WalletActivity, Integer> {
+public interface WalletActivityRepository extends JpaRepository<WalletActivity, Long> {
     List<WalletActivity> findByWalletIdAndActivityTypeAndActivityDateBetween(Long walletId, WalletActivityType type, LocalDateTime startDateTime, LocalDateTime endDateTime);
 
     List<WalletActivity> findByWalletIdAndActivityDateBetween(Long walletId, LocalDateTime startDateTime, LocalDateTime endDateTime);

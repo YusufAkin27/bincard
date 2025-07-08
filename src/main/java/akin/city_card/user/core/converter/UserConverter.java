@@ -1,12 +1,8 @@
 package akin.city_card.user.core.converter;
 
 import akin.city_card.user.core.request.CreateUserRequest;
-import akin.city_card.user.core.response.CacheUserDTO;
-import akin.city_card.user.core.response.GeoAlertDTO;
-import akin.city_card.user.core.response.SearchHistoryDTO;
-import akin.city_card.user.model.GeoAlert;
-import akin.city_card.user.model.SearchHistory;
-import akin.city_card.user.model.User;
+import akin.city_card.user.core.response.*;
+import akin.city_card.user.model.*;
 
 public interface UserConverter {
 
@@ -15,6 +11,8 @@ public interface UserConverter {
     CacheUserDTO toCacheUserDTO(User user);
 
     SearchHistoryDTO toSearchHistoryDTO(SearchHistory searchHistory);
-
+    UserIdentityInfoDTO toUserIdentityInfoDTO(UserIdentityInfo entity);
     GeoAlertDTO toGeoAlertDTO(GeoAlert geoAlert);
+    IdentityVerificationRequestDTO convertToVerificationRequestDTO(IdentityVerificationRequest entity);
+
 }

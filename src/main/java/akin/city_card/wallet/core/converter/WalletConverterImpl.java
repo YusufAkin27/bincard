@@ -1,9 +1,11 @@
 package akin.city_card.wallet.core.converter;
 
+import akin.city_card.wallet.core.response.TransferDetailsDTO;
 import akin.city_card.wallet.core.response.WalletActivityDTO;
 import akin.city_card.wallet.core.response.WalletDTO;
 import akin.city_card.wallet.model.Wallet;
 import akin.city_card.wallet.model.WalletActivity;
+import akin.city_card.wallet.model.WalletTransfer;
 import akin.city_card.wallet.repository.WalletTransactionRepository;
 import akin.city_card.wallet.repository.WalletTransferRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +38,27 @@ public class WalletConverterImpl implements WalletConverter {
     }
 
     @Override
+    public TransferDetailsDTO convertToTransferDTO(WalletTransfer walletTransfer) {
+        if (walletTransfer == null) {
+            return null;
+        }
+
+        return TransferDetailsDTO.builder()
+                .id(walletTransfer.getId())
+                .amount(walletTransfer.getAmount())
+                .status(walletTransfer.getStatus().name())
+                .initiatedAt(walletTransfer.getInitiatedAt())
+                .completedAt(walletTransfer.getCompletedAt())
+                .description(walletTransfer.getDescription())
+                .initiatedByUserId(walletTransfer.getInitiatedByUserId())
+                .cancellationReason(walletTransfer.getCancellationReason())
+                .senderWalletId(walletTransfer.getSenderWallet() != null ? walletTransfer.getSenderWallet().getId() : null)
+                .receiverWalletId(walletTransfer.getReceiverWallet() != null ? walletTransfer.getReceiverWallet().getId() : null)
+                .build();
+    }
+
+
+    @Override
     public WalletActivityDTO convertWalletActivityDTO(WalletActivity walletActivity) {
         WalletActivityDTO.WalletActivityDTOBuilder dtoBuilder = WalletActivityDTO.builder()
                 .id(walletActivity.getId())
@@ -57,7 +80,7 @@ public class WalletConverterImpl implements WalletConverter {
         }
 
         if (walletActivity.getTransferId() != null) {
-            walletTransferRepository.findById(Math.toIntExact(walletActivity.getTransferId())).ifPresent(transfer -> {
+            walletTransferRepository.findById(walletActivity.getTransferId()).ifPresent(transfer -> {
                 if (walletActivity.getTransactionId() == null) {
                     dtoBuilder.amount(transfer.getAmount());
                 }

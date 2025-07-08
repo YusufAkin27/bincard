@@ -1,13 +1,16 @@
 package akin.city_card.wallet.service.abstracts;
 
+import akin.city_card.bus.exceptions.UnauthorizedAccessException;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.core.response.IdentityVerificationRequestDTO;
 import akin.city_card.user.exceptions.FileFormatCouldNotException;
 import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.exceptions.VideoSizeLargerException;
+import akin.city_card.user.model.RequestStatus;
 import akin.city_card.wallet.core.request.ApproveIdentityRequest;
 import akin.city_card.wallet.core.request.CreateWalletRequest;
 import akin.city_card.wallet.core.request.TopUpBalanceRequest;
@@ -19,6 +22,7 @@ import akin.city_card.wallet.exceptions.*;
 import akin.city_card.wallet.model.WalletActivityType;
 import akin.city_card.wallet.model.WalletTransfer;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -37,7 +41,7 @@ public interface WalletService {
 
     DataResponseMessage<List<WalletActivityDTO>> getActivitiesPaged(String username, WalletActivityType type, int page, int size) throws WalletNotFoundException, UserNotFoundException;
 
-    DataResponseMessage<?> getTransferDetail(String username, Long id);
+    DataResponseMessage<?> getTransferDetail(String username, Long id) throws UnauthorizedAccessException, UserNotFoundException, TransferNotFoundException;
 
     DataResponseMessage<List<BigDecimal>> getBalanceHistory(String username, LocalDate start, LocalDate end);
 
@@ -79,5 +83,7 @@ public interface WalletService {
     ResponseMessage topUp(@Valid String username, TopUpBalanceRequest topUpBalanceRequest) throws UserNotFoundException, WalletNotFoundException;
 
     ResponseMessage approveOrReject(@Valid ApproveIdentityRequest request, String username) throws UserNotFoundException, UnauthorizedAreaException, IdentityVerificationRequestNotFoundException, AlreadyWalletUserException;
+
+    DataResponseMessage<Page<IdentityVerificationRequestDTO>> getIdentityRequests(String username, RequestStatus status, LocalDate startDate, LocalDate endDate, int page, int size, String sortBy, String sortDir) throws UserNotFoundException, UnauthorizedAreaException;
 }
 
