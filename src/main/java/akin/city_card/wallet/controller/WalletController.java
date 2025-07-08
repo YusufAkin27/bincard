@@ -1,7 +1,15 @@
 package akin.city_card.wallet.controller;
 
+import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.exceptions.FileFormatCouldNotException;
+import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
+import akin.city_card.user.exceptions.PhotoSizeLargerException;
+import akin.city_card.user.exceptions.VideoSizeLargerException;
+import akin.city_card.wallet.core.request.ApproveIdentityRequest;
+import akin.city_card.wallet.core.request.TopUpBalanceRequest;
 import akin.city_card.wallet.core.response.WalletStatsDTO;
 import akin.city_card.wallet.core.request.CreateWalletRequest;
 
@@ -9,9 +17,14 @@ import akin.city_card.wallet.core.request.QRTransferRequest;
 import akin.city_card.wallet.core.response.QRCodeDTO;
 import akin.city_card.wallet.core.response.WalletActivityDTO;
 import akin.city_card.wallet.core.response.WalletDTO;
+import akin.city_card.wallet.exceptions.AlreadyWalletUserException;
+import akin.city_card.wallet.exceptions.IdentityVerificationRequestNotFoundException;
+import akin.city_card.wallet.exceptions.WalletNotActiveException;
+import akin.city_card.wallet.exceptions.WalletNotFoundException;
 import akin.city_card.wallet.model.WalletActivityType;
 import akin.city_card.wallet.service.abstracts.QRCodeService;
 import akin.city_card.wallet.service.abstracts.WalletService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -19,6 +32,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
@@ -34,12 +48,21 @@ public class WalletController {
 
     // ========== Mevcut Endpoint'ler ==========
     @PostMapping("/create")
-    public DataResponseMessage<WalletDTO> create(@RequestBody CreateWalletRequest createWalletRequest, @AuthenticationPrincipal UserDetails user) {
-        return walletService.createWallet(user.getUsername(), createWalletRequest);
+    public ResponseMessage create(
+            @ModelAttribute CreateWalletRequest request,
+            @AuthenticationPrincipal UserDetails user) throws UserNotFoundException, OnlyPhotosAndVideosException, PhotoSizeLargerException, IOException, VideoSizeLargerException, FileFormatCouldNotException {
+        return walletService.createWallet(user.getUsername(), request);
+    }
+
+    @PostMapping("/approve")
+    public ResponseMessage approveIdentityRequest(
+            @RequestBody @Valid ApproveIdentityRequest request,
+            @AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException, IdentityVerificationRequestNotFoundException, UnauthorizedAreaException, AlreadyWalletUserException {
+        return walletService.approveOrReject(request, userDetails.getUsername());
     }
 
     @GetMapping("/balance")
-    public DataResponseMessage<BigDecimal> getBalance(@AuthenticationPrincipal UserDetails user) {
+    public DataResponseMessage<BigDecimal> getBalance(@AuthenticationPrincipal UserDetails user) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException {
         return walletService.getWalletBalance(user.getUsername());
     }
 
@@ -106,11 +129,8 @@ public class WalletController {
     @PostMapping("/top-up")
     public ResponseMessage topUpBalance(
             @AuthenticationPrincipal UserDetails user,
-            @RequestParam BigDecimal amount,
-            @RequestParam String cardNumber,
-            @RequestParam String cardExpiry,
-            @RequestParam String cardCvc) {
-        return walletService.topUp(user.getUsername(), amount, cardNumber, cardExpiry, cardCvc);
+          @Valid @RequestBody TopUpBalanceRequest topUpBalanceRequest) throws UserNotFoundException, WalletNotFoundException {
+        return walletService.topUp(user.getUsername(),topUpBalanceRequest);
     }
 
     // ========== QR Kod İşlemleri ==========

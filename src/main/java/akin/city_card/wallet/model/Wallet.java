@@ -1,7 +1,6 @@
 package akin.city_card.wallet.model;
 
 import akin.city_card.user.model.User;
-import io.craftgate.model.Currency;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,9 +32,8 @@ public class Wallet extends AuditableEntity {
     @Column(name = "wiban", unique = true, nullable = false, length = 30)
     private String wiban;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 10)
-    private Currency currency = Currency.TRY;
+    private String  currency = "TRY";
 
 
     @Column(nullable = false, precision = 19, scale = 4)
@@ -81,14 +79,12 @@ public class Wallet extends AuditableEntity {
                 MessageDigest digest = MessageDigest.getInstance("SHA-256");
                 byte[] hash = digest.digest(base.getBytes());
 
-                // Hash'teki her byte'ı pozitif int yapıp stringe çevir ve sadece rakamlar elde et
                 StringBuilder digitsOnly = new StringBuilder();
                 for (byte b : hash) {
-                    int val = b & 0xFF; // byte'ı unsigned int yap
-                    digitsOnly.append(String.format("%03d", val)); // 3 basamaklı sayıya çevir, örn 005, 123 gibi
+                    int val = b & 0xFF;
+                    digitsOnly.append(String.format("%03d", val));
                 }
 
-                // İlk 16 haneyi al (başına "WBN-" eklenince toplam 20 karakter olur)
                 String numericPart = digitsOnly.substring(0, 16);
 
                 this.wiban = "WBN-" + numericPart;

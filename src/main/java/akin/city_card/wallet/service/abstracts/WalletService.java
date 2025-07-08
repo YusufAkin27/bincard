@@ -1,26 +1,40 @@
 package akin.city_card.wallet.service.abstracts;
 
+import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.exceptions.FileFormatCouldNotException;
+import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
+import akin.city_card.user.exceptions.PhotoSizeLargerException;
+import akin.city_card.user.exceptions.VideoSizeLargerException;
+import akin.city_card.wallet.core.request.ApproveIdentityRequest;
 import akin.city_card.wallet.core.request.CreateWalletRequest;
+import akin.city_card.wallet.core.request.TopUpBalanceRequest;
 import akin.city_card.wallet.core.response.WalletActivityDTO;
 import akin.city_card.wallet.core.response.WalletDTO;
 import akin.city_card.wallet.core.response.WalletStatsDTO;
+import akin.city_card.wallet.exceptions.AlreadyWalletUserException;
+import akin.city_card.wallet.exceptions.IdentityVerificationRequestNotFoundException;
+import akin.city_card.wallet.exceptions.WalletNotActiveException;
+import akin.city_card.wallet.exceptions.WalletNotFoundException;
 import akin.city_card.wallet.model.WalletActivityType;
+import jakarta.validation.Valid;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
 public interface WalletService {
-    DataResponseMessage<BigDecimal> getWalletBalance(String phone);
+    DataResponseMessage<BigDecimal> getWalletBalance(String phone) throws WalletNotFoundException, UserNotFoundException, WalletNotActiveException;
     ResponseMessage transfer(String senderPhone, String receiverPhone, BigDecimal amount);
     ResponseMessage deactivateWallet(String phone);
     ResponseMessage activateWallet(String phone);
     DataResponseMessage<List<WalletActivityDTO>> getActivities(String phone, WalletActivityType type, LocalDate start, LocalDate end);
 
-    DataResponseMessage<WalletDTO> createWallet(String phone, CreateWalletRequest createWalletRequest);
+    ResponseMessage createWallet(@Valid String phone, CreateWalletRequest createWalletRequest) throws UserNotFoundException, OnlyPhotosAndVideosException, PhotoSizeLargerException, IOException, VideoSizeLargerException, FileFormatCouldNotException;
 
     DataResponseMessage<List<WalletActivityDTO>> getActivitiesPaged(String username, WalletActivityType type, int page, int size);
 
@@ -30,7 +44,6 @@ public interface WalletService {
 
     ResponseMessage changeStatusAsAdmin(String username, String userNumber, boolean activate, String statusReason);
 
-    ResponseMessage topUp(String username, BigDecimal amount, String cardNumber, String cardExpiry, String cardCvc);
 
     ResponseMessage transferToWiban(String username, String receiverWiban, BigDecimal amount, String description);
 
@@ -63,5 +76,9 @@ public interface WalletService {
     DataResponseMessage<byte[]> exportTransactionsCSV(String username, LocalDate start, LocalDate end);
 
     DataResponseMessage<byte[]> exportTransactionsPDF(String username, LocalDate start, LocalDate end);
+
+    ResponseMessage topUp(@Valid String username, TopUpBalanceRequest topUpBalanceRequest) throws UserNotFoundException, WalletNotFoundException;
+
+    ResponseMessage approveOrReject(@Valid ApproveIdentityRequest request, String username) throws UserNotFoundException, UnauthorizedAreaException, IdentityVerificationRequestNotFoundException, AlreadyWalletUserException;
 }
 

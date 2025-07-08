@@ -16,7 +16,7 @@ public class WalletDTO {
 
     private Long userId;
 
-    private Currency currency;
+    private String currency;
 
     private BigDecimal balance;
 
