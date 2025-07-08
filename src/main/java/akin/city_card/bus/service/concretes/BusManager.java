@@ -30,6 +30,8 @@ import akin.city_card.response.ResponseMessage;
 import akin.city_card.route.model.Route;
 import akin.city_card.route.repository.RouteRepository;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.superadmin.model.SuperAdmin;
+import akin.city_card.superadmin.repository.SuperAdminRepository;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -51,6 +53,7 @@ import java.util.stream.Collectors;
 public class BusManager implements BusService {
     private final BusConverter busConverter;
     private final AdminRepository adminRepository;
+    private final SuperAdminRepository superAdminRepository;
     private final RouteRepository routeRepository;
     private final DriverRepository driverRepository;
     private final BusRepository busRepository;
@@ -63,7 +66,8 @@ public class BusManager implements BusService {
     @Override
     public DataResponseMessage<List<BusDTO>> getAllBuses(String username) throws AdminNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
-        if (admin == null) {
+        SuperAdmin superAdmin = superAdminRepository.findByUserNumber(username);
+        if (admin == null && superAdmin == null) {
             throw new AdminNotFoundException();
         }
         List<Bus> buses = new ArrayList<>();
@@ -73,7 +77,8 @@ public class BusManager implements BusService {
     @Override
     public DataResponseMessage<BusDTO> getBusById(Long busId, String username) throws AdminNotFoundException, BusNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
-        if (admin == null) {
+        SuperAdmin superAdmin = superAdminRepository.findByUserNumber(username);
+        if (admin == null && superAdmin == null) {
             throw new AdminNotFoundException();
         }
         Bus bus = busRepository.findById(busId).orElseThrow(() -> new BusNotFoundException(busId));
@@ -90,7 +95,8 @@ public class BusManager implements BusService {
     @Override
     public ResponseMessage createBus(CreateBusRequest request, String username) throws AdminNotFoundException, DuplicateBusPlateException, RouteNotFoundException, DriverNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
-        if (admin == null) {
+        SuperAdmin superAdmin = superAdminRepository.findByUserNumber(username);
+        if (admin == null && superAdmin == null) {
             throw new AdminNotFoundException();
         }
 
@@ -117,7 +123,8 @@ public class BusManager implements BusService {
     @Override
     public ResponseMessage updateBus(Long busId, UpdateBusRequest request, String username) throws AdminNotFoundException, DuplicateBusPlateException, DriverNotFoundException, RouteNotFoundException, BusNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
-        if (admin == null) {
+        SuperAdmin superAdmin = superAdminRepository.findByUserNumber(username);
+        if (admin == null && superAdmin == null) {
             throw new AdminNotFoundException();
         }
 
@@ -151,7 +158,8 @@ public class BusManager implements BusService {
     @Override
     public ResponseMessage deleteBus(Long busId, String username) throws AdminNotFoundException, BusNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
-        if (admin == null) {
+        SuperAdmin superAdmin = superAdminRepository.findByUserNumber(username);
+        if (admin == null && superAdmin == null) {
             throw new AdminNotFoundException();
         }
 
@@ -172,7 +180,8 @@ public class BusManager implements BusService {
     @Override
     public ResponseMessage toggleBusActive(Long busId, String username) throws AdminNotFoundException, BusNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
-        if (admin == null) {
+        SuperAdmin superAdmin = superAdminRepository.findByUserNumber(username);
+        if (admin == null && superAdmin == null) {
             throw new AdminNotFoundException();
         }
 
@@ -192,7 +201,8 @@ public class BusManager implements BusService {
     @Override
     public ResponseMessage assignDriver(Long busId, Long driverId, String username) throws AdminNotFoundException, BusNotFoundException, DriverNotFoundException, DriverAlreadyAssignedException {
         Admin admin = adminRepository.findByUserNumber(username);
-        if (admin == null) {
+        SuperAdmin superAdmin = superAdminRepository.findByUserNumber(username);
+        if (admin == null && superAdmin == null) {
             throw new AdminNotFoundException();
         }
 
@@ -276,7 +286,8 @@ public class BusManager implements BusService {
     @Override
     public DataResponseMessage<List<BusLocationDTO>> getLocationHistory(Long busId, LocalDate date, String username) throws UnauthorizedAccessException, BusNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
-        if (admin == null) {
+        SuperAdmin superAdmin = superAdminRepository.findByUserNumber(username);
+        if (admin == null && superAdmin == null) {
             throw new UnauthorizedAccessException();
         }
 

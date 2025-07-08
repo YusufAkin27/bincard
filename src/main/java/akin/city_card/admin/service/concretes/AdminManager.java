@@ -53,7 +53,9 @@ public class AdminManager implements AdminService {
 
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(adminRequest.getTelephone());
         adminRequest.setTelephone(normalizedPhone);
-
+        if (securityUserRepository.existsByUserNumber(adminRequest.getTelephone())){
+            throw new PhoneNumberAlreadyExistsException();
+        }
 
         DeviceInfo deviceInfo = DeviceInfo.builder()
                 .deviceUuid(adminRequest.getDeviceUuid())
