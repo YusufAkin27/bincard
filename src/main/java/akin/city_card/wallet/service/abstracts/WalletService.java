@@ -11,14 +11,13 @@ import akin.city_card.user.exceptions.VideoSizeLargerException;
 import akin.city_card.wallet.core.request.ApproveIdentityRequest;
 import akin.city_card.wallet.core.request.CreateWalletRequest;
 import akin.city_card.wallet.core.request.TopUpBalanceRequest;
+import akin.city_card.wallet.core.request.WalletTransferRequest;
 import akin.city_card.wallet.core.response.WalletActivityDTO;
 import akin.city_card.wallet.core.response.WalletDTO;
 import akin.city_card.wallet.core.response.WalletStatsDTO;
-import akin.city_card.wallet.exceptions.AlreadyWalletUserException;
-import akin.city_card.wallet.exceptions.IdentityVerificationRequestNotFoundException;
-import akin.city_card.wallet.exceptions.WalletNotActiveException;
-import akin.city_card.wallet.exceptions.WalletNotFoundException;
+import akin.city_card.wallet.exceptions.*;
 import akin.city_card.wallet.model.WalletActivityType;
+import akin.city_card.wallet.model.WalletTransfer;
 import jakarta.validation.Valid;
 
 import java.io.IOException;
@@ -29,14 +28,14 @@ import java.util.Map;
 
 public interface WalletService {
     DataResponseMessage<BigDecimal> getWalletBalance(String phone) throws WalletNotFoundException, UserNotFoundException, WalletNotActiveException;
-    ResponseMessage transfer(String senderPhone, String receiverPhone, BigDecimal amount);
-    ResponseMessage deactivateWallet(String phone);
-    ResponseMessage activateWallet(String phone);
-    DataResponseMessage<List<WalletActivityDTO>> getActivities(String phone, WalletActivityType type, LocalDate start, LocalDate end);
+    ResponseMessage transfer(String senderPhone,@Valid WalletTransferRequest walletTransfer) throws UserNotFoundException, ReceiverNotFoundException, WalletNotFoundException, ReceiverWalletNotFoundException, WalletNotActiveException, ReceiverWalletNotActiveException, InsufficientFundsException;
+    ResponseMessage deactivateWallet(String phone) throws WalletNotActiveException, WalletNotFoundException, UserNotFoundException;
+    ResponseMessage activateWallet(String phone) throws UserNotFoundException, WalletNotFoundException;
+    DataResponseMessage<List<WalletActivityDTO>> getActivities(String phone, WalletActivityType type, LocalDate start, LocalDate end) throws UserNotFoundException, WalletNotFoundException;
 
     ResponseMessage createWallet(@Valid String phone, CreateWalletRequest createWalletRequest) throws UserNotFoundException, OnlyPhotosAndVideosException, PhotoSizeLargerException, IOException, VideoSizeLargerException, FileFormatCouldNotException;
 
-    DataResponseMessage<List<WalletActivityDTO>> getActivitiesPaged(String username, WalletActivityType type, int page, int size);
+    DataResponseMessage<List<WalletActivityDTO>> getActivitiesPaged(String username, WalletActivityType type, int page, int size) throws WalletNotFoundException, UserNotFoundException;
 
     DataResponseMessage<?> getTransferDetail(String username, Long id);
 

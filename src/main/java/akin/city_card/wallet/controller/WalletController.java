@@ -8,19 +8,12 @@ import akin.city_card.user.exceptions.FileFormatCouldNotException;
 import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.exceptions.VideoSizeLargerException;
-import akin.city_card.wallet.core.request.ApproveIdentityRequest;
-import akin.city_card.wallet.core.request.TopUpBalanceRequest;
-import akin.city_card.wallet.core.response.WalletStatsDTO;
-import akin.city_card.wallet.core.request.CreateWalletRequest;
-
-import akin.city_card.wallet.core.request.QRTransferRequest;
+import akin.city_card.wallet.core.request.*;
 import akin.city_card.wallet.core.response.QRCodeDTO;
 import akin.city_card.wallet.core.response.WalletActivityDTO;
 import akin.city_card.wallet.core.response.WalletDTO;
-import akin.city_card.wallet.exceptions.AlreadyWalletUserException;
-import akin.city_card.wallet.exceptions.IdentityVerificationRequestNotFoundException;
-import akin.city_card.wallet.exceptions.WalletNotActiveException;
-import akin.city_card.wallet.exceptions.WalletNotFoundException;
+import akin.city_card.wallet.core.response.WalletStatsDTO;
+import akin.city_card.wallet.exceptions.*;
 import akin.city_card.wallet.model.WalletActivityType;
 import akin.city_card.wallet.service.abstracts.QRCodeService;
 import akin.city_card.wallet.service.abstracts.WalletService;
@@ -69,18 +62,17 @@ public class WalletController {
     @PostMapping("/transfer")
     public ResponseMessage transfer(
             @AuthenticationPrincipal UserDetails sender,
-            @RequestParam String receiverPhone,
-            @RequestParam BigDecimal amount) {
-        return walletService.transfer(sender.getUsername(), receiverPhone, amount);
+            @RequestBody @Valid WalletTransferRequest walletTransferRequest) throws UserNotFoundException, ReceiverWalletNotFoundException, ReceiverNotFoundException, WalletNotFoundException, InsufficientFundsException, ReceiverWalletNotActiveException, WalletNotActiveException {
+        return walletService.transfer(sender.getUsername(), walletTransferRequest);
     }
 
     @PostMapping("/deactivate")
-    public ResponseMessage deactivate(@AuthenticationPrincipal UserDetails user) {
+    public ResponseMessage deactivate(@AuthenticationPrincipal UserDetails user) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException {
         return walletService.deactivateWallet(user.getUsername());
     }
 
     @PostMapping("/activate")
-    public ResponseMessage activate(@AuthenticationPrincipal UserDetails user) {
+    public ResponseMessage activate(@AuthenticationPrincipal UserDetails user) throws UserNotFoundException, WalletNotFoundException {
         return walletService.activateWallet(user.getUsername());
     }
 
@@ -89,7 +81,7 @@ public class WalletController {
             @AuthenticationPrincipal UserDetails user,
             @RequestParam(required = false) WalletActivityType type,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) throws UserNotFoundException {
         return walletService.getActivities(user.getUsername(), type, start, end);
     }
 
@@ -98,7 +90,7 @@ public class WalletController {
             @AuthenticationPrincipal UserDetails user,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) WalletActivityType type) {
+            @RequestParam(required = false) WalletActivityType type) throws UserNotFoundException, WalletNotFoundException {
         return walletService.getActivitiesPaged(user.getUsername(), type, page, size);
     }
 
@@ -129,8 +121,8 @@ public class WalletController {
     @PostMapping("/top-up")
     public ResponseMessage topUpBalance(
             @AuthenticationPrincipal UserDetails user,
-          @Valid @RequestBody TopUpBalanceRequest topUpBalanceRequest) throws UserNotFoundException, WalletNotFoundException {
-        return walletService.topUp(user.getUsername(),topUpBalanceRequest);
+            @Valid @RequestBody TopUpBalanceRequest topUpBalanceRequest) throws UserNotFoundException, WalletNotFoundException {
+        return walletService.topUp(user.getUsername(), topUpBalanceRequest);
     }
 
     // ========== QR Kod İşlemleri ==========
@@ -217,7 +209,6 @@ public class WalletController {
     }
 
 
-
     // ========== Bakiye ve Para Yatırma İşlemleri ==========
 
     @PostMapping("/withdraw")
@@ -230,7 +221,6 @@ public class WalletController {
     }
 
 
-
     @GetMapping("/withdraw/history")
     public DataResponseMessage<List<?>> getWithdrawHistory(
             @AuthenticationPrincipal UserDetails user,
@@ -238,7 +228,6 @@ public class WalletController {
             @RequestParam(defaultValue = "10") int size) {
         return walletService.getWithdrawHistory(user.getUsername(), page, size);
     }
-
 
 
     // ========== İstatistik ve Raporlama ==========
@@ -250,7 +239,6 @@ public class WalletController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
         return walletService.getWalletStats(user.getUsername(), start, end);
     }
-
 
 
     @GetMapping("/report/monthly")
@@ -294,8 +282,6 @@ public class WalletController {
     }
 
 
-
-
     // ========== Admin İşlemleri ==========
 
     @GetMapping("/admin/all")
@@ -329,7 +315,6 @@ public class WalletController {
             @RequestParam(defaultValue = "20") int size) {
         return walletService.getSuspiciousActivities(admin.getUsername(), page, size);
     }
-
 
 
     // ========== Özel İşlemler ==========

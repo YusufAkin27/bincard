@@ -47,13 +47,9 @@ public class WalletTransfer extends AuditableEntity {
     @Column(length = 255)
     private String description;
 
-    @Column(length = 100)
-    private String externalReference;
 
     @Column(nullable = false)
     private Long initiatedByUserId;
-
-    private Long authorizedByUserId;
 
     @Column(length = 255)
     private String cancellationReason;

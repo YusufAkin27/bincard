@@ -18,20 +18,17 @@ import akin.city_card.user.model.UserIdentityInfo;
 import akin.city_card.user.repository.IdentityVerificationRequestRepository;
 import akin.city_card.user.repository.UserIdentityInfoRepository;
 import akin.city_card.user.repository.UserRepository;
+import akin.city_card.wallet.core.converter.WalletConverter;
 import akin.city_card.wallet.core.request.ApproveIdentityRequest;
 import akin.city_card.wallet.core.request.CreateWalletRequest;
 import akin.city_card.wallet.core.request.TopUpBalanceRequest;
+import akin.city_card.wallet.core.request.WalletTransferRequest;
 import akin.city_card.wallet.core.response.WalletActivityDTO;
 import akin.city_card.wallet.core.response.WalletDTO;
 import akin.city_card.wallet.core.response.WalletStatsDTO;
-import akin.city_card.wallet.exceptions.AlreadyWalletUserException;
-import akin.city_card.wallet.exceptions.IdentityVerificationRequestNotFoundException;
-import akin.city_card.wallet.exceptions.WalletNotActiveException;
-import akin.city_card.wallet.exceptions.WalletNotFoundException;
+import akin.city_card.wallet.exceptions.*;
 import akin.city_card.wallet.model.*;
-import akin.city_card.wallet.repository.WalletActivityRepository;
-import akin.city_card.wallet.repository.WalletRepository;
-import akin.city_card.wallet.repository.WalletTransferRepository;
+import akin.city_card.wallet.repository.*;
 import akin.city_card.wallet.service.abstracts.WalletService;
 import com.iyzipay.Options;
 import com.iyzipay.model.*;
@@ -40,6 +37,10 @@ import com.iyzipay.model.Locale;
 import com.iyzipay.request.CreatePaymentRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -62,38 +63,241 @@ public class WalletManager implements WalletService {
     private final UserIdentityInfoRepository userIdentityInfoRepository;
     private final SecurityUserRepository securityUserRepository;
     private final IdentityVerificationRequestRepository identityVerificationRequestRepository;
+    private final WalletTransactionRepository walletTransactionRepository;
+    private final WalletStatusLogRepository walletStatusLogRepository;
+    private final WalletConverter walletConverter;
 
 
     @Override
     public DataResponseMessage<BigDecimal> getWalletBalance(String phone) throws WalletNotFoundException, UserNotFoundException, WalletNotActiveException {
-        User user=userRepository.findByUserNumber(phone);
-        if (user==null) throw new UserNotFoundException();
+        User user = userRepository.findByUserNumber(phone);
+        if (user == null) throw new UserNotFoundException();
 
-        if (user.getWallet()==null) throw new WalletNotFoundException();
+        if (user.getWallet() == null) throw new WalletNotFoundException();
 
         if (!user.getWallet().getStatus().equals(WalletStatus.ACTIVE)) throw new WalletNotActiveException();
-        return new DataResponseMessage <>("cüzdan bakiyesi",true,user.getWallet().getBalance());
+        return new DataResponseMessage<>("cüzdan bakiyesi", true, user.getWallet().getBalance());
     }
 
     @Override
-    public ResponseMessage transfer(String senderPhone, String receiverPhone, BigDecimal amount) {
-        return null;
+    public ResponseMessage transfer(String senderPhone, WalletTransferRequest walletTransferRequest) throws UserNotFoundException, ReceiverNotFoundException, WalletNotFoundException, ReceiverWalletNotFoundException, WalletNotActiveException, ReceiverWalletNotActiveException, InsufficientFundsException {
+        // Kullanıcıları bul
+        User sender = userRepository.findByUserNumber(senderPhone);
+        User receiver = userRepository.findByUserNumber(walletTransferRequest.getReceiverTelephone());
+
+        if (sender == null) {
+            throw new UserNotFoundException();
+        }
+        if (receiver == null) {
+            throw new ReceiverNotFoundException();
+        }
+        if (sender.getWallet() == null) {
+            throw new WalletNotFoundException();
+        }
+        if (receiver.getWallet() == null) {
+            throw new ReceiverWalletNotFoundException();
+        }
+        if (!sender.getWallet().getStatus().equals(WalletStatus.ACTIVE)) {
+            throw new WalletNotActiveException();
+        }
+        if (!receiver.getWallet().getStatus().equals(WalletStatus.ACTIVE)) {
+            throw new ReceiverWalletNotActiveException();
+        }
+
+        Wallet senderWallet = sender.getWallet();
+        Wallet receiverWallet = receiver.getWallet();
+        BigDecimal transferAmount = walletTransferRequest.getAmount();
+
+        if (senderWallet.getBalance().compareTo(transferAmount) < 0) {
+            throw new InsufficientFundsException();
+        }
+
+        WalletTransfer walletTransfer = new WalletTransfer();
+        walletTransfer.setAmount(transferAmount);
+        walletTransfer.setReceiverWallet(receiverWallet);
+        walletTransfer.setSenderWallet(senderWallet);
+        walletTransfer.setStatus(TransferStatus.SUCCESS);
+        walletTransfer.setDescription(walletTransferRequest.getDescription());
+        walletTransfer.setCancellationReason(null);
+        walletTransfer.setInitiatedAt(LocalDateTime.now());
+        walletTransfer.setCompletedAt(LocalDateTime.now());
+        walletTransfer.setVersion(1L);
+
+        WalletTransfer savedTransfer = walletTransferRepository.save(walletTransfer);
+
+        senderWallet.setBalance(senderWallet.getBalance().subtract(transferAmount));
+        receiverWallet.setBalance(receiverWallet.getBalance().add(transferAmount));
+
+        walletRepository.save(senderWallet);
+        walletRepository.save(receiverWallet);
+
+        WalletTransaction senderTransaction = WalletTransaction.builder()
+                .wallet(senderWallet)
+                .amount(transferAmount.negate())
+                .type(TransactionType.TRANSFER_OUT)
+                .status(TransactionStatus.SUCCESS)
+                .timestamp(LocalDateTime.now())
+                .description("Transfer to " + receiver.getUserNumber())
+                .externalReference("TRF-" + savedTransfer.getId())
+                .userId(sender.getId())
+                .version(1L)
+                .build();
+
+        WalletTransaction savedSenderTransaction = walletTransactionRepository.save(senderTransaction);
+
+        // Alıcı için transaction kaydı oluştur
+        WalletTransaction receiverTransaction = WalletTransaction.builder()
+                .wallet(receiverWallet)
+                .amount(transferAmount) // Pozitif miktar (para geliyor)
+                .type(TransactionType.TRANSFER_IN)
+                .status(TransactionStatus.SUCCESS)
+                .timestamp(LocalDateTime.now())
+                .description("Transfer from " + sender.getUserNumber())
+                .externalReference("TRF-" + savedTransfer.getId())
+                .userId(receiver.getId())
+                .version(1L)
+                .build();
+
+        WalletTransaction savedReceiverTransaction = walletTransactionRepository.save(receiverTransaction);
+
+        WalletActivity senderActivity = WalletActivity.builder()
+                .walletId(senderWallet.getId())
+                .activityType(WalletActivityType.TRANSFER_SENT)
+                .transactionId(savedSenderTransaction.getId())
+                .transferId(savedTransfer.getId())
+                .activityDate(LocalDateTime.now())
+                .description("Para transferi gönderildi: " + receiver.getUserNumber())
+                .version(1L)
+                .build();
+
+        walletActivityRepository.save(senderActivity);
+
+        WalletActivity receiverActivity = WalletActivity.builder()
+                .walletId(receiverWallet.getId())
+                .activityType(WalletActivityType.TRANSFER_RECEIVED)
+                .transactionId(savedReceiverTransaction.getId())
+                .transferId(savedTransfer.getId())
+                .activityDate(LocalDateTime.now())
+                .description("Para transferi alındı: " + sender.getUserNumber())
+                .version(1L)
+                .build();
+
+        walletActivityRepository.save(receiverActivity);
+
+        String msg = String.format("transferId: %d\namount: %s\nsenderBalance: %s\nreceiverPhone: %s",
+                savedTransfer.getId(), transferAmount, senderWallet.getBalance(), receiver.getUserNumber());
+
+        return new ResponseMessage(msg, true);
+    }
+
+
+    @Override
+    @Transactional
+    public ResponseMessage deactivateWallet(String phone) throws WalletNotFoundException, WalletNotActiveException, UserNotFoundException {
+        User user = userRepository.findByUserNumber(phone);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+
+        Wallet wallet = user.getWallet();
+        if (wallet == null) {
+            throw new WalletNotFoundException();
+        }
+
+        if (!wallet.getStatus().equals(WalletStatus.ACTIVE)) {
+            throw new WalletNotActiveException();
+        }
+
+        WalletStatus oldStatus = wallet.getStatus();
+        wallet.setStatus(WalletStatus.SUSPENDED);
+        wallet.setLastUpdated(LocalDateTime.now());
+
+        WalletStatusLog statusLog = WalletStatusLog.builder()
+                .wallet(wallet)
+                .oldStatus(oldStatus)
+                .newStatus(WalletStatus.SUSPENDED)
+                .changedAt(LocalDateTime.now())
+                .changedByUserId(user.getId())
+                .reason("Kullanıcı isteğiyle cüzdan askıya alındı.")
+                .build();
+
+        walletStatusLogRepository.save(statusLog);
+        walletRepository.save(wallet);
+
+        return new ResponseMessage("Cüzdan başarıyla askıya alındı.", true);
     }
 
     @Override
-    public ResponseMessage deactivateWallet(String phone) {
-        return null;
+    @Transactional
+    public ResponseMessage activateWallet(String phone) throws UserNotFoundException, WalletNotFoundException {
+        User user = userRepository.findByUserNumber(phone);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+
+        Wallet wallet = user.getWallet();
+        if (wallet == null) {
+            throw new WalletNotFoundException();
+        }
+
+        if (wallet.getStatus().equals(WalletStatus.ACTIVE)) {
+            return new ResponseMessage("Cüzdan zaten aktif.", true);
+        }
+
+        if (wallet.getStatus().equals(WalletStatus.LOCKED)) {
+            return new ResponseMessage("Cüzdan kilitli, manuel müdahale gerektirir.", false);
+        }
+
+        WalletStatus oldStatus = wallet.getStatus();
+        wallet.setStatus(WalletStatus.ACTIVE);
+        wallet.setLastUpdated(LocalDateTime.now());
+
+        WalletStatusLog statusLog = WalletStatusLog.builder()
+                .wallet(wallet)
+                .oldStatus(oldStatus)
+                .newStatus(WalletStatus.ACTIVE)
+                .changedAt(LocalDateTime.now())
+                .changedByUserId(user.getId())
+                .reason("Kullanıcı isteğiyle cüzdan yeniden aktive edildi.")
+                .build();
+
+        walletStatusLogRepository.save(statusLog);
+        walletRepository.save(wallet);
+
+        return new ResponseMessage("Cüzdan başarıyla aktifleştirildi.", true);
     }
 
-    @Override
-    public ResponseMessage activateWallet(String phone) {
-        return null;
-    }
 
     @Override
-    public DataResponseMessage<List<WalletActivityDTO>> getActivities(String phone, WalletActivityType type, LocalDate start, LocalDate end) {
-        return null;
+    public DataResponseMessage<List<WalletActivityDTO>> getActivities(String phone, WalletActivityType type, LocalDate start, LocalDate end) throws UserNotFoundException, WalletNotFoundException {
+        User user = userRepository.findByUserNumber(phone);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+        if (user.getWallet() == null) {
+            throw new WalletNotFoundException();
+        }
+
+        Long walletId = user.getWallet().getId();
+
+        LocalDateTime startDateTime = (start != null) ? start.atStartOfDay() : LocalDateTime.MIN;
+        LocalDateTime endDateTime = (end != null) ? end.atTime(23, 59, 59) : LocalDateTime.MAX;
+
+        List<WalletActivity> activities;
+
+        if (type != null) {
+            activities = walletActivityRepository.findByWalletIdAndActivityTypeAndActivityDateBetween(walletId, type, startDateTime, endDateTime);
+        } else {
+            activities = walletActivityRepository.findByWalletIdAndActivityDateBetween(walletId, startDateTime, endDateTime);
+        }
+
+        List<WalletActivityDTO> dtos = activities.stream()
+                .map(walletConverter::convertWalletActivityDTO)
+                .toList();
+
+        return new DataResponseMessage<>( "Aktiviteler başarıyla getirildi.", true,dtos);
     }
+
 
     @Override
     @Transactional
@@ -124,10 +328,9 @@ public class WalletManager implements WalletService {
                 .build();
         userIdentityInfoRepository.save(identityInfo);
 
-        // Kimlik onay başvurusu oluştur
         IdentityVerificationRequest verificationRequest = IdentityVerificationRequest.builder()
                 .identityInfo(identityInfo)
-                .requestedBy(user) // User → SecurityUser ilişkisini kullan
+                .requestedBy(user)
                 .requestedAt(LocalDateTime.now())
                 .status(RequestStatus.PENDING)
                 .build();
@@ -139,9 +342,33 @@ public class WalletManager implements WalletService {
 
 
     @Override
-    public DataResponseMessage<List<WalletActivityDTO>> getActivitiesPaged(String username, WalletActivityType type, int page, int size) {
-        return null;
+    public DataResponseMessage<List<WalletActivityDTO>> getActivitiesPaged(String username, WalletActivityType type, int page, int size) throws WalletNotFoundException, UserNotFoundException {
+        User user = userRepository.findByUserNumber(username);
+        if (user == null) {
+            throw new UserNotFoundException();
+        }
+        if (user.getWallet() == null) {
+            throw new WalletNotFoundException();
+        }
+
+        Long walletId = user.getWallet().getId();
+        Pageable pageable = PageRequest.of(page, size, Sort.by("activityDate").descending());
+
+        Page<WalletActivity> activityPage;
+
+        if (type != null) {
+            activityPage = walletActivityRepository.findByWalletIdAndActivityType(walletId, type, pageable);
+        } else {
+            activityPage = walletActivityRepository.findByWalletId(walletId, pageable);
+        }
+
+        List<WalletActivityDTO> dtos = activityPage.stream()
+                .map(walletConverter::convertWalletActivityDTO)
+                .toList();
+
+        return new DataResponseMessage<>( "Sayfalı aktiviteler getirildi.", true,dtos);
     }
+
 
     @Override
     public DataResponseMessage<?> getTransferDetail(String username, Long id) {
