@@ -262,7 +262,7 @@ public class NewsManager implements NewsService {
             throw new NewsIsNotActiveException(newsId + " ");
         }
 
-        if (news.getEndDate() == null || news.getEndDate().isAfter(now)) {
+        if (news.getEndDate() == null || news.getEndDate().isAfter(now)) {//tarih formatları uyuşmuyor heralde bu yüzden haber aktif değilmiş gibi dönüyor
             news.setActive(false);
             throw new OutDatedNewsException();
         }
@@ -403,7 +403,6 @@ public class NewsManager implements NewsService {
         Set<Long> likedNewsIds = user.getLikedNews().stream()
                 .map(like -> like.getNews().getId())
                 .collect(Collectors.toSet());
-
         List<UserNewsDTO> userNewsDTOS = newsList.stream()
                 .filter(news -> platform == null || news.getPlatform().equals(platform))
                 .map(news -> {

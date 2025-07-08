@@ -102,7 +102,7 @@ public class NewsController {
                                                 @RequestParam(required = false) NewsType type) throws UserNotFoundException, AdminNotFoundException {
 
         boolean isAdmin = userDetails.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals(Role.ADMIN.getAuthority()));
+                .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
 
         if (isAdmin) {
             return newsService.getActiveNewsForAdmin(platform, type, userDetails.getUsername()); // List<AdminNewsDTO>
@@ -164,7 +164,8 @@ public class NewsController {
 
     // Kategoriye göre haber listeleme
     @GetMapping("/by-category")
-    public DataResponseMessage<List<?>> getNewsByCategory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam NewsType category,
+    public DataResponseMessage<List<?>> getNewsByCategory(@AuthenticationPrincipal UserDetails userDetails,
+                                                          @RequestParam(name = "category") NewsType category,//Gelen String veriyi enum'a çeviremiyor, bunu nasıl düzeltirim bilmiyorum
                                                           @RequestParam(name = "platform", required = false) PlatformType platform
     ) throws UserNotFoundException {
         boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ADMIN"));

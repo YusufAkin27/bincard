@@ -21,7 +21,7 @@ public class RouteController {
 
     private final RouteService routeService;
 
-    @GetMapping
+    @GetMapping("/getAllRoutes")
     public DataResponseMessage<List<RouteDTO>> getAllRoutes(@AuthenticationPrincipal UserDetails userDetails) {
         return routeService.getAllRoutes(userDetails.getUsername());
     }
@@ -41,7 +41,7 @@ public class RouteController {
         return routeService.findRoutesByStationId(stationId);
     }
 
-    @PostMapping
+    @PostMapping("/create-route")
     public ResponseMessage createRoute(@RequestBody CreateRouteRequest request) {
         return routeService.createRoute(request);
     }
