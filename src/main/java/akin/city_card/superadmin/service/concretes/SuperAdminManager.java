@@ -26,6 +26,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -172,9 +173,10 @@ public class SuperAdminManager implements SuperAdminService {
     @Override
     public DataResponseMessage<List<AuditLogDTO>> getAuditLogs(String fromDate, String toDate, String action, String username) {
         LocalDateTime from = (fromDate != null && !fromDate.isBlank()) ?
-                LocalDateTime.parse(fromDate) : LocalDateTime.MIN;
+                LocalDate.parse(fromDate).atStartOfDay() : LocalDateTime.MIN;
+
         LocalDateTime to = (toDate != null && !toDate.isBlank()) ?
-                LocalDateTime.parse(toDate) : LocalDateTime.now();
+                LocalDate.parse(toDate).atTime(LocalTime.MAX) : LocalDateTime.now();
 
         ActionType actionType = null;
         if (action != null && !action.isBlank()) {
