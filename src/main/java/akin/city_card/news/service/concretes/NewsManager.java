@@ -73,7 +73,10 @@ public class NewsManager implements NewsService {
             String imageUrl = mediaUploadService.uploadAndOptimizeMedia(createNewsRequest.getImage()).get();
             news.setImage(imageUrl);
         }
-
+        if (createNewsRequest.getThumbnail() != null && !createNewsRequest.getThumbnail().isEmpty()) {
+            String imageUrl = mediaUploadService.uploadAndOptimizeMedia(createNewsRequest.getThumbnail()).get();
+            news.setThumbnail(imageUrl);
+        }
         newsRepository.save(news);
         return new ResponseMessage("haber eklendi", true);
     }
@@ -167,15 +170,8 @@ public class NewsManager implements NewsService {
         if (user == null) {
             throw new UserNotFoundException();
         }
-
+/*
         List<NewsLike> likedNews = user.getLikedNews();
-        Set<NewsType> preferredTypes = likedNews.stream()
-                .map(like -> like.getNews().getType())
-                .collect(Collectors.toSet());
-
-        Set<NewsPriority> preferredPriorities = likedNews.stream()
-                .map(like -> like.getNews().getPriority())
-                .collect(Collectors.toSet());
 
         LocalDateTime now = LocalDateTime.now();
         List<News> allActiveNews = newsRepository.findAll().stream()
@@ -183,31 +179,59 @@ public class NewsManager implements NewsService {
                 .filter(news -> news.getEndDate() == null || news.getEndDate().isAfter(now))
                 .toList();
 
-        List<UserNewsDTO> sortedNews = allActiveNews.stream()
-                .map(news -> {
-                    boolean likedByUser = likedNews.stream()
-                            .anyMatch(like -> like.getNews().getId().equals(news.getId()));
+        // Eğer hiçbir filtreleme veya beğeni yoksa, tüm haberleri döndür
+        boolean shouldScore = (platform != null || type != null || !likedNews.isEmpty());
 
-                    boolean viewedByUser = newsViewHistoryRepository.existsByUserAndNews(user, news);
+        List<UserNewsDTO> resultNews;
 
-                    int score = 0;
+        if (!shouldScore) {
+            // Tüm aktif haberleri döndür
+            resultNews = allActiveNews.stream()
+                    .map(news -> {
+                        boolean likedByUser = false;
+                        boolean viewedByUser = newsViewHistoryRepository.existsByUserAndNews(user, news);
+                        return newsConverter.toUserDTO(news, likedByUser, viewedByUser);
+                    })
+                    .toList();
+        } else {
+            // Skorlama yapılacaksa
+            Set<NewsType> preferredTypes = likedNews.stream()
+                    .map(like -> like.getNews().getType())
+                    .collect(Collectors.toSet());
 
-                    if (type != null && news.getType() == type) score += 3;
-                    if (platform != null && (news.getPlatform() == platform || news.getPlatform().name().equals("ALL")))
-                        score += 3;
+            Set<NewsPriority> preferredPriorities = likedNews.stream()
+                    .map(like -> like.getNews().getPriority())
+                    .collect(Collectors.toSet());
 
-                    if (preferredTypes.contains(news.getType())) score += 2;
-                    if (preferredPriorities.contains(news.getPriority())) score += 1;
+            resultNews = allActiveNews.stream()
+                    .map(news -> {
+                        boolean likedByUser = likedNews.stream()
+                                .anyMatch(like -> like.getNews().getId().equals(news.getId()));
 
-                    UserNewsDTO dto = newsConverter.toUserDTO(news, likedByUser, viewedByUser);
-                    return new AbstractMap.SimpleEntry<>(dto, score);
-                })
-                .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue())) // skora göre sırala
-                .map(Map.Entry::getKey)
-                .toList();
+                        boolean viewedByUser = newsViewHistoryRepository.existsByUserAndNews(user, news);
 
-        return new DataResponseMessage<>("Kullanıcıya özel haber listesi", true, sortedNews);
+                        int score = 0;
+
+                        if (type != null && news.getType() == type) score += 3;
+                        if (platform != null && (news.getPlatform() == platform || news.getPlatform().name().equals("ALL")))
+                            score += 3;
+
+                        if (preferredTypes.contains(news.getType())) score += 2;
+                        if (preferredPriorities.contains(news.getPriority())) score += 1;
+
+                        UserNewsDTO dto = newsConverter.toUserDTO(news, likedByUser, viewedByUser);
+                        return new AbstractMap.SimpleEntry<>(dto, score);
+                    })
+                    .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()))
+                    .map(Map.Entry::getKey)
+                    .toList();
+        }
+
+ */
+
+        return new DataResponseMessage<>("Kişiye özel haberler", true, newsRepository.findAll().stream().map(newsConverter::toAdminDTO).collect(Collectors.toList()));
     }
+
 
 
     @Override

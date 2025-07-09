@@ -42,6 +42,7 @@ public class NewsConverterImpl implements NewsConverter {
                 .title(news.getTitle())
                 .content(news.getContent())
                 .image(news.getImage())
+                .thumbnailUrl(news.getThumbnail())
                 .priority(news.getPriority())
                 .type(news.getType())
                 .likedByUser(likedByUser)

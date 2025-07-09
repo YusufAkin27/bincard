@@ -23,6 +23,9 @@ public class CreateNewsRequest {
     @NotBlank(message = "Haber içeriği boş olamaz")
     private String content;
 
+    @NotBlank(message = "Haber kapak boş olamaz")
+    private MultipartFile thumbnail;
+
     private MultipartFile image; // opsiyonel: URL ya da base64 image olabilir
 
     @NotNull(message = "Başlangıç tarihi zorunludur")
@@ -42,5 +45,5 @@ public class CreateNewsRequest {
     @NotNull(message = "Haber türü zorunludur")
     private NewsType type;
 
-    private boolean allowFeedback ;
+    private boolean allowFeedback;
 }
