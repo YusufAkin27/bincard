@@ -474,8 +474,8 @@ public class UserManager implements UserService {
 
     @Override
     public boolean updateFCMToken(String fcmToken, String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
-        user.getDeviceInfo().setFcmToken(fcmToken);
+        Optional<SecurityUser> user = securityUserRepository.findByUserNumber(username);
+        user.get().getDeviceInfo().setFcmToken(fcmToken);
         return true;
     }
 
