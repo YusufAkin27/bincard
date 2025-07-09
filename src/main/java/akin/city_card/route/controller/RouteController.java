@@ -21,6 +21,8 @@ public class RouteController {
 
     private final RouteService routeService;
 
+    //apiler boş
+
     @GetMapping("/getAllRoutes")
     public DataResponseMessage<List<RouteDTO>> getAllRoutes(@AuthenticationPrincipal UserDetails userDetails) {
         return routeService.getAllRoutes(userDetails.getUsername());
