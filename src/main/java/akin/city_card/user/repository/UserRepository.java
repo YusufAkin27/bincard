@@ -31,4 +31,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT ufc FROM UserFavoriteCard ufc WHERE ufc.user.userNumber = :username")
     List<UserFavoriteCard> findFavoriteCardsByUserNumber(@Param("username") String username);
+
+    @Query("SELECT u FROM User u LEFT JOIN FETCH u.wallet")
+    List<User> findAllWithWallet();
+
 }

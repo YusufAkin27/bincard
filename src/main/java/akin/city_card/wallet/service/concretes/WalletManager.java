@@ -318,6 +318,9 @@ public class WalletManager implements WalletService {
         if (hasPendingOrApproved) {
             return new ResponseMessage("Kimlik doğrulama isteğiniz zaten işleniyor veya onaylanmış.", false);
         }
+        if (request.getFrontCardPhoto() == null || request.getBackCardPhoto() == null) {
+            throw new IllegalArgumentException("Kimlik fotoğrafları boş olamaz");
+        }
 
         UserIdentityInfo identityInfo = UserIdentityInfo.builder()
                 .nationalId(request.getNationalId())
@@ -502,12 +505,14 @@ public class WalletManager implements WalletService {
         if (admin.isEmpty()) {
             throw new UserNotFoundException();
         }
-
+/*
         boolean isAdmin = admin.get().getRoles().contains("ADMIN") || admin.get().getRoles().contains("SUPERADMIN");
         if (!isAdmin) {
             throw new UnauthorizedAreaException();
         }
 
+
+ */
         if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
             throw new IllegalArgumentException("Bitiş tarihi, başlangıç tarihinden önce olamaz.");
         }

@@ -1,4 +1,4 @@
-package akin.city_card;
+package akin.city_card.initializer;
 
 import akin.city_card.security.entity.ProfileInfo;
 import akin.city_card.security.entity.Role;

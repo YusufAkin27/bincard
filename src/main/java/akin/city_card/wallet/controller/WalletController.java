@@ -10,7 +10,6 @@ import akin.city_card.user.exceptions.FileFormatCouldNotException;
 import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.exceptions.VideoSizeLargerException;
-import akin.city_card.user.model.IdentityVerificationRequest;
 import akin.city_card.user.model.RequestStatus;
 import akin.city_card.wallet.core.request.*;
 import akin.city_card.wallet.core.response.QRCodeDTO;
@@ -25,6 +24,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -45,7 +45,7 @@ public class WalletController {
     private final QRCodeService qrCodeService;
 
     // ========== Mevcut Endpoint'ler ==========
-    @PostMapping("/create")
+    @PostMapping(path = "/create",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseMessage create(
             @ModelAttribute CreateWalletRequest request,
             @AuthenticationPrincipal UserDetails user) throws UserNotFoundException, OnlyPhotosAndVideosException, PhotoSizeLargerException, IOException, VideoSizeLargerException, FileFormatCouldNotException {
