@@ -13,7 +13,14 @@ public class AuditLogConverterImpl implements AuditLogConverter {
         dto.setAction(log.getAction());
         dto.setDescription(log.getDescription());
         dto.setTimestamp(log.getTimestamp());
-        dto.setIpAddress(log.getDeviceInfo().getIpAddress());
+
+        if (log.getDeviceInfo() != null) {
+            dto.setIpAddress(log.getDeviceInfo().getIpAddress());
+        } else {
+            dto.setIpAddress(null); // veya "Bilinmiyor"
+        }
+
         return dto;
     }
+
 }

@@ -20,4 +20,8 @@ public interface AuditLogRepository extends JpaRepository<AuditLog,Long> {
     Page<AuditLog> findByUser_UserNumberOrderByTimestampDesc(String username, Pageable pageable);
 
     Page<AuditLog> findByUser(User user, Pageable pageable);
+
+    List<AuditLog> findByActionAndTimestampBetween(ActionType actionType, LocalDateTime from, LocalDateTime to);
+
+    List<AuditLog> findByTimestampBetween(LocalDateTime from, LocalDateTime to);
 }

@@ -18,6 +18,8 @@ import akin.city_card.superadmin.exceptions.RequestAlreadyProcessedException;
 import akin.city_card.superadmin.model.SuperAdmin;
 import akin.city_card.superadmin.repository.SuperAdminRepository;
 import akin.city_card.superadmin.service.abstracts.SuperAdminService;
+import akin.city_card.user.core.response.Views;
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -171,36 +173,47 @@ public class SuperAdminManager implements SuperAdminService {
     }
 
     @Override
+    @JsonView(Views.SuperAdmin.class)
     public DataResponseMessage<List<AuditLogDTO>> getAuditLogs(String fromDate, String toDate, String action, String username) {
         LocalDateTime from = (fromDate != null && !fromDate.isBlank()) ?
                 LocalDate.parse(fromDate).atStartOfDay() :
-                LocalDateTime.of(2000, 1, 1, 0, 0); // Güvenli bir başlangıç tarihi
+                LocalDateTime.of(2000, 1, 1, 0, 0); // Güvenli başlangıç
 
         LocalDateTime to = (toDate != null && !toDate.isBlank()) ?
                 LocalDate.parse(toDate).atTime(LocalTime.MAX) :
                 LocalDateTime.now();
 
-
+        // Action tipi çözümle
         ActionType actionType = null;
         if (action != null && !action.isBlank()) {
             try {
                 actionType = ActionType.valueOf(action.toUpperCase());
             } catch (IllegalArgumentException e) {
-                return new DataResponseMessage<>("başarılı",true,List.of()); // Geçersiz action varsa boş dön
+                return new DataResponseMessage<>("başarılı", true, List.of()); // Geçersiz action -> boş dön
             }
         }
 
+        // Kullanıcının SuperAdmin olup olmadığını kontrol et
+        boolean isSuperAdmin = superAdminRepository.existsByUserNumber(username); // performanslı yöntem
+
         List<AuditLog> logs;
 
-        if (actionType != null) {
-            logs = auditLogRepository.findByUser_UserNumberAndActionAndTimestampBetween(username, actionType, from, to);
+        if (isSuperAdmin) {
+            // SuperAdmin ise tüm logları getir
+            logs = (actionType != null)
+                    ? auditLogRepository.findByActionAndTimestampBetween(actionType, from, to)
+                    : auditLogRepository.findByTimestampBetween(from, to);
         } else {
-            logs = auditLogRepository.findByUser_UserNumberAndTimestampBetween(username, from, to);
+            // Normal kullanıcı ise sadece kendi loglarını getir
+            logs = (actionType != null)
+                    ? auditLogRepository.findByUser_UserNumberAndActionAndTimestampBetween(username, actionType, from, to)
+                    : auditLogRepository.findByUser_UserNumberAndTimestampBetween(username, from, to);
         }
 
         List<AuditLogDTO> dtoList = logs.stream().map(auditLogConverter::mapToDto).toList();
-        return new DataResponseMessage<>("başarılı",true,dtoList);
+        return new DataResponseMessage<>("başarılı", true, dtoList);
     }
+
 
 
 
