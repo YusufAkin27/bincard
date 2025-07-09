@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface NewsLikeRepository extends JpaRepository<NewsLike, Integer> {
     List<NewsLike> findByLikedAtAfter(LocalDateTime startOfMonth);
+
+    boolean existsByUserIdAndNewsId(Long userId, Long newsId);
 }

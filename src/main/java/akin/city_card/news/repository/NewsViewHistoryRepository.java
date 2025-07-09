@@ -15,4 +15,5 @@ public interface NewsViewHistoryRepository extends JpaRepository<NewsViewHistory
 
     List<NewsViewHistory> findByViewedAtAfter(LocalDateTime startOfMonth);
 
+    boolean existsByUserIdAndNewsId(Long userId, Long newsId);
 }

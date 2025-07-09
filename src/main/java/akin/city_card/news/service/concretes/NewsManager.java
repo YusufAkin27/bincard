@@ -229,7 +229,18 @@ public class NewsManager implements NewsService {
 
  */
 
-        return new DataResponseMessage<>("Kişiye özel haberler", true, newsRepository.findAll().stream().map(newsConverter::toAdminDTO).collect(Collectors.toList()));
+        return new DataResponseMessage<>("Kişiye özel haberler", true, newsRepository.findAll().stream().map(news -> newsConverter.toUserDTO(news,
+                checkIfLikedByUser(news,user),
+                checkIfViewedByUser(news,user))).collect(Collectors.toList()));
+    }
+
+    private boolean checkIfLikedByUser(News news,User user) {
+        // Kullanıcının ID'sine göre DB kontrolü yapılabilir
+        return newsLikeRepository.existsByUserIdAndNewsId(user.getId(), news.getId());
+    }
+
+    private boolean checkIfViewedByUser(News news,User user) {
+        return newsViewHistoryRepository.existsByUserIdAndNewsId(user.getId(), news.getId());
     }
 
 
