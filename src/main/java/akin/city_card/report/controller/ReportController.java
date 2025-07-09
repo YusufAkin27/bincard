@@ -33,7 +33,7 @@ import java.util.List;
 public class ReportController {
 
     private final ReportService reportService;
-
+// çoğu api boş manager'a bakınız
     @PostMapping(value = "/addReport", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseMessage addReport(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -96,7 +96,7 @@ public class ReportController {
 
     @GetMapping("/byCategory")
     public List<?> getReportsByCategory(
-            @RequestParam ReportCategory category,
+            @RequestParam ReportCategory category,//enum string uyuşmazlığı
             @AuthenticationPrincipal UserDetails userDetails,
             @PageableDefault(size = 10) Pageable pageable)
             throws AdminNotFoundException, UserNotFoundException {

@@ -34,7 +34,7 @@ public class SuperAdminController {
 
 
     @GetMapping("/admin-requests/pending")
-    public DataResponseMessage<List<AdminApprovalRequestDTO>> getPendingAdminRequests(
+    public DataResponseMessage<List<AdminApprovalRequest>> getPendingAdminRequests(
             @AuthenticationPrincipal UserDetails userDetails,
             @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) throws SuperAdminNotFoundException {
         return superAdminService.getPendingAdminRequest(userDetails.getUsername(), pageable);

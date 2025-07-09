@@ -33,7 +33,7 @@ public interface SuperAdminService {
 
     DataResponseMessage<Map<String, BigDecimal>> getIncomeSummary(String username);
 
-    DataResponseMessage<List<AdminApprovalRequestDTO>> getPendingAdminRequest(String username, Pageable pageable) throws SuperAdminNotFoundException;
+    DataResponseMessage<List<AdminApprovalRequest>> getPendingAdminRequest(String username, Pageable pageable) throws SuperAdminNotFoundException;
 
     DataResponseMessage<List<AuditLogDTO>> getAuditLogs(String fromDate, String toDate, String action, String username);
 

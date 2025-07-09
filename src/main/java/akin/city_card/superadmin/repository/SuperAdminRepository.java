@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface SuperAdminRepository extends JpaRepository<SuperAdmin,Long> {
     SuperAdmin findByUserNumber(String phoneNumber);
+
+    boolean existsByUserNumber(String username);
 }
