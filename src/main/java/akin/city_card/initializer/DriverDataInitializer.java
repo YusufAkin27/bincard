@@ -10,6 +10,7 @@ import akin.city_card.security.entity.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -23,6 +24,7 @@ import java.util.stream.IntStream;
 public class DriverDataInitializer implements ApplicationRunner {
 
     private final DriverRepository driverRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -35,8 +37,8 @@ public class DriverDataInitializer implements ApplicationRunner {
 
     private Driver createDriver(int i) {
         return Driver.builder()
-                .userNumber("driver" + i)
-                .password("driverpass" + i)
+                .userNumber(generatePhoneNumber(i))
+                .password(passwordEncoder.encode("123456"))
                 .roles(Set.of(Role.DRVIER))
                 .emailVerified(true)
                 .phoneVerified(true)
@@ -60,5 +62,8 @@ public class DriverDataInitializer implements ApplicationRunner {
     }
     private String generateNationalId(int i) {
         return String.format("12345678%03d", i); // 12345678001 → 11 karakter
+    }
+    private String generatePhoneNumber(int i) {
+        return String.format("+905332%06d", 10 + i); // +905330000011, +905330000012, ...
     }
 }

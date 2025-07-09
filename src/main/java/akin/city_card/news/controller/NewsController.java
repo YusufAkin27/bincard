@@ -1,23 +1,27 @@
 package akin.city_card.news.controller;
 
 import akin.city_card.admin.exceptions.AdminNotFoundException;
-import akin.city_card.news.core.request.*;
-import akin.city_card.news.core.response.AdminNewsDTO;
+import akin.city_card.news.core.request.CreateNewsRequest;
+import akin.city_card.news.core.request.UpdateNewsRequest;
+import akin.city_card.news.core.response.NewsDTO;
 import akin.city_card.news.core.response.NewsHistoryDTO;
 import akin.city_card.news.core.response.NewsStatistics;
-import akin.city_card.news.core.response.UserNewsDTO;
-import akin.city_card.news.exceptions.*;
+import akin.city_card.news.exceptions.NewsIsNotActiveException;
+import akin.city_card.news.exceptions.NewsNotFoundException;
+import akin.city_card.news.exceptions.OutDatedNewsException;
+import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.news.model.NewsType;
 import akin.city_card.news.model.PlatformType;
 import akin.city_card.news.service.abstracts.NewsService;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
-import akin.city_card.security.entity.Role;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.user.core.response.Views;
 import akin.city_card.user.exceptions.FileFormatCouldNotException;
 import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.exceptions.VideoSizeLargerException;
+import com.fasterxml.jackson.annotation.JsonView;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -25,7 +29,6 @@ import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -40,8 +43,9 @@ public class NewsController {
     private final NewsService newsService;
 
     @GetMapping("/")
-    public DataResponseMessage<List<AdminNewsDTO>> getAll(@AuthenticationPrincipal UserDetails userDetails,
-                                                          @RequestParam(name = "platform", required = false) PlatformType platform
+    @JsonView(Views.Admin.class) // Admin görünümleri
+    public List<NewsDTO> getAll(@AuthenticationPrincipal UserDetails userDetails,
+                                                     @RequestParam(name = "platform", required = false) PlatformType platform
     )
             throws AdminNotFoundException, UnauthorizedAreaException {
         if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
@@ -81,41 +85,46 @@ public class NewsController {
         return newsService.updateNews(userDetails.getUsername(), request);
     }
 
-    @GetMapping("/{id}")
-    public DataResponseMessage<?> getNewsById(@AuthenticationPrincipal UserDetails userDetails,
-                                              @PathVariable Long id) throws UserNotFoundException, NewsNotFoundException, NewsIsNotActiveException, AdminNotFoundException {
-
-        boolean isAdmin = userDetails.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
-
-        if (isAdmin) {
-            return newsService.getNewsByIdForAdmin(userDetails.getUsername(), id); // AdminNewsDTO
-        } else {
-            return newsService.getNewsByIdForUser(userDetails.getUsername(), id); // UserNewsDTO
-        }
+    @GetMapping("/admin/{id}")
+    @JsonView(Views.Admin.class) // Admin görünümleri
+    public NewsDTO getNewsByIdForAdmin(@AuthenticationPrincipal UserDetails userDetails,
+                                                      @PathVariable Long id) throws AdminNotFoundException, NewsNotFoundException, NewsIsNotActiveException {
+        // Burada admin kontrolü güvenlik katmanında yapılabilir, isteğe bağlı olarak buraya eklenebilir
+        return newsService.getNewsByIdForAdmin(userDetails.getUsername(), id);
     }
+
+    @GetMapping("/{id}")
+    @JsonView(Views.User.class) // Admin görünümleri
+    public NewsDTO getNewsByIdForUser(@AuthenticationPrincipal UserDetails userDetails,
+                                                     @PathVariable Long id) throws UserNotFoundException, NewsNotFoundException, NewsIsNotActiveException {
+        return newsService.getNewsByIdForUser(userDetails.getUsername(), id);
+    }
+
 
 
     @GetMapping("/active")
-    public DataResponseMessage<?> getActiveNews(@AuthenticationPrincipal UserDetails userDetails,
-                                                @RequestParam(required = false) PlatformType platform,
-                                                @RequestParam(required = false) NewsType type) throws UserNotFoundException, AdminNotFoundException {
+    @JsonView(Views.User.class) // Admin görünümleri
+    public List<NewsDTO> getActiveNewsForUser(@AuthenticationPrincipal UserDetails userDetails,
+                                                       @RequestParam(required = false) PlatformType platform,
+                                                       @RequestParam(required = false) NewsType type) throws UserNotFoundException, AdminNotFoundException {
 
-        boolean isAdmin = userDetails.getAuthorities().stream()
-                .anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
+        return newsService.getActiveNewsForUser(platform, type, userDetails.getUsername()); // List<UserNewsDTO>
+    }
 
-        if (isAdmin) {
-            return newsService.getActiveNewsForAdmin(platform, type, userDetails.getUsername()); // List<AdminNewsDTO>
-        } else {
-            return newsService.getActiveNewsForUser(platform, type, userDetails.getUsername()); // List<UserNewsDTO>
-        }
+    @GetMapping("/active-admin")
+    @JsonView(Views.Admin.class) // Admin görünümleri
+    public NewsDTO getActiveNewsForAdmin(@AuthenticationPrincipal UserDetails userDetails,
+                                                        @RequestParam(required = false) PlatformType platform,
+                                                        @RequestParam(required = false) NewsType type) throws AdminNotFoundException {
+
+        return newsService.getActiveNewsForAdmin(platform, type, userDetails.getUsername()); // List<AdminNewsDTO>
+
     }
 
 
-
-
     @GetMapping("/between-dates")
-    public DataResponseMessage<List<AdminNewsDTO>> getNewsBetweenDates(
+    @JsonView(Views.Admin.class) // Admin görünümleri
+    public List<NewsDTO> getNewsBetweenDates(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
@@ -133,7 +142,8 @@ public class NewsController {
     }
 
     @GetMapping("/liked")
-    public DataResponseMessage<List<UserNewsDTO>> getLikedNewsByUser(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+    @JsonView(Views.User.class) // Admin görünümleri
+    public List<NewsDTO> getLikedNewsByUser(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
         return newsService.getLikedNewsByUser(userDetails.getUsername());
     }
 
@@ -148,37 +158,45 @@ public class NewsController {
     }
 
     @GetMapping("/personalized")
-    public DataResponseMessage<List<UserNewsDTO>> getPersonalizedNews(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "platform", required = false) PlatformType platform
+    @JsonView(Views.User.class) // Admin görünümleri
+    public List<NewsDTO> getPersonalizedNews(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "platform", required = false) PlatformType platform
     ) throws UserNotFoundException {
         return newsService.getPersonalizedNews(userDetails.getUsername(), platform);
     }
 
 
     @GetMapping("/statistics")
-    public DataResponseMessage<List<NewsStatistics>> getMonthlyNewsStatistics(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundException, UnauthorizedAreaException {
+    public List<NewsStatistics> getMonthlyNewsStatistics(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundException, UnauthorizedAreaException {
 
         if (userDetails.getAuthorities().stream().noneMatch(a -> a.getAuthority().equals("ADMIN")))
             throw new UnauthorizedAreaException();
         return newsService.getMonthlyNewsStatistics(userDetails.getUsername());
     }
 
-    // Kategoriye göre haber listeleme
-    @GetMapping("/by-category")
-    public DataResponseMessage<List<?>> getNewsByCategory(@AuthenticationPrincipal UserDetails userDetails,
-                                                          @RequestParam(name = "category") NewsType category,//Gelen String veriyi enum'a çeviremiyor, bunu nasıl düzeltirim bilmiyorum
-                                                          @RequestParam(name = "platform", required = false) PlatformType platform
-    ) throws UserNotFoundException {
-        boolean isAdmin = userDetails.getAuthorities().stream().anyMatch(auth -> auth.getAuthority().equals("ADMIN"));
-        if (isAdmin) {
-            return newsService.getNewsByCategoryForAdmin(userDetails.getUsername(), category, platform);
-        }
-        return newsService.getNewsByCategoryForUser(userDetails.getUsername(), category, platform);
+    @GetMapping("/admin/by-category")
+    @JsonView(Views.Admin.class) // Admin görünümleri
+    public List<NewsDTO> getNewsByCategoryForAdmin(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(name = "category") NewsType category,
+            @RequestParam(name = "platform", required = false) PlatformType platform
+    ) throws AdminNotFoundException {
+        // Burada isAdmin kontrolü opsiyonel olabilir çünkü endpoint admin için.
+        return newsService.getNewsByCategoryForAdmin(userDetails.getUsername(), category, platform);
+    }
 
+    @GetMapping("/by-category")
+    @JsonView(Views.User.class) // Admin görünümleri
+    public List<NewsDTO> getNewsByCategoryForUser(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(name = "category") NewsType category,
+            @RequestParam(name = "platform", required = false) PlatformType platform
+    ) throws UserNotFoundException {
+        return newsService.getNewsByCategoryForUser(userDetails.getUsername(), category, platform);
     }
 
     // Kullanıcı haber geçmişi (kim ne zaman neyi okudu)
     @GetMapping("/view-history")
-    public DataResponseMessage<List<NewsHistoryDTO>> getNewsViewHistory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "platform", required = false) PlatformType platform
+    public List<NewsHistoryDTO> getNewsViewHistory(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(name = "platform", required = false) PlatformType platform
     ) throws UserNotFoundException {
         return newsService.getNewsViewHistory(userDetails.getUsername());
     }
@@ -191,7 +209,8 @@ public class NewsController {
 
     // Önerilen haberler (kategorilere göre kullanıcıya özel)
     @GetMapping("/suggested")
-    public DataResponseMessage<List<UserNewsDTO>> getSuggestedNews(
+    @JsonView(Views.User.class) // Admin görünümleri
+    public List<NewsDTO> getSuggestedNews(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(name = "platform", required = false) PlatformType platform
     ) throws UserNotFoundException {

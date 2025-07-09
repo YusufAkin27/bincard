@@ -13,6 +13,7 @@ import akin.city_card.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
@@ -29,9 +30,7 @@ import java.util.stream.IntStream;
 public class UserDataInitializer implements ApplicationRunner {
 
     private final UserRepository userRepository;
-    private final NewsRepository newsRepository;
-
-    private static final Random random = new Random();
+private final PasswordEncoder passwordEncoder;
 
     @Override
     public void run(ApplicationArguments args) {
@@ -55,7 +54,7 @@ public class UserDataInitializer implements ApplicationRunner {
 
         User user = User.builder()
                 .userNumber(phoneNumber)
-                .password("password" + i)
+                .password(passwordEncoder.encode("123456"))
                 .roles(Set.of(Role.USER))
                 .isActive(true)
                 .isDeleted(false)
@@ -98,7 +97,7 @@ public class UserDataInitializer implements ApplicationRunner {
 
     private String generatePhoneNumber(int i) {
         // i = 1 → +905330000001, i = 2 → +905330000002, ...
-        return String.format("+90533%06d", i);
+        return String.format("+905331%06d", i);
     }
 
 

@@ -8,6 +8,7 @@ import akin.city_card.security.entity.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -20,7 +21,7 @@ import java.util.stream.IntStream;
 public class AdminDataInitializer implements ApplicationRunner {
 
     private final AdminRepository adminRepository;
-
+    private final PasswordEncoder passwordEncoder;
     private static final Random random = new Random();
 
     @Override
@@ -36,9 +37,11 @@ public class AdminDataInitializer implements ApplicationRunner {
     }
 
     private Admin generateAdmin(int i) {
+        String phoneNumber = generatePhoneNumber(i); // +905330000011, +905330000012, ...
+
         return Admin.builder()
-                .userNumber("admin" + i)
-                .password("adminpass" + i) // Gerekiyorsa şifreleme ekleyebiliriz
+                .userNumber(phoneNumber)
+                .password(passwordEncoder.encode("123456")) // Gerçek uygulamada hashlenmeli
                 .roles(Set.of(Role.ADMIN))
                 .isActive(true)
                 .isDeleted(false)
@@ -59,4 +62,9 @@ public class AdminDataInitializer implements ApplicationRunner {
                         .build())
                 .build();
     }
+
+    private String generatePhoneNumber(int i) {
+        return String.format("+905333%06d", 10 + i); // +905330000011, +905330000012, ...
+    }
+
 }

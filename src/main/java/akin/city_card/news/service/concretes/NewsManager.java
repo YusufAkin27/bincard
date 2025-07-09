@@ -7,10 +7,9 @@ import akin.city_card.cloudinary.MediaUploadService;
 import akin.city_card.news.core.converter.NewsConverter;
 import akin.city_card.news.core.request.CreateNewsRequest;
 import akin.city_card.news.core.request.UpdateNewsRequest;
-import akin.city_card.news.core.response.AdminNewsDTO;
+import akin.city_card.news.core.response.NewsDTO;
 import akin.city_card.news.core.response.NewsHistoryDTO;
 import akin.city_card.news.core.response.NewsStatistics;
-import akin.city_card.news.core.response.UserNewsDTO;
 import akin.city_card.news.exceptions.NewsIsNotActiveException;
 import akin.city_card.news.exceptions.NewsNotFoundException;
 import akin.city_card.news.exceptions.OutDatedNewsException;
@@ -19,7 +18,6 @@ import akin.city_card.news.repository.NewsLikeRepository;
 import akin.city_card.news.repository.NewsRepository;
 import akin.city_card.news.repository.NewsViewHistoryRepository;
 import akin.city_card.news.service.abstracts.NewsService;
-import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.Role;
 import akin.city_card.security.exception.UserNotFoundException;
@@ -52,13 +50,12 @@ public class NewsManager implements NewsService {
 
 
     @Override
-    public DataResponseMessage<List<AdminNewsDTO>> getAllForAdmin(String username, PlatformType platform) throws AdminNotFoundException {
-        List<AdminNewsDTO> adminNewsDTOS = newsRepository.findAll().stream()
-                .filter(news -> platform == null || news.getPlatform().equals(platform))
-                .map(newsConverter::toAdminDTO)
-                .toList();
+    public List<NewsDTO> getAllForAdmin(String username, PlatformType platform) throws AdminNotFoundException {
 
-        return new DataResponseMessage<>("Tüm haberler listelendi", true, adminNewsDTOS);
+        return newsRepository.findAll().stream()
+                .filter(news -> platform == null || news.getPlatform().equals(platform))
+                .map(news -> newsConverter.toNewsDTO(news, false, false))
+                .toList();
     }
 
 
@@ -111,16 +108,16 @@ public class NewsManager implements NewsService {
 
 
     @Override
-    public DataResponseMessage<?> getNewsByIdForAdmin(String username, Long id) throws NewsIsNotActiveException, NewsNotFoundException, AdminNotFoundException {
+    public NewsDTO getNewsByIdForAdmin(String username, Long id) throws NewsIsNotActiveException, NewsNotFoundException, AdminNotFoundException {
         News news = newsRepository.findById(id).orElseThrow(NewsNotFoundException::new);
-        AdminNewsDTO adminNewsDTO = newsConverter.toAdminDTO(news);
+     return newsConverter.toNewsDTO(news,false,false);
 
-        return new DataResponseMessage<>("haber", true, adminNewsDTO);
     }
 
     @Override
-    public DataResponseMessage<?> getNewsByIdForUser(String username, Long id) throws NewsIsNotActiveException, UserNotFoundException, NewsNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+    public NewsDTO getNewsByIdForUser(String username, Long id) throws NewsIsNotActiveException, UserNotFoundException, NewsNotFoundException {
+        User user = userRepository.findByUserNumberWithViewedNews(username)
+                .orElseThrow(UserNotFoundException::new);
         News news = newsRepository.findById(id).orElseThrow(NewsNotFoundException::new);
         if (!news.isActive()) {
             throw new NewsIsNotActiveException(id + " ");
@@ -132,13 +129,13 @@ public class NewsManager implements NewsService {
         newsViewHistory.setViewedAt(LocalDateTime.now());
         newsViewHistoryRepository.save(newsViewHistory);
         user.getViewedNews().add(newsViewHistory);
-        UserNewsDTO newsDTO = newsConverter.toUserDTO(news, false, true);
+        NewsDTO newsDTO = newsConverter.toNewsDTO(news,false,false);
 
-        return new DataResponseMessage<>("haber", true, newsDTO);
+        return   newsDTO;
     }
 
     @Override
-    public DataResponseMessage<?> getActiveNewsForAdmin(PlatformType platform, NewsType type, String username) throws AdminNotFoundException {
+    public NewsDTO getActiveNewsForAdmin(PlatformType platform, NewsType type, String username) throws AdminNotFoundException {
         LocalDateTime now = LocalDateTime.now();
 
         List<News> filteredNews = newsRepository.findAll().stream()
@@ -148,7 +145,7 @@ public class NewsManager implements NewsService {
                 .filter(news -> type == null || news.getType() == type)
                 .toList();
 
-        List<AdminNewsDTO> sortedNews = filteredNews.stream()
+        return (NewsDTO) filteredNews.stream()
                 .sorted((n1, n2) -> {
                     int cmp = n2.getPriority().compareTo(n1.getPriority());
                     if (cmp == 0) {
@@ -158,19 +155,16 @@ public class NewsManager implements NewsService {
                     }
                     return cmp;
                 })
-                .map(newsConverter::toAdminDTO)
-                .toList();
-
-        return new DataResponseMessage<>("Admin için aktif haberler", true, sortedNews);
+                .map(news -> newsConverter.toNewsDTO(news, false, false));
     }
 
     @Override
-    public DataResponseMessage<?> getActiveNewsForUser(PlatformType platform, NewsType type, String username) throws UserNotFoundException {
+    public List<NewsDTO> getActiveNewsForUser(PlatformType platform, NewsType type, String username) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
         if (user == null) {
             throw new UserNotFoundException();
         }
-/*
+
         List<NewsLike> likedNews = user.getLikedNews();
 
         LocalDateTime now = LocalDateTime.now();
@@ -182,7 +176,7 @@ public class NewsManager implements NewsService {
         // Eğer hiçbir filtreleme veya beğeni yoksa, tüm haberleri döndür
         boolean shouldScore = (platform != null || type != null || !likedNews.isEmpty());
 
-        List<UserNewsDTO> resultNews;
+        List<NewsDTO> resultNews;
 
         if (!shouldScore) {
             // Tüm aktif haberleri döndür
@@ -190,7 +184,7 @@ public class NewsManager implements NewsService {
                     .map(news -> {
                         boolean likedByUser = false;
                         boolean viewedByUser = newsViewHistoryRepository.existsByUserAndNews(user, news);
-                        return newsConverter.toUserDTO(news, likedByUser, viewedByUser);
+                        return newsConverter.toNewsDTO(news, likedByUser, viewedByUser);
                     })
                     .toList();
         } else {
@@ -219,7 +213,7 @@ public class NewsManager implements NewsService {
                         if (preferredTypes.contains(news.getType())) score += 2;
                         if (preferredPriorities.contains(news.getPriority())) score += 1;
 
-                        UserNewsDTO dto = newsConverter.toUserDTO(news, likedByUser, viewedByUser);
+                        NewsDTO dto = newsConverter.toNewsDTO(news, likedByUser, viewedByUser);
                         return new AbstractMap.SimpleEntry<>(dto, score);
                     })
                     .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()))
@@ -227,11 +221,11 @@ public class NewsManager implements NewsService {
                     .toList();
         }
 
- */
 
-        return new DataResponseMessage<>("Kişiye özel haberler", true, newsRepository.findAll().stream().map(news -> newsConverter.toUserDTO(news,
+
+        return  newsRepository.findAll().stream().map(news -> newsConverter.toNewsDTO(news,
                 checkIfLikedByUser(news,user),
-                checkIfViewedByUser(news,user))).collect(Collectors.toList()));
+                checkIfViewedByUser(news,user))).toList();
     }
 
     private boolean checkIfLikedByUser(News news,User user) {
@@ -246,10 +240,10 @@ public class NewsManager implements NewsService {
 
 
     @Override
-    public DataResponseMessage<List<AdminNewsDTO>> getNewsBetweenDates(String username, LocalDateTime start, LocalDateTime end, PlatformType platform) throws AdminNotFoundException {
+    public List<NewsDTO> getNewsBetweenDates(String username, LocalDateTime start, LocalDateTime end, PlatformType platform) throws AdminNotFoundException {
 
         if (start == null || end == null) {
-            return new DataResponseMessage<>("Başlangıç ve bitiş tarihleri zorunludur", false, null);
+            List.of();
         }
 
         List<News> newsBetweenDates = newsRepository.findAll().stream()
@@ -258,16 +252,14 @@ public class NewsManager implements NewsService {
                 .filter(news -> !news.getStartDate().isBefore(start) && !news.getStartDate().isAfter(end))
                 .toList();
 
-        List<AdminNewsDTO> dtoList = newsBetweenDates.stream()
-                .map(newsConverter::toAdminDTO)
+        return newsBetweenDates.stream()
+                .map(news -> newsConverter.toNewsDTO(news, false, false))
                 .toList();
-
-        return new DataResponseMessage<>("Belirtilen tarihler arasındaki haberler", true, dtoList);
     }
 
 
     @Override
-    public DataResponseMessage<List<UserNewsDTO>> getLikedNewsByUser(String username) throws UserNotFoundException {
+    public List<NewsDTO> getLikedNewsByUser(String username) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
         if (user == null) {
             throw new UserNotFoundException();
@@ -276,14 +268,14 @@ public class NewsManager implements NewsService {
         List<NewsLike> newsLikes = user.getLikedNews();
         LocalDateTime now = LocalDateTime.now();
 
-        List<UserNewsDTO> likedNews = newsLikes.stream()
+        // likedByUser = true, viewedByUser = false
+
+        return newsLikes.stream()
                 .map(NewsLike::getNews)
                 .filter(News::isActive)
                 .filter(news -> news.getEndDate() == null || news.getEndDate().isAfter(now))
-                .map(news -> newsConverter.toUserDTO(news, true, true)) // likedByUser = true, viewedByUser = false
+                .map(news -> newsConverter.toNewsDTO(news, true, true)) // likedByUser = true, viewedByUser = false
                 .toList();
-
-        return new DataResponseMessage<>("Kullanıcının beğendiği haberler", true, likedNews);
     }
 
 
@@ -297,10 +289,10 @@ public class NewsManager implements NewsService {
             throw new NewsIsNotActiveException(newsId + " ");
         }
 
-        if (news.getEndDate() == null || news.getEndDate().isAfter(now)) {//tarih formatları uyuşmuyor heralde bu yüzden haber aktif değilmiş gibi dönüyor
-            news.setActive(false);
+        if (news.getEndDate() != null && news.getEndDate().isBefore(LocalDateTime.now())) {
             throw new OutDatedNewsException();
         }
+
         newsLike.setNews(news);
         newsLike.setUser(user);
         newsLike.setLikedAt(now);
@@ -321,8 +313,7 @@ public class NewsManager implements NewsService {
             throw new NewsIsNotActiveException(newsId + " ");
         }
 
-        if (news.getEndDate() == null || news.getEndDate().isAfter(now)) {
-            news.setActive(false);
+        if (news.getEndDate() != null && news.getEndDate().isBefore(LocalDateTime.now())) {
             throw new OutDatedNewsException();
         }
         user.getLikedNews().removeIf(newsLike1 -> newsLike1.getNews().equals(news));
@@ -333,10 +324,10 @@ public class NewsManager implements NewsService {
 
 
     @Override
-    public DataResponseMessage<List<UserNewsDTO>> getPersonalizedNews(String username, PlatformType platform) throws UserNotFoundException {
+    public List<NewsDTO> getPersonalizedNews(String username, PlatformType platform) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
         if (user == null) {
-            return new DataResponseMessage<>("Kullanıcı bulunamadı", false, null);
+            return List.of();
         }
 
         // Kullanıcının beğendiği ve görüntülediği haberlerden tip ve öncelik setlerini çıkaralım
@@ -370,7 +361,7 @@ public class NewsManager implements NewsService {
                 .map(like -> like.getNews().getId())
                 .collect(Collectors.toSet());
 
-        List<UserNewsDTO> personalizedNews = activeNews.stream()
+        List<NewsDTO> personalizedNews = activeNews.stream()
                 .map(news -> {
                     int score = 0;
                     if (likedTypes.contains(news.getType())) score += 3;
@@ -381,22 +372,22 @@ public class NewsManager implements NewsService {
                     boolean likedByUser = likedNewsIds.contains(news.getId());
                     boolean viewedByUser = newsViewHistoryRepository.existsByUserAndNews(user, news);
 
-                    return new AbstractMap.SimpleEntry<>(newsConverter.toUserDTO(news, likedByUser, viewedByUser), score);
+                    return new AbstractMap.SimpleEntry<>(newsConverter.toNewsDTO(news, likedByUser, viewedByUser), score);
                 })
                 .filter(entry -> entry.getValue() > 0)  // Sadece ilgisi olan haberler
                 .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue())) // Skora göre azalan
                 .map(Map.Entry::getKey)
                 .toList();
 
-        return new DataResponseMessage<>("Kişiye özel haberler", true, personalizedNews);
+        return  personalizedNews;
     }
 
 
     @Override
-    public DataResponseMessage<List<NewsStatistics>> getMonthlyNewsStatistics(String username) throws AdminNotFoundException {
+    public List<NewsStatistics> getMonthlyNewsStatistics(String username) throws AdminNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
         if (admin == null || !admin.getRoles().contains(Role.ADMIN)) {
-            return new DataResponseMessage<>("Yetkisiz erişim", false, null);
+            return List.of();
         }
 
         LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1);
@@ -405,32 +396,28 @@ public class NewsManager implements NewsService {
 
         List<News> allNews = newsRepository.findAll();
 
-        List<NewsStatistics> stats = allNews.stream()
+        return allNews.stream()
                 .map(news -> newsConverter.toDetailedStatistics(news, likesThisMonth, viewsThisMonth))
                 .sorted(Comparator.comparingInt(NewsStatistics::getViewCountThisMonth).reversed())
                 .toList();
-
-        return new DataResponseMessage<>("Bu ayın haber istatistikleri", true, stats);
     }
 
 
     @Override
-    public DataResponseMessage<List<?>> getNewsByCategoryForAdmin(String username, NewsType category, PlatformType platform) {
+    public List<NewsDTO> getNewsByCategoryForAdmin(String username, NewsType category, PlatformType platform) {
         List<News> newsList = newsRepository.findByTypeAndActiveTrue(category);
 
-        List<AdminNewsDTO> adminNewsDTOS = newsList.stream()
+        return newsList.stream()
                 .filter(news -> platform == null || news.getPlatform().equals(platform))
-                .map(newsConverter::toAdminDTO)
+                .map(news -> newsConverter.toNewsDTO(news, false, false))
                 .toList();
-
-        return new DataResponseMessage<>("Kategoriye göre aktif haberler", true, adminNewsDTOS);
     }
 
     @Override
-    public DataResponseMessage<List<?>> getNewsByCategoryForUser(String username, NewsType category, PlatformType platform) throws UserNotFoundException {
+    public List<NewsDTO> getNewsByCategoryForUser(String username, NewsType category, PlatformType platform) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
         if (user == null) {
-            return new DataResponseMessage<>("Kullanıcı bulunamadı", false, null);
+            return List.of();
         }
 
         List<News> newsList = newsRepository.findByTypeAndActiveTrue(category);
@@ -438,41 +425,36 @@ public class NewsManager implements NewsService {
         Set<Long> likedNewsIds = user.getLikedNews().stream()
                 .map(like -> like.getNews().getId())
                 .collect(Collectors.toSet());
-        List<UserNewsDTO> userNewsDTOS = newsList.stream()
+
+        return newsList.stream()
                 .filter(news -> platform == null || news.getPlatform().equals(platform))
                 .map(news -> {
                     boolean liked = likedNewsIds.contains(news.getId());
                     boolean viewed = newsViewHistoryRepository.existsByUserAndNews(user, news);
-                    return newsConverter.toUserDTO(news, liked, viewed);
+                    return newsConverter.toNewsDTO(news, liked, viewed);
                 })
                 .toList();
-
-        return new DataResponseMessage<>("Kategoriye göre aktif haberler", true, userNewsDTOS);
     }
 
 
     @Override
-    public DataResponseMessage<List<NewsHistoryDTO>> getNewsViewHistory(String username) throws UserNotFoundException {
+    public List<NewsHistoryDTO> getNewsViewHistory(String username) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
 
         LocalDateTime now = LocalDateTime.now();
 
-        List<NewsHistoryDTO> newsHistoryDTOS = user.getViewedNews().stream()
-                .filter(view -> {
-                    News news = view.getNews();
-                    return news != null &&
-                            news.isActive() &&
-                            (news.getEndDate() == null || news.getEndDate().isAfter(now));
-                })
-                .sorted(Comparator.comparing(NewsViewHistory::getViewedAt).reversed())
-                .map(newsConverter::toHistoryDTO)
-                .toList();
+        return
+                user.getViewedNews().stream()
+                        .filter(view -> {
+                            News news = view.getNews();
+                            return news != null &&
+                                    news.isActive() &&
+                                    (news.getEndDate() == null || news.getEndDate().isAfter(now));
+                        })
+                        .sorted(Comparator.comparing(NewsViewHistory::getViewedAt).reversed())
+                        .map(newsConverter::toHistoryDTO)
+                        .toList();
 
-        return new DataResponseMessage<>(
-                "Kullanıcının görüntülediği haber geçmişi",
-                true,
-                newsHistoryDTOS
-        );
     }
 
     @Override
@@ -492,10 +474,10 @@ public class NewsManager implements NewsService {
     }
 
     @Override
-    public DataResponseMessage<List<UserNewsDTO>> getSuggestedNews(String username, PlatformType platformType) throws UserNotFoundException {
+    public List<NewsDTO> getSuggestedNews(String username, PlatformType platformType) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username);
         if (user == null) {
-            return new DataResponseMessage<>("Kullanıcı bulunamadı", false, null);
+            return List.of();
         }
 
         // Kullanıcının beğendiği ve görüntülediği haberleri çek
@@ -530,7 +512,10 @@ public class NewsManager implements NewsService {
                 .map(like -> like.getNews().getId())
                 .collect(Collectors.toSet());
 
-        List<UserNewsDTO> suggested = activeNews.stream()
+        // Beğeni bazlı
+        // Görüntülenme bazlı
+
+        return activeNews.stream()
                 .map(news -> {
                     int score = 0;
 
@@ -545,14 +530,12 @@ public class NewsManager implements NewsService {
                     boolean likedByUser = likedNewsIds.contains(news.getId());
                     boolean viewedByUser = newsViewHistoryRepository.existsByUserAndNews(user, news);
 
-                    UserNewsDTO dto = newsConverter.toUserDTO(news, likedByUser, viewedByUser);
+                    NewsDTO dto = newsConverter.toNewsDTO(news, likedByUser, viewedByUser);
                     return new AbstractMap.SimpleEntry<>(dto, score);
                 })
                 .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()))
                 .map(Map.Entry::getKey)
                 .toList();
-
-        return new DataResponseMessage<>("Kullanıcıya özel önerilen haberler", true, suggested);
     }
 
 }
