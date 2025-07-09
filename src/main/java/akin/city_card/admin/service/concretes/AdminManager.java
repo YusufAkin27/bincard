@@ -6,11 +6,10 @@ import akin.city_card.admin.core.request.UpdateLocationRequest;
 import akin.city_card.admin.core.response.AuditLogDTO;
 import akin.city_card.admin.core.response.LoginHistoryDTO;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
-import akin.city_card.admin.model.Admin;
-import akin.city_card.admin.model.AdminApprovalRequest;
-import akin.city_card.admin.model.ApprovalStatus;
+import akin.city_card.admin.model.*;
 import akin.city_card.admin.repository.AdminApprovalRequestRepository;
 import akin.city_card.admin.repository.AdminRepository;
+import akin.city_card.admin.repository.AuditLogRepository;
 import akin.city_card.admin.service.abstracts.AdminService;
 import akin.city_card.location.core.response.LocationDTO;
 import akin.city_card.location.exceptions.NoLocationFoundException;
@@ -20,6 +19,7 @@ import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.DeviceInfo;
 import akin.city_card.security.entity.ProfileInfo;
 import akin.city_card.security.entity.Role;
+import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.user.core.request.ChangePasswordRequest;
 import akin.city_card.user.core.request.UpdateProfileRequest;
@@ -35,6 +35,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -44,6 +45,7 @@ public class AdminManager implements AdminService {
     private final AdminRepository adminRepository;
     private final LoginHistoryRepository loginHistoryRepository;
     private final AdminApprovalRequestRepository adminApprovalRequestRepository;
+    private final AuditLogRepository auditLogRepository;
     @Override
     @Transactional
     public ResponseMessage signUp(CreateAdminRequest adminRequest) throws PhoneIsNotValidException, PhoneNumberAlreadyExistsException {
@@ -85,6 +87,21 @@ public class AdminManager implements AdminService {
         // Admin kaydet
         adminRepository.save(admin);
 
+        // Admin kayıt olduğunda logla
+
+        createAuditLog(
+                admin,
+                ActionType.SIGN_UP,
+                "Admin kayıt oldu",
+                deviceInfo,
+                null,                   // targetEntityId yok
+                "SUPER_ADMIN",          // hedef entity türü
+                null,                   // amount yok
+                "{\"platform\":\"web\"}" // metadata örneği (opsiyonel)
+        );
+
+
+
         // Admin onay talebi oluştur ve kaydet
         AdminApprovalRequest approvalRequest = AdminApprovalRequest.builder()
                 .admin(admin)
@@ -95,6 +112,28 @@ public class AdminManager implements AdminService {
         adminApprovalRequestRepository.save(approvalRequest);
 
         return new ResponseMessage("Kayıt başarılı. Super admin onayı bekleniyor.", true);
+    }
+    public void createAuditLog(SecurityUser user,
+                               ActionType action,
+                               String description,
+                               DeviceInfo deviceInfo,
+                               UUID targetEntityId,
+                               String targetEntityType,
+                               Double amount,
+                               String metadata) {
+
+        AuditLog auditLog = new AuditLog();
+        auditLog.setUser(user);
+        auditLog.setAction(action);
+        auditLog.setDescription(description);
+        auditLog.setDeviceInfo(deviceInfo);
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setTargetEntityId(targetEntityId);
+        auditLog.setTargetEntityType(targetEntityType);
+        auditLog.setAmount(amount);
+        auditLog.setMetadata(metadata);
+
+        auditLogRepository.save(auditLog);
     }
 
 
