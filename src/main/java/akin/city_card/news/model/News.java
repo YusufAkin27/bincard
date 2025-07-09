@@ -18,6 +18,7 @@ public class News {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    private String thumbnail;
     @Column(nullable = false, length = 150)
     private String title;
 

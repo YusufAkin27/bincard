@@ -13,6 +13,7 @@ public class UserNewsDTO {
     private String content;
     private String image;
     private boolean likedByUser;
+    private String thumbnailUrl;
     private boolean viewedByUser;
     private NewsPriority priority;
     private NewsType type;
