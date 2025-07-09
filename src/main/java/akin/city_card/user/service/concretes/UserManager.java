@@ -205,7 +205,7 @@ public class UserManager implements UserService {
     @Override
     @JsonView(Views.User.class)
     public CacheUserDTO getProfile(String username) throws UserNotFoundException {
-        return cachedUserLookupService.findByUsername(username);
+        return userConverter.toCacheUserDTO(userRepository.findByUserNumber(username));
     }
 
 
