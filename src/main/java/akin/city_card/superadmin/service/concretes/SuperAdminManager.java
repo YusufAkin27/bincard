@@ -173,10 +173,13 @@ public class SuperAdminManager implements SuperAdminService {
     @Override
     public DataResponseMessage<List<AuditLogDTO>> getAuditLogs(String fromDate, String toDate, String action, String username) {
         LocalDateTime from = (fromDate != null && !fromDate.isBlank()) ?
-                LocalDate.parse(fromDate).atStartOfDay() : LocalDateTime.MIN;
+                LocalDate.parse(fromDate).atStartOfDay() :
+                LocalDateTime.of(2000, 1, 1, 0, 0); // Güvenli bir başlangıç tarihi
 
         LocalDateTime to = (toDate != null && !toDate.isBlank()) ?
-                LocalDate.parse(toDate).atTime(LocalTime.MAX) : LocalDateTime.now();
+                LocalDate.parse(toDate).atTime(LocalTime.MAX) :
+                LocalDateTime.now();
+
 
         ActionType actionType = null;
         if (action != null && !action.isBlank()) {
