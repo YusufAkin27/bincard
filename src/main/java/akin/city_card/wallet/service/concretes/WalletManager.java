@@ -579,33 +579,43 @@ public class WalletManager implements WalletService {
             int page,
             int size,
             String sortBy,
-            String sortDir) throws UserNotFoundException, UnauthorizedAreaException {
+            String sortDir
+    ) throws UserNotFoundException, UnauthorizedAreaException {
 
-        Optional<SecurityUser> admin = securityUserRepository.findByUserNumber(username);
-        if (admin.isEmpty()) {
+        // Kullanıcı kontrolü
+        Optional<SecurityUser> adminOpt = securityUserRepository.findByUserNumber(username);
+        if (adminOpt.isEmpty()) {
             throw new UserNotFoundException();
         }
-/*
-        boolean isAdmin = admin.get().getRoles().contains("ADMIN") || admin.get().getRoles().contains("SUPERADMIN");
+
+        SecurityUser admin = adminOpt.get();
+
+        // Rol kontrolü
+        boolean isAdmin = admin.getRoles().contains(Role.ADMIN) || admin.getRoles().contains(Role.SUPERADMIN);
         if (!isAdmin) {
             throw new UnauthorizedAreaException();
         }
 
-
- */
+        // Tarih aralığı geçerliliği kontrolü
         if (startDate != null && endDate != null && endDate.isBefore(startDate)) {
             throw new IllegalArgumentException("Bitiş tarihi, başlangıç tarihinden önce olamaz.");
         }
 
+        // Sıralama belirleme
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir.toUpperCase()), sortBy);
-
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        LocalDateTime start = startDate != null ? startDate.atStartOfDay() : LocalDate.MIN.atStartOfDay();
-        LocalDateTime end = endDate != null ? endDate.plusDays(1).atStartOfDay().minusNanos(1) : LocalDateTime.now();
+        // PostgreSQL uyumlu tarih aralıkları belirleme
+        LocalDateTime defaultStart = LocalDateTime.of(1970, 1, 1, 0, 0);
+        LocalDateTime defaultEnd = LocalDateTime.now().plusYears(1);
 
+        LocalDateTime start = (startDate != null) ? startDate.atStartOfDay() : defaultStart;
+        LocalDateTime end = (endDate != null)
+                ? endDate.plusDays(1).atStartOfDay().minusNanos(1)
+                : defaultEnd;
+
+        // Veritabanı sorgusu
         Page<IdentityVerificationRequest> resultPage;
-
         if (status != null) {
             resultPage = identityVerificationRequestRepository
                     .findAllByStatusAndRequestedAtBetween(status, start, end, pageable);
@@ -614,10 +624,16 @@ public class WalletManager implements WalletService {
                     .findAllByRequestedAtBetween(start, end, pageable);
         }
 
+        // DTO dönüşümü
         Page<IdentityVerificationRequestDTO> dtoPage = resultPage.map(userConverter::convertToVerificationRequestDTO);
 
-        return new DataResponseMessage<>("Kimlik doğrulama başvuruları başarıyla getirildi.", true, dtoPage);
+        return new DataResponseMessage<>(
+                "Kimlik doğrulama başvuruları başarıyla getirildi.",
+                true,
+                dtoPage
+        );
     }
+
 
     @Override
     public WalletDTO getMyWallet(String username) throws WalletNotFoundException, WalletNotActiveException, UserNotFoundException {
@@ -745,15 +761,12 @@ public class WalletManager implements WalletService {
         if (securityUser.isEmpty()) {
             throw new UserNotFoundException();
         }
-/*
-        boolean isAdmin = securityUser.get().getRoles().contains("ADMIN");
-        boolean isSuperAdmin = securityUser.get().getRoles().contains("SUPERADMIN");
 
-        if (!isAdmin && !isSuperAdmin) {
+        boolean isAuthorized = securityUser.get().getRoles().contains(Role.ADMIN) || securityUser.get().getRoles().contains(Role.SUPERADMIN);
+        if (!isAuthorized) {
             throw new UnauthorizedAreaException();
         }
 
- */
 
         // 3. Başvuruyu getir
         IdentityVerificationRequest verificationRequest = identityVerificationRequestRepository
