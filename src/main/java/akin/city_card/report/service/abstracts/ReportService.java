@@ -24,7 +24,7 @@ public interface ReportService {
     ResponseMessage addReport(AddReportRequest addReportRequest, List<MultipartFile> photos, String username)
             throws AddReportRequestNullException, UserNotFoundException, PhotoSizeLargerException, IOException;
 
-    ResponseMessage deleteReport(Long reportId,String username) throws ReportNotFoundException, ReportAlreadyDeletedException, ReportNotActiveException;
+    ResponseMessage deleteReport(Long reportId,String username) throws ReportNotFoundException, ReportAlreadyDeletedException, ReportNotActiveException, UserNotFoundException;
 
 
     List<Report> getReportByCategory(ReportCategory category, String username) throws UserNotFoundException, CategoryNotFoundExecption, AdminNotFoundException;
@@ -39,36 +39,36 @@ public interface ReportService {
 
     ResponseMessage changeStatus(Long reportId, ReportStatus status, String username) throws AdminNotFoundException, ReportNotFoundException;
 
-    ResponseMessage toggleDeleteReport(Long reportId, String username);
+    ResponseMessage toggleDeleteReport(Long reportId, String username) throws AdminNotFoundException, ReportNotFoundException;
 
-    ResponseMessage replyToReportAsAdmin(Long reportId, String username, String message);
+    ResponseMessage replyToReportAsAdmin(Long reportId, String username, String message) throws AdminNotFoundException, ReportNotFoundException;
 
-    ResponseMessage replyToReportResponse(Long responseId, String username, String message);
+    ResponseMessage replyToReportResponse(Long responseId, String username, String message) throws ReportNotFoundException, UserNotFoundException;
 
-    ResponseMessage deleteResponse(Long responseId, String username);
+    ResponseMessage deleteResponse(Long responseId, String username) throws ReportNotFoundException, UserNotFoundException, AdminNotFoundException;
 
-    ResponseMessage rateResponse(Long responseId, String username, int rating);
+    ResponseMessage rateResponse(Long responseId, String username, int rating) throws UserNotFoundException, ReportNotFoundException;
 
-    ResponseMessage updateRating(Long ratingId, String username, int rating);
+    ResponseMessage updateRating(Long ratingId, String username, int rating) throws UserNotFoundException;
 
-    ResponseMessage deleteRating(Long ratingId, String username);
+    ResponseMessage deleteRating(Long ratingId, String username) throws UserNotFoundException;
 
-    List<?> getAllResponsesByUser(String username);
+    List<?> getAllResponsesByUser(String username) throws UserNotFoundException;
 
-    List<?> getReportResponses(Long reportId);
+    List<?> getReportResponses(Long reportId) throws ReportNotFoundException;
 
-    ResponseMessage batchToggleReports(List<Long> reportIds, boolean delete, String username);
+    ResponseMessage batchToggleReports(List<Long> reportIds, boolean delete, String username) throws AdminNotFoundException;
 
-    ResponseMessage archiveReport(Long reportId, String username);
+    ResponseMessage archiveReport(Long reportId, String username) throws AdminNotFoundException, ReportNotFoundException;
 
-    ReportStatsDTO getReportStats(String username);
+    ReportStatsDTO getReportStats(String username) throws AdminNotFoundException;
 
 
-    Object getReportByIdAsAdmin(Long reportId);
+    Object getReportByIdAsAdmin(Long reportId) throws ReportNotFoundException;
 
-    Object getReportByIdAsUser(Long reportId, String username);
+    Object getReportByIdAsUser(Long reportId, String username) throws ReportNotFoundException, UserNotFoundException;
 
-    List<?> getReportsByCategoryUser(ReportCategory category, String username, Pageable pageable);
+    List<?> getReportsByCategoryUser(ReportCategory category, String username, Pageable pageable) throws UserNotFoundException;
 
     List<?> getReportsByCategoryAdmin(ReportCategory category, Pageable pageable);
 }
