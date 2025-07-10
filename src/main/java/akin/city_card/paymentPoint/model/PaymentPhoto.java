@@ -1,9 +1,11 @@
 package akin.city_card.paymentPoint.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
 @Table(name = "payment_point_photos")
+@Data
 public class PaymentPhoto {
 
     @Id

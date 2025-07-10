@@ -3,8 +3,9 @@ package akin.city_card.response;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.SuperBuilder;
 
-
+@Data
 public class DataResponseMessage<T> extends ResponseMessage {
     private T data;
 
@@ -13,11 +14,4 @@ public class DataResponseMessage<T> extends ResponseMessage {
         this.data = data;
     }
 
-    public T getData() {
-        return data;
-    }
-
-    public void setData(T data) {
-        this.data = data;
-    }
 }

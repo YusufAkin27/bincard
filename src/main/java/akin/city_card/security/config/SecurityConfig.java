@@ -45,7 +45,14 @@ public class SecurityConfig {
                 "/v1/api/auth/**",
                 "/v1/api/user/active/**",
                 "/v1/api/token/**",
-                "/v1/api/admin/register"
+                "/v1/api/admin/register",
+                // Aşağıdaki ödeme noktası görüntüleme ve listeleme yolları herkese açık
+                "/v1/api/payment-point",                   // GET tüm ödeme noktaları (sayfalama)
+                "/v1/api/payment-point/search",            // POST arama
+                "/v1/api/payment-point/nearby",            // GET yakın ödeme noktaları
+                "/v1/api/payment-point/by-city/**",        // GET şehir bazlı listeleme
+                "/v1/api/payment-point/by-payment-method", // GET ödeme yöntemi bazlı listeleme
+                "/v1/api/payment-point/*"                   // GET tekil ödeme noktası (detay)
         };
 
 
@@ -53,6 +60,11 @@ public class SecurityConfig {
         String[] adminPaths = {
                 "/v1/api/admin/**",
                 "/v1/api/user/all",
+                "/v1/api/payment-point",                // POST yeni ekleme
+                "/v1/api/payment-point/**/status",     // PATCH status değişikliği
+                "/v1/api/payment-point/**/photos/**",  // Fotoğraf silme
+                "/v1/api/payment-point/**/photos",     // Fotoğraf ekleme
+                "/v1/api/payment-point/{id}",           // PUT update ve DELETE silme (path parametreye göre)
         };
         String[] superAdminPaths = {
                 "/v1/api/super-admin/**",
