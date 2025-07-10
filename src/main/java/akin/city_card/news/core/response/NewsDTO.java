@@ -52,10 +52,10 @@ public class NewsDTO {
     @JsonView(Views.Admin.class)
     private PlatformType platform;
 
-    @JsonView(Views.Admin.class)
+    @JsonView(Views.User.class)
     private int viewCount;
 
-    @JsonView(Views.Admin.class)
+    @JsonView(Views.User.class)
     private int likeCount;
 
     @JsonView(Views.Admin.class)
