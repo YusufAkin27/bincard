@@ -38,14 +38,26 @@ public class SecurityConfig {
                 "/v1/api/user/verify/phone/resend/**",
                 "/v1/api/user/password/forgot/**",
                 "/v1/api/user/password/reset/**",
-                "/v1/api/admin/sign-up",
                 "/v1/api/user/password/verify-code",
                 "/v1/api/user/password/reset",
-                "/swagger-ui/**", "/v3/api-docs/**",
+                "/v1/api/admin/sign-up",
+                "/v1/api/admin/register",
                 "/v1/api/auth/**",
                 "/v1/api/user/active/**",
                 "/v1/api/token/**",
-                "/v1/api/admin/register"
+                "/swagger-ui/**",
+                "/v3/api-docs/**",
+
+                // Ödeme noktası herkese açık görüntüleme uçları
+                "/v1/api/payment-point",                         // GET
+                "/v1/api/payment-point/search",                  // POST
+                "/v1/api/payment-point/nearby",                  // GET
+                "/v1/api/payment-point/by-city/**",              // GET
+                "/v1/api/payment-point/by-payment-method",       // GET
+                "/v1/api/payment-point/*",                       // GET tekil detay (id)
+                "/v1/api/payment-point/*/photos",                // GET (varsa)
+                "/v1/api/payment-point/*/photos/*",              // GET (varsa)
+                "/v1/api/payment-point/*/status"                 // GET (varsa)
         };
 
 
@@ -53,13 +65,20 @@ public class SecurityConfig {
         String[] adminPaths = {
                 "/v1/api/admin/**",
                 "/v1/api/user/all",
-        };
-        String[] superAdminPaths = {
-                "/v1/api/super-admin/**",
-                "/v1/api/user/all",
+                "/v1/api/payment-point",                     // POST yeni ekleme
+                "/v1/api/payment-point/*/status",            // PATCH: Tek seviye (id/status)
+                "/v1/api/payment-point/*/photos",            // POST: Fotoğraf ekleme
+                "/v1/api/payment-point/*/photos/*",          // DELETE: Fotoğraf silme
+                "/v1/api/payment-point/*",                   // PUT & DELETE: Güncelleme ve silme
         };
 
-        // Öğrenci rolleri için yollar
+// Sadece superadmin yetkisi gerektiren yollar
+        String[] superAdminPaths = {
+                "/v1/api/super-admin/**",
+                "/v1/api/user/all"
+        };
+
+// Öğrenci (normal kullanıcı) rolleri için yollar
         String[] userPaths = {
                 "/v1/api/user/**"
         };

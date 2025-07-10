@@ -19,17 +19,19 @@ public class ReportSpecification {
 
     public static Specification<Report> containsKeyword(String keyword) {
         return (root, query, cb) -> {
-            if (keyword == null || keyword.isBlank()) return cb.conjunction();
+            if (keyword == null || keyword.isBlank()) {
+                return cb.conjunction();
+            }
             String pattern = "%" + keyword.toLowerCase() + "%";
 
             return cb.or(
-                    cb.like(cb.lower(root.get("title")), pattern),
-                    cb.like(cb.lower(root.get("description")), pattern),
-                    cb.like(cb.lower(root.get("status").as(String.class)), pattern),
-                    cb.like(cb.lower(root.get("category").as(String.class)), pattern),
-                    cb.like(cb.lower(root.get("user").get("username")), pattern)
+                    cb.like(cb.lower(root.get("message")), pattern), // mesaj içeriği
+                    cb.like(cb.lower(root.get("status").as(String.class)), pattern), // durum (OPEN, CLOSED)
+                    cb.like(cb.lower(root.get("category").as(String.class)), pattern), // kategori (TEKNIK, vs.)
+                    cb.like(cb.lower(root.get("user").get("userNumber")), pattern) // kullanıcı adı
             );
         };
     }
+
 
 }
