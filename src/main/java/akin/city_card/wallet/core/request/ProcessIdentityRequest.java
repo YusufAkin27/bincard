@@ -1,11 +1,10 @@
 package akin.city_card.wallet.core.request;
 
-import akin.city_card.user.model.RequestStatus;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 @Data
-public class ApproveIdentityRequest {
+public class ProcessIdentityRequest {
 
     @NotNull(message = "Başvuru ID'si zorunludur.")
     private Long requestId;

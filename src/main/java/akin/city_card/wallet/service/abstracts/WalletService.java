@@ -11,7 +11,7 @@ import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.exceptions.VideoSizeLargerException;
 import akin.city_card.user.model.RequestStatus;
-import akin.city_card.wallet.core.request.ApproveIdentityRequest;
+import akin.city_card.wallet.core.request.ProcessIdentityRequest;
 import akin.city_card.wallet.core.request.CreateWalletRequest;
 import akin.city_card.wallet.core.request.TopUpBalanceRequest;
 import akin.city_card.wallet.core.request.WalletTransferRequest;
@@ -20,9 +20,9 @@ import akin.city_card.wallet.core.response.WalletDTO;
 import akin.city_card.wallet.core.response.WalletStatsDTO;
 import akin.city_card.wallet.exceptions.*;
 import akin.city_card.wallet.model.WalletActivityType;
-import akin.city_card.wallet.model.WalletTransfer;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -33,13 +33,9 @@ import java.util.Map;
 public interface WalletService {
     DataResponseMessage<BigDecimal> getWalletBalance(String phone) throws WalletNotFoundException, UserNotFoundException, WalletNotActiveException;
     ResponseMessage transfer(String senderPhone,@Valid WalletTransferRequest walletTransfer) throws UserNotFoundException, ReceiverNotFoundException, WalletNotFoundException, ReceiverWalletNotFoundException, WalletNotActiveException, ReceiverWalletNotActiveException, InsufficientFundsException;
-    ResponseMessage deactivateWallet(String phone) throws WalletNotActiveException, WalletNotFoundException, UserNotFoundException;
-    ResponseMessage activateWallet(String phone) throws UserNotFoundException, WalletNotFoundException;
-    DataResponseMessage<List<WalletActivityDTO>> getActivities(String phone, WalletActivityType type, LocalDate start, LocalDate end) throws UserNotFoundException, WalletNotFoundException;
-
+    ResponseMessage toggleWalletStatus(String phone, boolean isActive) throws WalletNotActiveException, WalletNotFoundException, UserNotFoundException, WalletDeactivationException;
     ResponseMessage createWallet(@Valid String phone, CreateWalletRequest createWalletRequest) throws UserNotFoundException, OnlyPhotosAndVideosException, PhotoSizeLargerException, IOException, VideoSizeLargerException, FileFormatCouldNotException;
 
-    DataResponseMessage<List<WalletActivityDTO>> getActivitiesPaged(String username, WalletActivityType type, int page, int size) throws WalletNotFoundException, UserNotFoundException;
 
     DataResponseMessage<?> getTransferDetail(String username, Long id) throws UnauthorizedAccessException, UserNotFoundException, TransferNotFoundException;
 
@@ -68,7 +64,6 @@ public interface WalletService {
 
     DataResponseMessage<?> getNotificationSettings(String username);
 
-    DataResponseMessage<List<WalletDTO>> getAllWallets(String username, int page, int size);
 
     DataResponseMessage<Map<String, Object>> getSystemStats(String username);
 
@@ -76,14 +71,19 @@ public interface WalletService {
 
     DataResponseMessage<List<?>> getSuspiciousActivities(String username, int page, int size);
 
-    DataResponseMessage<byte[]> exportTransactionsCSV(String username, LocalDate start, LocalDate end);
-
+    DataResponseMessage<byte[]> exportTransactionsExcel(String username, LocalDate start, LocalDate end) throws UserNotFoundException, UnauthorizedAreaException;
     DataResponseMessage<byte[]> exportTransactionsPDF(String username, LocalDate start, LocalDate end);
 
     ResponseMessage topUp(@Valid String username, TopUpBalanceRequest topUpBalanceRequest) throws UserNotFoundException, WalletNotFoundException;
 
-    ResponseMessage approveOrReject(@Valid ApproveIdentityRequest request, String username) throws UserNotFoundException, UnauthorizedAreaException, IdentityVerificationRequestNotFoundException, AlreadyWalletUserException;
+    ResponseMessage approveOrReject(@Valid ProcessIdentityRequest request, String username) throws UserNotFoundException, UnauthorizedAreaException, IdentityVerificationRequestNotFoundException, AlreadyWalletUserException;
 
     DataResponseMessage<Page<IdentityVerificationRequestDTO>> getIdentityRequests(String username, RequestStatus status, LocalDate startDate, LocalDate endDate, int page, int size, String sortBy, String sortDir) throws UserNotFoundException, UnauthorizedAreaException;
+
+    WalletDTO getMyWallet(String username) throws WalletNotFoundException, WalletNotActiveException, UserNotFoundException;
+
+    DataResponseMessage<Page<WalletActivityDTO>> getActivities(String username, WalletActivityType type, LocalDate start, LocalDate end, Pageable pageable) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException;
+
+    DataResponseMessage<Page<WalletDTO>> getAllWallets(String username, Pageable pageable);
 }
 

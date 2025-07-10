@@ -8,7 +8,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,15 +17,18 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     boolean existsByIdentityInfo_NationalId(String nationalId);
 
+    User findByIdentityInfo_NationalId(String nationalId);
+
+    User findByProfileInfo_Email(String email);
 
     @Query("""
-       SELECT u FROM User u
-       WHERE LOWER(u.identityInfo.nationalId) LIKE %:query%
-          OR LOWER(u.userNumber) LIKE %:query%
-          OR LOWER(u.profileInfo.email) LIKE %:query%
-          OR LOWER(u.profileInfo.name) LIKE %:query%
-          OR LOWER(u.profileInfo.surname) LIKE %:query%
-       """)
+            SELECT u FROM User u
+            WHERE LOWER(u.identityInfo.nationalId) LIKE %:query%
+               OR LOWER(u.userNumber) LIKE %:query%
+               OR LOWER(u.profileInfo.email) LIKE %:query%
+               OR LOWER(u.profileInfo.name) LIKE %:query%
+               OR LOWER(u.profileInfo.surname) LIKE %:query%
+            """)
     Page<User> searchByQuery(@Param("query") String query, Pageable pageable);
 
     @Query("SELECT ufc FROM UserFavoriteCard ufc WHERE ufc.user.userNumber = :username")

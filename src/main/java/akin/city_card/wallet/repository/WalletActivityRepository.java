@@ -10,11 +10,11 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface WalletActivityRepository extends JpaRepository<WalletActivity, Long> {
-    List<WalletActivity> findByWalletIdAndActivityTypeAndActivityDateBetween(Long walletId, WalletActivityType type, LocalDateTime startDateTime, LocalDateTime endDateTime);
+    Page<WalletActivity> findByWalletIdAndActivityDateBetween(
+            Long walletId, LocalDateTime start, LocalDateTime end, Pageable pageable);
 
-    List<WalletActivity> findByWalletIdAndActivityDateBetween(Long walletId, LocalDateTime startDateTime, LocalDateTime endDateTime);
+    Page<WalletActivity> findByWalletIdAndActivityTypeAndActivityDateBetween(
+            Long walletId, WalletActivityType type, LocalDateTime start, LocalDateTime end, Pageable pageable);
 
-    Page<WalletActivity> findByWalletIdAndActivityType(Long walletId, WalletActivityType type, Pageable pageable);
 
-    Page<WalletActivity> findByWalletId(Long walletId, Pageable pageable);
 }

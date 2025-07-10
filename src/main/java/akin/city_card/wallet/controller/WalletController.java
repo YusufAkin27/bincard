@@ -23,8 +23,13 @@ import akin.city_card.wallet.service.abstracts.WalletService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -45,19 +51,20 @@ public class WalletController {
     private final QRCodeService qrCodeService;
 
     // ========== Mevcut Endpoint'ler ==========
-    @PostMapping(path = "/create",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(path = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseMessage create(
             @ModelAttribute CreateWalletRequest request,
             @AuthenticationPrincipal UserDetails user) throws UserNotFoundException, OnlyPhotosAndVideosException, PhotoSizeLargerException, IOException, VideoSizeLargerException, FileFormatCouldNotException {
         return walletService.createWallet(user.getUsername(), request);
     }
 
-    @PostMapping("/approve")
-    public ResponseMessage approveIdentityRequest(
-            @RequestBody @Valid ApproveIdentityRequest request,
+    @PostMapping("/process")
+    public ResponseMessage processIdentityRequest(
+            @RequestBody @Valid ProcessIdentityRequest request,
             @AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException, IdentityVerificationRequestNotFoundException, UnauthorizedAreaException, AlreadyWalletUserException {
         return walletService.approveOrReject(request, userDetails.getUsername());
     }
+
     @GetMapping("/identity-requests")
     public DataResponseMessage<Page<IdentityVerificationRequestDTO>> getIdentityRequests(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -86,39 +93,60 @@ public class WalletController {
         return walletService.transfer(sender.getUsername(), walletTransferRequest);
     }
 
-    @PostMapping("/deactivate")
-    public ResponseMessage deactivate(@AuthenticationPrincipal UserDetails user) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException {
-        return walletService.deactivateWallet(user.getUsername());
+    @PutMapping("/toggleWalletStatus")
+    public ResponseMessage toggleWalletStatus(@AuthenticationPrincipal UserDetails user,
+                                              @RequestParam(name = "isActive") boolean isActive) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException, WalletDeactivationException {
+        return walletService.toggleWalletStatus(user.getUsername(),isActive);
     }
 
-    @PostMapping("/activate")
-    public ResponseMessage activate(@AuthenticationPrincipal UserDetails user) throws UserNotFoundException, WalletNotFoundException {
-        return walletService.activateWallet(user.getUsername());
-    }
 
     @GetMapping("/activities")
-    public DataResponseMessage<List<WalletActivityDTO>> getActivities(
+    public DataResponseMessage<Page<WalletActivityDTO>> getActivities(
             @AuthenticationPrincipal UserDetails user,
             @RequestParam(required = false) WalletActivityType type,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) throws UserNotFoundException, WalletNotFoundException {
-        return walletService.getActivities(user.getUsername(), type, start, end);
-    }
-
-    @GetMapping("/activities/page")
-    public DataResponseMessage<List<WalletActivityDTO>> getPagedActivities(
-            @AuthenticationPrincipal UserDetails user,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(required = false) WalletActivityType type) throws UserNotFoundException, WalletNotFoundException {
-        return walletService.getActivitiesPaged(user.getUsername(), type, page, size);
+            @RequestParam(defaultValue = "activityDate,desc") String sort
+    ) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException {
+
+        Pageable pageable = PageRequest.of(page, size, parseSortParam(sort));
+
+        return walletService.getActivities(
+                user.getUsername(),
+                type,
+                start,
+                end,
+                pageable
+        );
     }
+    private Sort parseSortParam(String sortParam) {
+        if (sortParam == null || sortParam.isBlank()) {
+            return Sort.by(Sort.Order.desc("activityDate"));
+        }
+
+        String[] parts = sortParam.split(",");
+        String property = parts[0];
+        Sort.Direction direction = (parts.length == 2) ? Sort.Direction.fromString(parts[1]) : Sort.Direction.ASC;
+
+        return Sort.by(new Sort.Order(direction, property));
+    }
+
+
+
 
     @GetMapping("/transfer/{id}")
     public DataResponseMessage<?> getTransferDetail(
             @AuthenticationPrincipal UserDetails user,
             @PathVariable Long id) throws UserNotFoundException, TransferNotFoundException, UnauthorizedAccessException {
         return walletService.getTransferDetail(user.getUsername(), id);
+    }
+
+
+    @GetMapping("/my-wallet")
+    public WalletDTO getMyWallet(@AuthenticationPrincipal UserDetails user) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException {
+        return walletService.getMyWallet(user.getUsername());
     }
 
     @GetMapping("/balance/history")
@@ -208,38 +236,6 @@ public class WalletController {
         return qrCodeService.cancelQRCode(user.getUsername(), qrId);
     }
 
-    // ========== Transfer İşlemleri ==========
-
-    @PostMapping("/transfer/wiban")
-    public ResponseMessage transferToWiban(
-            @AuthenticationPrincipal UserDetails user,
-            @RequestParam String receiverWiban,
-            @RequestParam BigDecimal amount,
-            @RequestParam(required = false) String description) {
-        return walletService.transferToWiban(user.getUsername(), receiverWiban, amount, description);
-    }
-
-    @PostMapping("/transfer/email")
-    public ResponseMessage transferToEmail(
-            @AuthenticationPrincipal UserDetails user,
-            @RequestParam String receiverEmail,
-            @RequestParam BigDecimal amount,
-            @RequestParam(required = false) String description) {
-        return walletService.transferToEmail(user.getUsername(), receiverEmail, amount, description);
-    }
-
-
-    // ========== Bakiye ve Para Yatırma İşlemleri ==========
-
-    @PostMapping("/withdraw")
-    public ResponseMessage withdrawToBank(
-            @AuthenticationPrincipal UserDetails user,
-            @RequestParam BigDecimal amount,
-            @RequestParam String bankAccount,
-            @RequestParam String bankCode) {
-        return walletService.withdrawToBank(user.getUsername(), amount, bankAccount, bankCode);
-    }
-
 
     @GetMapping("/withdraw/history")
     public DataResponseMessage<List<?>> getWithdrawHistory(
@@ -276,13 +272,6 @@ public class WalletController {
         return walletService.getYearlyReport(user.getUsername(), year);
     }
 
-    // ========== Kullanıcı Yönetimi ve Profil ==========
-
-    @GetMapping("/info")
-    public DataResponseMessage<WalletDTO> getWalletInfo(
-            @AuthenticationPrincipal UserDetails user) {
-        return walletService.getWalletInfo(user.getUsername());
-    }
 
     // ========== Bildirim ve Ayarlar ==========
 
@@ -305,12 +294,37 @@ public class WalletController {
     // ========== Admin İşlemleri ==========
 
     @GetMapping("/admin/all")
-    public DataResponseMessage<List<WalletDTO>> getAllWallets(
+    public DataResponseMessage<Page<WalletDTO>> getAllWallets(
             @AuthenticationPrincipal UserDetails admin,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
-        return walletService.getAllWallets(admin.getUsername(), page, size);
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "id,desc") String sort) {
+
+        Pageable pageable = PageRequest.of(page, size, parseSortParams(sort));
+
+        return walletService.getAllWallets(admin.getUsername(), pageable);
     }
+    private Sort parseSortParams(String sortParams) {
+        List<Sort.Order> orders = new ArrayList<>();
+
+        if (sortParams == null || sortParams.isBlank()) {
+            return Sort.by(Sort.Order.desc("id")); // varsayılan sıralama
+        }
+
+        String[] sortPairs = sortParams.split(";"); // çoklu sıralama için id,desc;createdAt,asc gibi kullanım
+
+        for (String pair : sortPairs) {
+            String[] parts = pair.split(",");
+            if (parts.length == 2) {
+                orders.add(new Sort.Order(Sort.Direction.fromString(parts[1]), parts[0]));
+            } else {
+                orders.add(new Sort.Order(Sort.Direction.ASC, parts[0]));
+            }
+        }
+
+        return Sort.by(orders);
+    }
+
 
     @GetMapping("/admin/stats")
     public DataResponseMessage<Map<String, Object>> getSystemStats(
@@ -340,13 +354,20 @@ public class WalletController {
     // ========== Özel İşlemler ==========
 
 
-    @PostMapping("/export/csv")
-    public DataResponseMessage<byte[]> exportTransactionsCSV(
-            @AuthenticationPrincipal UserDetails user,
+    @GetMapping("/admin/export/transactions/excel")
+    public ResponseEntity<byte[]> exportAllTransactionsExcel(
+            @AuthenticationPrincipal UserDetails admin,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
-        return walletService.exportTransactionsCSV(user.getUsername(), start, end);
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end
+    ) throws Exception {
+        DataResponseMessage<byte[]> response = walletService.exportTransactionsExcel(admin.getUsername(), start, end);
+
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=transactions.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(response.getData());
     }
+
 
     @PostMapping("/export/pdf")
     public DataResponseMessage<byte[]> exportTransactionsPDF(

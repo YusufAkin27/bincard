@@ -11,7 +11,7 @@ import java.math.BigDecimal;
 public class WalletTransferRequest {
 
     @NotBlank(message = "Alıcı telefon boş olamaz")
-    private String receiverTelephone;
+    private String receiverIdentifier;
 
     @NotNull(message = "Transfer miktarı zorunludur.")
     @DecimalMin(value = "0.01", inclusive = true, message = "Transfer miktarı en az 0.01 olmalıdır.")

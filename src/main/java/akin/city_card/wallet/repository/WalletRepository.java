@@ -9,4 +9,6 @@ import java.util.Optional;
 
 public interface WalletRepository extends JpaRepository<Wallet, Long> {
     Optional<Wallet> findByUser(User user);
+
+    Wallet findByWiban(String identifier);
 }
