@@ -96,7 +96,7 @@ public class NewsController {
     @JsonView(Views.User.class)
     public NewsDTO getNewsByIdForUser(@AuthenticationPrincipal UserDetails userDetails,
                                       @PathVariable Long id,
-                                      HttpServletRequest request)
+                                      @RequestParam(name = "platform") PlatformType platform,                                      HttpServletRequest request)
             throws UserNotFoundException, NewsNotFoundException, NewsIsNotActiveException {
 
         String username = userDetails != null ? userDetails.getUsername() : null;
@@ -104,7 +104,7 @@ public class NewsController {
         String sessionId = request.getSession().getId();
         String userAgent = request.getHeader("User-Agent"); // ✅ User-Agent bilgisi
 
-        return newsService.getNewsByIdForUser(username, id, clientIp, sessionId, userAgent);
+        return newsService.getNewsByIdForUser(username,platform, id, clientIp, sessionId, userAgent);
     }
 
 
@@ -112,7 +112,7 @@ public class NewsController {
     @GetMapping("/active")
     @JsonView(Views.User.class)
     public List<NewsDTO> getActiveNewsForUser(@AuthenticationPrincipal UserDetails userDetails,
-                                              @RequestParam(required = false) PlatformType platform,
+                                              @RequestParam PlatformType platform,
                                               @RequestParam(required = false) NewsType type,
                                               HttpServletRequest request)
             throws UserNotFoundException, AdminNotFoundException {
@@ -182,7 +182,7 @@ public class NewsController {
     @GetMapping("/personalized")
     @JsonView(Views.User.class)
     public List<NewsDTO> getPersonalizedNews(@AuthenticationPrincipal UserDetails userDetails,
-                                             @RequestParam(name = "platform", required = false) PlatformType platform)
+                                             @RequestParam(name = "platform") PlatformType platform)
             throws UserNotFoundException, UnauthorizedAreaException {
         if (userDetails == null) throw new UnauthorizedAreaException();
         return newsService.getPersonalizedNews(userDetails.getUsername(), platform);
@@ -214,7 +214,7 @@ public class NewsController {
     public List<NewsDTO> getNewsByCategoryForUser(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(name = "category") NewsType category,
-            @RequestParam(name = "platform", required = false) PlatformType platform,
+            @RequestParam(name = "platform") PlatformType platform,
             HttpServletRequest request
     ) throws UserNotFoundException {
         String username = userDetails != null ? userDetails.getUsername() : null;
@@ -225,10 +225,10 @@ public class NewsController {
     // Giriş yapmış kullanıcılar için
     @GetMapping("/view-history")
     public List<NewsHistoryDTO> getNewsViewHistory(@AuthenticationPrincipal UserDetails userDetails,
-                                                   @RequestParam(name = "platform", required = false) PlatformType platform)
+                                                   @RequestParam(name = "platform") PlatformType platform)
             throws UserNotFoundException, UnauthorizedAreaException {
         if (userDetails == null) throw new UnauthorizedAreaException();
-        return newsService.getNewsViewHistory(userDetails.getUsername());
+        return newsService.getNewsViewHistory(userDetails.getUsername(),platform);
     }
 
     // Anonim kullanıcılar da erişebilir
@@ -236,7 +236,7 @@ public class NewsController {
     @JsonView(Views.User.class)
     public List<NewsDTO> getSuggestedNews(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam(name = "platform", required = false) PlatformType platform,
+            @RequestParam(name = "platform") PlatformType platform,
             HttpServletRequest request
     ) throws UserNotFoundException {
         String username = userDetails != null ? userDetails.getUsername() : null;

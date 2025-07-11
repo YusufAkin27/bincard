@@ -1,6 +1,8 @@
 package akin.city_card.wallet.model;
 
+import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.model.User;
+import akin.city_card.wallet.exceptions.IdentityInfoNotFoundException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -67,8 +69,16 @@ public class Wallet extends AuditableEntity {
 
 
     @PrePersist
-    private void generateWibanIfAbsent() {
+    private void generateWibanIfAbsent() throws UserNotFoundException, IdentityInfoNotFoundException {
         if (this.wiban == null || this.wiban.isEmpty()) {
+            if (user == null || user.getId() == null) {
+                throw new UserNotFoundException();
+            }
+
+            if (user.getIdentityInfo() == null) {
+              throw new IdentityInfoNotFoundException();
+            }
+
             try {
                 String base = "CW" // CityWallet prefix
                         + "-" + user.getId()

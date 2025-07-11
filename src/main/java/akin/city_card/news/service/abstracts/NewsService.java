@@ -65,10 +65,10 @@ public interface NewsService {
 
     List<NewsDTO> getPersonalizedNews(String username, PlatformType platform) throws UserNotFoundException;
 
-    List<NewsHistoryDTO> getNewsViewHistory(String username) throws UserNotFoundException;
+    List<NewsHistoryDTO> getNewsViewHistory(String username,PlatformType platformType) throws UserNotFoundException;
 
     // Hem giriş yapmış hem anonim kullanıcılar için
-    NewsDTO getNewsByIdForUser(String username, Long id, String clientIp,String sessionId,String userAgent)
+    NewsDTO getNewsByIdForUser(String username, PlatformType type,Long id, String clientIp,String sessionId,String userAgent)
             throws NewsIsNotActiveException, UserNotFoundException, NewsNotFoundException;
 
     List<NewsDTO> getActiveNewsForUser(PlatformType platform, NewsType type, String username, String clientIp)

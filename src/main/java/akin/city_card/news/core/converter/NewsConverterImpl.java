@@ -21,6 +21,7 @@ public class NewsConverterImpl implements NewsConverter {
                 .title(news.getTitle())
                 .content(news.getContent())
                 .image(news.getImage())
+                .thumbnail(news.getThumbnail() != null ? news.getThumbnail() : news.getImage() != null ? news.getImage() : "")
                 .startDate(news.getStartDate())
                 .endDate(news.getEndDate())
                 .active(news.isActive())

@@ -28,6 +28,9 @@ public class NewsDTO {
     private String image;
 
     @JsonView(Views.User.class)
+    private String thumbnail;
+
+    @JsonView(Views.User.class)
     private NewsPriority priority;
 
     @JsonView(Views.User.class)
