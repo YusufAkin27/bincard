@@ -3,6 +3,7 @@ package akin.city_card.user.model;
 import akin.city_card.buscard.model.BusCard;
 import akin.city_card.buscard.model.UserFavoriteCard;
 import akin.city_card.news.model.NewsLike;
+import akin.city_card.news.model.NewsType;
 import akin.city_card.news.model.NewsViewHistory;
 import akin.city_card.notification.model.NotificationPreferences;
 import akin.city_card.route.model.Route;
@@ -22,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Data
@@ -44,6 +46,7 @@ public class User extends SecurityUser {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<NewsLike> likedNews;
+
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore

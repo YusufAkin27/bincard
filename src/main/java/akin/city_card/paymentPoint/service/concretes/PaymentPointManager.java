@@ -1,6 +1,7 @@
 package akin.city_card.paymentPoint.service.concretes;
 
 import akin.city_card.cloudinary.MediaUploadService;
+import akin.city_card.news.core.response.PageDTO;
 import akin.city_card.paymentPoint.core.converter.PaymentPointConverter;
 import akin.city_card.paymentPoint.core.request.AddPaymentPointRequest;
 import akin.city_card.paymentPoint.core.request.PaymentPointSearchRequest;
@@ -109,15 +110,16 @@ public class PaymentPointManager implements PaymentPointService {
 
     @Override
     @Transactional(readOnly = true)
-    public DataResponseMessage<Page<PaymentPointDTO>> getAll(String username, Pageable pageable) {
+    public DataResponseMessage<PageDTO<PaymentPointDTO>> getAll(String username, Pageable pageable) {
         try {
             Page<PaymentPoint> paymentPoints = paymentPointRepository.findAll(pageable);
-            Page<PaymentPointDTO> paymentPointDTOs = paymentPoints.map(paymentPointConverter::toDto);
+            Page<PaymentPointDTO> dtoPage = paymentPoints.map(paymentPointConverter::toDto);
+            PageDTO<PaymentPointDTO> pageDTO = new PageDTO<>(dtoPage);
 
             return new DataResponseMessage<>(
                     "Ödeme noktaları başarıyla getirildi",
                     true,
-                    paymentPointDTOs
+                    pageDTO
             );
         } catch (Exception e) {
             log.error("Error getting all payment points for user: {}", username, e);
@@ -129,21 +131,21 @@ public class PaymentPointManager implements PaymentPointService {
         }
     }
 
-
     @Override
     @Transactional(readOnly = true)
-    public DataResponseMessage<Page<PaymentPointDTO>> getNearby(double latitude, double longitude, double radiusKm, String username, Pageable pageable) {
+    public DataResponseMessage<PageDTO<PaymentPointDTO>> getNearby(double latitude, double longitude, double radiusKm, String username, Pageable pageable) {
         try {
             Page<PaymentPoint> paymentPoints = paymentPointRepository.findNearbyPaymentPoints(
                     latitude, longitude, radiusKm, pageable
             );
 
-            Page<PaymentPointDTO> paymentPointDTOs = paymentPoints.map(paymentPointConverter::toDto);
+            Page<PaymentPointDTO> dtoPage = paymentPoints.map(paymentPointConverter::toDto);
+            PageDTO<PaymentPointDTO> pageDTO = new PageDTO<>(dtoPage);
 
             return new DataResponseMessage<>(
                     "Yakındaki ödeme noktaları başarıyla getirildi",
                     true,
-                    paymentPointDTOs
+                    pageDTO
             );
         } catch (Exception e) {
             log.error("Error getting nearby payment points for user: {}", username, e);
@@ -157,7 +159,7 @@ public class PaymentPointManager implements PaymentPointService {
 
     @Override
     @Transactional(readOnly = true)
-    public DataResponseMessage<Page<PaymentPointDTO>> search(PaymentPointSearchRequest searchRequest, String username, Pageable pageable) {
+    public DataResponseMessage<PageDTO<PaymentPointDTO>> search(PaymentPointSearchRequest searchRequest, String username, Pageable pageable) {
         try {
             Page<PaymentPoint> paymentPoints = paymentPointRepository.searchPaymentPoints(
                     searchRequest.getLatitude(),
@@ -171,20 +173,17 @@ public class PaymentPointManager implements PaymentPointService {
                     pageable
             );
 
-            Page<PaymentPointDTO> paymentPointDTOs = paymentPoints.map(paymentPointConverter::toDto);
+            Page<PaymentPointDTO> dtoPage = paymentPoints.map(paymentPointConverter::toDto);
+            PageDTO<PaymentPointDTO> pageDTO = new PageDTO<>(dtoPage);
 
             return new DataResponseMessage<>(
                     "Arama sonuçları başarıyla getirildi",
                     true,
-                    paymentPointDTOs
+                    pageDTO
             );
         } catch (Exception e) {
             log.error("Error searching payment points for user: {}", username, e);
-            return new DataResponseMessage<>(
-                    "Arama yapılırken hata oluştu: " + e.getMessage(),
-                    false,
-                    null
-            );
+            throw e; // rollback olursa düzgün rollback olur
         }
     }
 
@@ -228,15 +227,8 @@ public class PaymentPointManager implements PaymentPointService {
                                                 photo.setPaymentPoint(paymentPoint);
                                                 return photo;
                                             });
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
-                                } catch (VideoSizeLargerException e) {
-                                    throw new RuntimeException(e);
-                                } catch (OnlyPhotosAndVideosException e) {
-                                    throw new RuntimeException(e);
-                                } catch (PhotoSizeLargerException e) {
-                                    throw new RuntimeException(e);
-                                } catch (FileFormatCouldNotException e) {
+                                } catch (IOException | VideoSizeLargerException | OnlyPhotosAndVideosException
+                                         | PhotoSizeLargerException | FileFormatCouldNotException e) {
                                     throw new RuntimeException(e);
                                 }
                             }
@@ -265,7 +257,6 @@ public class PaymentPointManager implements PaymentPointService {
         }
     }
 
-
     @Override
     public ResponseMessage delete(Long id, String username) {
         try {
@@ -287,7 +278,6 @@ public class PaymentPointManager implements PaymentPointService {
                     .build();
         }
     }
-
 
     @Override
     public ResponseMessage deletePhoto(Long id, Long photoId, String username) {
@@ -319,15 +309,16 @@ public class PaymentPointManager implements PaymentPointService {
 
     @Override
     @Transactional(readOnly = true)
-    public DataResponseMessage<Page<PaymentPointDTO>> getByCity(String city, String username, Pageable pageable) {
+    public DataResponseMessage<PageDTO<PaymentPointDTO>> getByCity(String city, String username, Pageable pageable) {
         try {
             Page<PaymentPoint> paymentPoints = paymentPointRepository.findByAddress_CityContainingIgnoreCase(city, pageable);
-            Page<PaymentPointDTO> paymentPointDTOs = paymentPoints.map(paymentPointConverter::toDto);
+            Page<PaymentPointDTO> dtoPage = paymentPoints.map(paymentPointConverter::toDto);
+            PageDTO<PaymentPointDTO> pageDTO = new PageDTO<>(dtoPage);
 
             return new DataResponseMessage<>(
                     "Şehir bazlı ödeme noktaları başarıyla getirildi",
                     true,
-                    paymentPointDTOs
+                    pageDTO
             );
         } catch (Exception e) {
             log.error("Error getting payment points by city for user: {}", username, e);
@@ -337,35 +328,28 @@ public class PaymentPointManager implements PaymentPointService {
                     null
             );
         }
-
     }
 
     @Override
     @Transactional(readOnly = true)
-    public DataResponseMessage<Page<PaymentPointDTO>> getByPaymentMethod(PaymentMethod paymentMethod, String username, Pageable pageable) {
+    public DataResponseMessage<PageDTO<PaymentPointDTO>> getByPaymentMethod(PaymentMethod paymentMethod, String username, Pageable pageable) {
         try {
             Page<PaymentPoint> paymentPoints = paymentPointRepository.findByPaymentMethodsContaining(paymentMethod, pageable);
-            Page<PaymentPointDTO> paymentPointDTOs = paymentPoints.map(paymentPointConverter::toDto);
+            Page<PaymentPointDTO> dtoPage = paymentPoints.map(paymentPointConverter::toDto);
+            PageDTO<PaymentPointDTO> pageDTO = new PageDTO<>(dtoPage);
 
-            DataResponseMessage<Page<PaymentPointDTO>> response = new DataResponseMessage<>(
+            return new DataResponseMessage<>(
                     "Ödeme yöntemi bazlı ödeme noktaları başarıyla getirildi",
                     true,
-                    paymentPointDTOs
+                    pageDTO
             );
-            return response;
         } catch (Exception e) {
             log.error("Error getting payment points by payment method for user: {}", username, e);
-            DataResponseMessage<Page<PaymentPointDTO>> errorResponse = new DataResponseMessage<>(
+            return new DataResponseMessage<>(
                     "Ödeme yöntemi bazlı ödeme noktaları getirilirken hata oluştu: " + e.getMessage(),
                     false,
                     null
             );
-            return errorResponse;
-
         }
     }
-
-
-
-
 }

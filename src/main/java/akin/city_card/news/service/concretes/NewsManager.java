@@ -1,4 +1,5 @@
 package akin.city_card.news.service.concretes;
+import akin.city_card.mail.MailService;
 import akin.city_card.news.core.response.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,32 +54,48 @@ public class NewsManager implements NewsService {
     private final AdminRepository adminRepository;
     private final UserRepository userRepository;
     private final MediaUploadService mediaUploadService;
-    private final AnonymousNewsViewHistoryRepository anonymousNewsViewHistoryRepository;
+    private final MailService mailService;
+        private final AnonymousNewsViewHistoryRepository anonymousNewsViewHistoryRepository;
 
 
 
-    @Override
-    @Transactional
-    public ResponseMessage createNews(String username, CreateNewsRequest createNewsRequest)
-            throws AdminNotFoundException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException, OnlyPhotosAndVideosException, VideoSizeLargerException, FileFormatCouldNotException {
+        @Override
+        @Transactional
+        public ResponseMessage createNews(String username, CreateNewsRequest createNewsRequest)
+                throws AdminNotFoundException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException, OnlyPhotosAndVideosException, VideoSizeLargerException, FileFormatCouldNotException {
 
-        News news = newsConverter.fromCreateRequest(createNewsRequest);
+            News news = newsConverter.fromCreateRequest(createNewsRequest);
 
-        if (createNewsRequest.getImage() != null && !createNewsRequest.getImage().isEmpty()) {
-            String imageUrl = mediaUploadService.uploadAndOptimizeMedia(createNewsRequest.getImage()).get();
-            news.setImage(imageUrl);
+            if (createNewsRequest.getImage() != null && !createNewsRequest.getImage().isEmpty()) {
+                String imageUrl = mediaUploadService.uploadAndOptimizeMedia(createNewsRequest.getImage()).get();
+                news.setImage(imageUrl);
+            }
+            if (createNewsRequest.getThumbnail() != null && !createNewsRequest.getThumbnail().isEmpty()) {
+                String imageUrl = mediaUploadService.uploadAndOptimizeMedia(createNewsRequest.getThumbnail()).get();
+                news.setThumbnail(imageUrl);
+            }
+            newsRepository.save(news);
+            for (int i = 0; i < 1000; i++) {
+
+            }
+            List<User> usersToNotify = newsLikeRepository.findDistinctUsersByNewsType(news.getType());
+
+            log.info("📢 Bu haberi alacak kullanıcı sayısı: {}", usersToNotify.size());
+
+            usersToNotify.forEach(user -> {
+                String email = (user.getProfileInfo() != null) ? user.getProfileInfo().getEmail() : null;
+                log.info("📩 E-posta gönderimi kuyruğa eklendi: {} - {}", user.getUserNumber(), email);
+                mailService.sendNewsNotificationEmail(user, news);
+            });
+
+
+
+            return new ResponseMessage("haber eklendi", true);
         }
-        if (createNewsRequest.getThumbnail() != null && !createNewsRequest.getThumbnail().isEmpty()) {
-            String imageUrl = mediaUploadService.uploadAndOptimizeMedia(createNewsRequest.getThumbnail()).get();
-            news.setThumbnail(imageUrl);
-        }
-        newsRepository.save(news);
-        return new ResponseMessage("haber eklendi", true);
-    }
 
-    @Override
-    public ResponseMessage softDeleteNews(String username, Long id) throws NewsNotFoundException, AdminNotFoundException {
-        News news = newsRepository.findById(id).orElseThrow(NewsNotFoundException::new);
+        @Override
+        public ResponseMessage softDeleteNews(String username, Long id) throws NewsNotFoundException, AdminNotFoundException {
+            News news = newsRepository.findById(id).orElseThrow(NewsNotFoundException::new);
         news.setActive(false);
         newsRepository.save(news);
         return new ResponseMessage("haber silindi", true);
@@ -246,6 +263,7 @@ public class NewsManager implements NewsService {
 
 
     @Override
+    @Transactional
     public ResponseMessage unlikeNews(Long newsId, String username) throws UserNotFoundException, NewsNotFoundException, NewsIsNotActiveException, OutDatedNewsException, NewsNotLikedException {
         User user = userRepository.findByUserNumber(username)
                 .orElseThrow(UserNotFoundException::new);

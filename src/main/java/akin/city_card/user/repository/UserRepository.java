@@ -1,6 +1,7 @@
 package akin.city_card.user.repository;
 
 import akin.city_card.buscard.model.UserFavoriteCard;
+import akin.city_card.news.model.NewsType;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.model.UserStatus;
@@ -42,4 +43,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByUserNumberWithViewedNews(String userNumber);
 
     long countByStatus(UserStatus status);
+
+
 }

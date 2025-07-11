@@ -1,7 +1,9 @@
 package akin.city_card.mail;
 
+import akin.city_card.news.model.News;
 import akin.city_card.user.exceptions.EmailSendException;
 
+import akin.city_card.user.model.User;
 import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
@@ -88,4 +90,100 @@ public class MailService {
             executorService.submit(() -> sendEmail(email));
         }
     }
+    public void sendNewsNotificationEmail(User user, News news) {
+        String toEmail = (user.getProfileInfo() != null) ? user.getProfileInfo().getEmail() : null;
+        if (toEmail == null) return;
+
+        String fullName = user.getProfileInfo().getName() + " " + user.getProfileInfo().getSurname();
+        String contentSnippet = news.getContent().substring(0, Math.min(200, news.getContent().length())) + "...";
+
+        log.info("📩 Mail gönderimi kuyruğa alındı: {} ({})", fullName, toEmail);
+
+        String htmlBody = String.format("""
+        <html>
+        <head>
+            <meta charset="UTF-8">
+            <style>
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background-color: #f2f2f2;
+                    padding: 20px;
+                }
+                .container {
+                    background-color: #ffffff;
+                    max-width: 650px;
+                    margin: auto;
+                    padding: 30px;
+                    border-radius: 10px;
+                    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                }
+                .header {
+                    text-align: center;
+                    margin-bottom: 20px;
+                }
+                .news-image {
+                    width: 100%%;
+                    max-height: 300px;
+                    object-fit: cover;
+                    border-radius: 8px;
+                    margin-bottom: 20px;
+                }
+                .highlight {
+                    color: #0a58ca;
+                    font-weight: bold;
+                }
+                .content {
+                    color: #333333;
+                    font-size: 15px;
+                    line-height: 1.6;
+                }
+                .footer {
+                    font-size: 12px;
+                    color: #888888;
+                    text-align: center;
+                    margin-top: 40px;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h2>Sayın %s,</h2>
+                    <p class="highlight">%s kategorisinde yeni bir haber yayınlandı!</p>
+                </div>
+
+                %s <!-- Görsel HTML burada -->
+
+                <div class="content">
+                    <p><strong>Başlık:</strong> %s</p>
+                    <p><strong>İçerik Özeti:</strong><br>%s</p>
+                    <p>Daha fazlası için lütfen uygulamamızı ziyaret ediniz.</p>
+                </div>
+
+                <div class="footer">
+                    &copy; 2025 Akin City Card • Tüm hakları saklıdır.
+                </div>
+            </div>
+        </body>
+        </html>
+        """,
+                fullName,
+                news.getType().name(),
+                news.getImage() != null && !news.getImage().isBlank()
+                        ? "<img src=\"" + news.getImage() + "\" alt=\"Haber Görseli\" class=\"news-image\" />"
+                        : "",
+                news.getTitle(),
+                contentSnippet
+        );
+
+        EmailMessage email = new EmailMessage();
+        email.setToEmail(toEmail);
+        email.setSubject("Yeni Haber Bildirimi - Akin City Card");
+        email.setBody(htmlBody);
+        email.setHtml(true);
+
+        queueEmail(email);
+    }
+
+
 }
