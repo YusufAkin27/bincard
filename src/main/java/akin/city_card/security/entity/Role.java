@@ -8,7 +8,7 @@ public enum Role implements GrantedAuthority {
     ADMIN("ADMIN"),
     SUPERADMIN("SUPERADMIN"),
     USER("USER"),
-    DRVIER("DRVIER"),
+    DRIVER("DRIVER"),
     MODERATOR("MODERATOR");
 
 

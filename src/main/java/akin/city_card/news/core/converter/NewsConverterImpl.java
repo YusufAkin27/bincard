@@ -15,8 +15,24 @@ import java.util.List;
 public class NewsConverterImpl implements NewsConverter {
 
     @Override
-    public NewsDTO toNewsDTO(News news, boolean isLiked, boolean isViewed) {
-        return NewsDTO.builder()
+    public UserNewsDTO toNewsDTO(News news, boolean isLiked, boolean isViewed) {
+        return UserNewsDTO.builder()
+                .id(news.getId())
+                .title(news.getTitle())
+                .content(news.getContent())
+                .image(news.getImage())
+                .thumbnail(news.getThumbnail() != null ? news.getThumbnail() : news.getImage() != null ? news.getImage() : "")
+                .priority(news.getPriority())
+                .type(news.getType())
+                .viewCount(news.getViewCount())
+                .likeCount(news.getLikes() != null ? news.getLikes().size() : 0)
+                .likedByUser(isLiked)
+                .viewedByUser(isViewed)
+                .build();
+    }
+    @Override
+    public AdminNewsDTO toAdminNewsDTO(News news) {
+        return AdminNewsDTO.builder()
                 .id(news.getId())
                 .title(news.getTitle())
                 .content(news.getContent())
@@ -33,8 +49,6 @@ public class NewsConverterImpl implements NewsConverter {
                 .allowFeedback(news.isAllowFeedback())
                 .createdAt(news.getCreatedAt())
                 .updatedAt(news.getUpdatedAt())
-                .likedByUser(isLiked)
-                .viewedByUser(isViewed)
                 .build();
     }
 

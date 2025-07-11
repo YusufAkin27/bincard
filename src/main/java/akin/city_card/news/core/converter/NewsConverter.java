@@ -10,11 +10,12 @@ import akin.city_card.news.model.NewsViewHistory;
 import java.util.List;
 
 public interface NewsConverter {
-    NewsDTO toNewsDTO(News news, boolean isLiked, boolean isViewed);
+    UserNewsDTO toNewsDTO(News news, boolean isLiked, boolean isViewed);
     NewsHistoryDTO toHistoryDTO(NewsViewHistory history);
     NewsStatistics toDetailedStatistics(News news, List<NewsLike>newsLikes,List<NewsViewHistory>newsViewHistories );
     News fromCreateRequest(CreateNewsRequest request);
     void updateEntityFromDTO(News news, UpdateNewsRequest dto);
+    AdminNewsDTO toAdminNewsDTO(News news);
 
 
 }

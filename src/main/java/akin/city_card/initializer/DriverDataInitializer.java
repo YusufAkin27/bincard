@@ -40,7 +40,7 @@ public class DriverDataInitializer implements ApplicationRunner {
         return Driver.builder()
                 .userNumber(generatePhoneNumber(i))
                 .password(passwordEncoder.encode("123456"))
-                .roles(Set.of(Role.DRVIER))
+                .roles(Set.of(Role.DRIVER))
                 .emailVerified(true)
                 .phoneVerified(true)
                 .status(UserStatus.ACTIVE)

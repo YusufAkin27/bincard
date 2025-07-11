@@ -6,8 +6,6 @@ import akin.city_card.security.exception.TokenIsExpiredException;
 import akin.city_card.security.exception.TokenNotFoundException;
 import akin.city_card.security.service.JwtService;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -35,6 +33,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String path = request.getServletPath();
+        // /auth dışındaki isteklerde JWT kontrolü yapılacak
         if (path.contains("/auth") && !path.contains("/logout")) {
             filterChain.doFilter(request, response);
             return;
@@ -48,12 +47,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     Claims claims = jwtService.getAccessTokenClaims(token);
                     String userNumber = claims.getSubject();
 
-                    List<String> rolesAsString = (List<String>) claims.get("role");
-                    Set<Role> roles = rolesAsString != null
-                            ? rolesAsString.stream()
-                            .map(roleStr -> Role.valueOf(roleStr.toUpperCase()))
-                            .collect(Collectors.toSet())
-                            : Collections.emptySet();
+                    Object rolesObj = claims.get("role");
+
+                    Set<Role> roles;
+
+                    if (rolesObj instanceof List<?>) {
+                        roles = ((List<?>) rolesObj).stream()
+                                .filter(String.class::isInstance)
+                                .map(String.class::cast)
+                                .map(roleStr -> Role.valueOf(roleStr.toUpperCase()))
+                                .collect(Collectors.toSet());
+                    } else if (rolesObj instanceof String) {
+                        roles = Set.of(Role.valueOf(((String) rolesObj).toUpperCase()));
+                    } else {
+                        roles = Collections.emptySet();
+                    }
 
                     SecurityUser userDetails = new SecurityUser(userNumber, roles);
                     UsernamePasswordAuthenticationToken authenticationToken =
@@ -70,6 +78,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\": \"" + e.getMessage() + "\"}");
             } catch (Exception e) {
+                // Log hatayı konsola yazabiliriz, ya da logger kullanabilirsin
+                e.printStackTrace();
+
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 response.setContentType("application/json");
                 response.getWriter().write("{\"error\": \"Sunucu hatası oluştu.\"}");

@@ -2,6 +2,9 @@ package akin.city_card.news.repository;
 
 import akin.city_card.news.model.News;
 import akin.city_card.news.model.NewsType;
+import akin.city_card.news.model.PlatformType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -65,4 +68,11 @@ public interface NewsRepository extends JpaRepository<News, Long> {
     @Query("SELECT n FROM News n WHERE n.updatedAt >= :since ORDER BY n.updatedAt DESC")
     List<News> findNewsUpdatedSince(@Param("since") LocalDateTime since);
 
+    Page<News> findByPlatform(PlatformType platform, Pageable pageable);
+
+    @Query("SELECT n FROM News n WHERE n.platform IN :platforms AND n.active = true AND (n.endDate > :now OR n.endDate IS NULL)")
+    Page<News> findByPlatformInAndActiveTrueAndValidEndDate(
+            @Param("platforms") List<PlatformType> platforms,
+            @Param("now") LocalDateTime now,
+            Pageable pageable);
 }

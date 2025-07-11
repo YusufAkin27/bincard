@@ -1,5 +1,7 @@
 package akin.city_card.news.service.concretes;
-
+import akin.city_card.news.core.response.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.repository.AdminRepository;
@@ -7,9 +9,6 @@ import akin.city_card.cloudinary.MediaUploadService;
 import akin.city_card.news.core.converter.NewsConverter;
 import akin.city_card.news.core.request.CreateNewsRequest;
 import akin.city_card.news.core.request.UpdateNewsRequest;
-import akin.city_card.news.core.response.NewsDTO;
-import akin.city_card.news.core.response.NewsHistoryDTO;
-import akin.city_card.news.core.response.NewsStatistics;
 import akin.city_card.news.exceptions.*;
 import akin.city_card.news.model.*;
 import akin.city_card.news.repository.AnonymousNewsViewHistoryRepository;
@@ -27,7 +26,14 @@ import akin.city_card.user.exceptions.VideoSizeLargerException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
 import jakarta.transaction.Transactional;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -38,6 +44,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class NewsManager implements NewsService {
     private final NewsRepository newsRepository;
     private final NewsLikeRepository newsLikeRepository;
@@ -48,15 +55,6 @@ public class NewsManager implements NewsService {
     private final MediaUploadService mediaUploadService;
     private final AnonymousNewsViewHistoryRepository anonymousNewsViewHistoryRepository;
 
-
-    @Override
-    public List<NewsDTO> getAllForAdmin(String username, PlatformType platform) throws AdminNotFoundException {
-
-        return newsRepository.findAll().stream()
-                .filter(news -> platform == null || news.getPlatform().equals(platform))
-                .map(news -> newsConverter.toNewsDTO(news, false, false))
-                .toList();
-    }
 
 
     @Override
@@ -108,36 +106,70 @@ public class NewsManager implements NewsService {
 
 
     @Override
-    public NewsDTO getNewsByIdForAdmin(String username, Long id) throws NewsIsNotActiveException, NewsNotFoundException, AdminNotFoundException {
+    public AdminNewsDTO getNewsByIdForAdmin(String username, Long id) throws NewsIsNotActiveException, NewsNotFoundException, AdminNotFoundException {
         News news = newsRepository.findById(id).orElseThrow(NewsNotFoundException::new);
-        return newsConverter.toNewsDTO(news, false, false);
+        return newsConverter.toAdminNewsDTO(news);
 
     }
 
 
     @Override
-    public NewsDTO getActiveNewsForAdmin(PlatformType platform, NewsType type, String username) throws AdminNotFoundException {
+    public PageDTO<AdminNewsDTO> getActiveNewsForAdmin(PlatformType platform, NewsType type, String username, Pageable pageable)
+            throws AdminNotFoundException {
+
         LocalDateTime now = LocalDateTime.now();
 
-        List<News> filteredNews = newsRepository.findAll().stream()
+        List<News> allNews = newsRepository.findAll(); // filtrelemeden önce tüm veri alınır
+
+        List<News> filtered = allNews.stream()
                 .filter(News::isActive)
                 .filter(news -> news.getEndDate() == null || news.getEndDate().isAfter(now))
                 .filter(news -> platform == null || news.getPlatform() == platform || news.getPlatform() == PlatformType.ALL)
                 .filter(news -> type == null || news.getType() == type)
-                .toList();
-
-        return (NewsDTO) filteredNews.stream()
                 .sorted((n1, n2) -> {
                     int cmp = n2.getPriority().compareTo(n1.getPriority());
-                    if (cmp == 0) {
-                        if (n2.getCreatedAt() == null) return -1;
-                        if (n1.getCreatedAt() == null) return 1;
+                    if (cmp == 0 && n1.getCreatedAt() != null && n2.getCreatedAt() != null) {
                         return n2.getCreatedAt().compareTo(n1.getCreatedAt());
                     }
                     return cmp;
                 })
-                .map(news -> newsConverter.toNewsDTO(news, false, false));
+                .toList();
+
+        int start = (int) pageable.getOffset();
+        int end = Math.min((start + pageable.getPageSize()), filtered.size());
+
+        List<AdminNewsDTO> pageContent = filtered.subList(start, end)
+                .stream()
+                .map(newsConverter::toAdminNewsDTO)
+                .toList();
+
+        Page<AdminNewsDTO> page = new org.springframework.data.domain.PageImpl<>(pageContent, pageable, filtered.size());
+
+        return new PageDTO<>(page);
     }
+
+    @Override
+    public PageDTO<UserNewsDTO> getNewsBetweenDates(String username, LocalDateTime start, LocalDateTime end, PlatformType platform, Pageable pageable) {
+
+        List<News> filtered = newsRepository.findAll().stream()
+                .filter(news -> news.getStartDate() != null)
+                .filter(news -> platform == null || news.getPlatform() == platform || news.getPlatform() == PlatformType.ALL)
+                .filter(news -> !news.getStartDate().isBefore(start) && !news.getStartDate().isAfter(end))
+                .sorted(Comparator.comparing(News::getStartDate).reversed())
+                .toList();
+
+        int offset = (int) pageable.getOffset();
+        int endIndex = Math.min(offset + pageable.getPageSize(), filtered.size());
+
+        List<UserNewsDTO> content = filtered.subList(offset, endIndex).stream()
+                .map(news -> newsConverter.toNewsDTO(news, false, false))
+                .toList();
+
+        Page<UserNewsDTO> page = new PageImpl<>(content, pageable, filtered.size());
+
+        return new PageDTO<>(page);
+    }
+
 
 
     private boolean checkIfLikedByUser(News news, User user) {
@@ -149,40 +181,34 @@ public class NewsManager implements NewsService {
     }
 
 
-    @Override
-    public List<NewsDTO> getNewsBetweenDates(String username, LocalDateTime start, LocalDateTime end, PlatformType platform) throws AdminNotFoundException {
 
-        if (start == null || end == null) {
-            List.of();
-        }
-
-        List<News> newsBetweenDates = newsRepository.findAll().stream()
-                .filter(news -> news.getStartDate() != null)
-                .filter(news -> platform == null || news.getPlatform().equals(platform))
-                .filter(news -> !news.getStartDate().isBefore(start) && !news.getStartDate().isAfter(end))
-                .toList();
-
-        return newsBetweenDates.stream()
-                .map(news -> newsConverter.toNewsDTO(news, false, false))
-                .toList();
-    }
 
 
     @Override
-    public List<NewsDTO> getLikedNewsByUser(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
+    public PageDTO<UserNewsDTO> getLikedNewsByUser(String username, Pageable pageable) throws UserNotFoundException {
+        User user = userRepository.findByUserNumber(username)
+                .orElseThrow(UserNotFoundException::new);
 
-
-        List<NewsLike> newsLikes = user.getLikedNews();
         LocalDateTime now = LocalDateTime.now();
 
-        return newsLikes.stream()
+        List<News> likedActiveNews = user.getLikedNews().stream()
                 .map(NewsLike::getNews)
                 .filter(News::isActive)
                 .filter(news -> news.getEndDate() == null || news.getEndDate().isAfter(now))
-                .map(news -> newsConverter.toNewsDTO(news, true, true)) // likedByUser = true, viewedByUser = false
+                .sorted(Comparator.comparing(News::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
+
+        int offset = (int) pageable.getOffset();
+        int endIndex = Math.min(offset + pageable.getPageSize(), likedActiveNews.size());
+
+        List<UserNewsDTO> pageContent = likedActiveNews.subList(offset, endIndex).stream()
+                .map(news -> newsConverter.toNewsDTO(news, true, checkIfViewedByUser(news, user)))
+                .toList();
+
+        Page<UserNewsDTO> page = new PageImpl<>(pageContent, pageable, likedActiveNews.size());
+        return new PageDTO<>(page);
     }
+
 
 
     @Override
@@ -248,121 +274,68 @@ public class NewsManager implements NewsService {
     }
 
 
-    @Override
-    public List<NewsDTO> getPersonalizedNews(String username, PlatformType platform) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
-        if (user == null) {
-            return List.of();
-        }
 
-        Set<NewsType> likedTypes = user.getLikedNews().stream()
-                .map(like -> like.getNews().getType())
-                .collect(Collectors.toSet());
-
-        Set<NewsPriority> likedPriorities = user.getLikedNews().stream()
-                .map(like -> like.getNews().getPriority())
-                .collect(Collectors.toSet());
-
-        Set<NewsType> viewedTypes = user.getViewedNews().stream()
-                .map(view -> view.getNews().getType())
-                .collect(Collectors.toSet());
-
-        Set<NewsPriority> viewedPriorities = user.getViewedNews().stream()
-                .map(view -> view.getNews().getPriority())
-                .collect(Collectors.toSet());
-
-        LocalDateTime now = LocalDateTime.now();
-
-        List<News> activeNews = newsRepository.findAll().stream()
-                .filter(News::isActive)
-                .filter(news -> platform == null || news.getPlatform().equals(platform))
-                .filter(news -> news.getEndDate() == null || news.getEndDate().isAfter(now))
-                .toList();
-
-        Set<Long> likedNewsIds = user.getLikedNews().stream()
-                .map(like -> like.getNews().getId())
-                .collect(Collectors.toSet());
-
-        List<NewsDTO> personalizedNews = activeNews.stream()
-                .map(news -> {
-                    int score = 0;
-                    if (likedTypes.contains(news.getType())) score += 3;
-                    if (likedPriorities.contains(news.getPriority())) score += 2;
-                    if (viewedTypes.contains(news.getType())) score += 2;
-                    if (viewedPriorities.contains(news.getPriority())) score += 1;
-
-                    boolean likedByUser = likedNewsIds.contains(news.getId());
-                    boolean viewedByUser = newsViewHistoryRepository.existsByUserAndNews(user, news);
-
-                    return new AbstractMap.SimpleEntry<>(newsConverter.toNewsDTO(news, likedByUser, viewedByUser), score);
-                })
-                .filter(entry -> entry.getValue() > 0)
-                .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue())) // Skora göre azalan
-                .map(Map.Entry::getKey)
-                .toList();
-
-        return personalizedNews;
-    }
 
 
     @Override
-    public List<NewsStatistics> getMonthlyNewsStatistics(String username) throws AdminNotFoundException {
+    public PageDTO<NewsStatistics> getMonthlyNewsStatistics(String username, Pageable pageable)
+            throws AdminNotFoundException {
+
         Admin admin = adminRepository.findByUserNumber(username);
         if (admin == null || !admin.getRoles().contains(Role.ADMIN)) {
-            return List.of();
+            throw new AdminNotFoundException();
         }
+
         LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1);
+
         List<NewsLike> likesThisMonth = newsLikeRepository.findByLikedAtAfter(startOfMonth);
         List<NewsViewHistory> viewsThisMonth = newsViewHistoryRepository.findByViewedAtAfter(startOfMonth);
         List<News> allNews = newsRepository.findAll();
-        return allNews.stream()
+
+        List<NewsStatistics> statisticsList = allNews.stream()
                 .map(news -> newsConverter.toDetailedStatistics(news, likesThisMonth, viewsThisMonth))
                 .sorted(Comparator.comparingInt(NewsStatistics::getViewCountThisMonth).reversed())
                 .toList();
+
+        // Sayfalama işlemi manuel
+        int offset = (int) pageable.getOffset();
+        int endIndex = Math.min(offset + pageable.getPageSize(), statisticsList.size());
+        List<NewsStatistics> pagedList = statisticsList.subList(offset, endIndex);
+
+        Page<NewsStatistics> page = new PageImpl<>(pagedList, pageable, statisticsList.size());
+        return new PageDTO<>(page);
     }
 
 
     @Override
-    public List<NewsDTO> getNewsByCategoryForAdmin(String username, NewsType category, PlatformType platform) {
-        List<News> newsList = newsRepository.findByTypeAndActiveTrue(category);
-        return newsList.stream()
+    public PageDTO<UserNewsDTO> getNewsByCategoryForAdmin(String username, NewsType category, PlatformType platform, Pageable pageable) {
+        List<News> newsList = newsRepository.findByTypeAndActiveTrue(category).stream()
                 .filter(news -> platform == null || news.getPlatform().equals(platform))
+                .sorted(Comparator.comparing(News::getCreatedAt).reversed()) // opsiyonel sıralama
+                .toList();
+
+        int offset = (int) pageable.getOffset();
+        int endIndex = Math.min(offset + pageable.getPageSize(), newsList.size());
+        List<UserNewsDTO> pagedList = newsList.subList(offset, endIndex)
+                .stream()
                 .map(news -> newsConverter.toNewsDTO(news, false, false))
                 .toList();
+
+        Page<UserNewsDTO> page = new PageImpl<>(pagedList, pageable, newsList.size());
+        return new PageDTO<>(page);
     }
 
 
-    @Override
-    public List<NewsHistoryDTO> getNewsViewHistory(String username, PlatformType platformType) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
-        LocalDateTime now = LocalDateTime.now();
 
-        return user.getViewedNews().stream()
-                .filter(view -> {
-                    News news = view.getNews();
-                    if (news == null) return false;
-                    if (!news.isActive()) return false;
-                    if (news.getEndDate() != null && news.getEndDate().isBefore(now)) return false;
-
-                    // Platform kontrolü:
-                    if (platformType != null) {
-                        return news.getPlatform() == PlatformType.ALL || news.getPlatform() == platformType;
-                    }
-                    return true;
-                })
-                .sorted(Comparator.comparing(NewsViewHistory::getViewedAt).reversed())
-                .map(newsConverter::toHistoryDTO)
-                .toList();
-    }
 
     @Transactional
-    public NewsDTO getNewsByIdForUser(String username,
-                                      PlatformType platformType,
-                                      Long id,
-                                      String clientIp,
-                                      String sessionId,
-                                      String userAgent)
+    public UserNewsDTO getNewsByIdForUser(String username,
+                                          PlatformType platformType,
+                                          Long id,
+                                          String clientIp,
+                                          String sessionId,
+                                          String userAgent)
             throws NewsIsNotActiveException, UserNotFoundException, NewsNotFoundException {
 
         News news = newsRepository.findById(id)
@@ -406,8 +379,6 @@ public class NewsManager implements NewsService {
                 anonymousNewsViewHistoryRepository.save(anonView);
             }
         }
-
-        news.setViewCount(news.getViewCount() + 1);
         newsRepository.save(news);
 
         return newsConverter.toNewsDTO(news, liked, viewed);
@@ -415,187 +386,45 @@ public class NewsManager implements NewsService {
 
 
 
-    @Override
-    public List<NewsDTO> getActiveNewsForUser(PlatformType platform, NewsType type, String username, String clientIp)
-            throws UserNotFoundException {
-
-        LocalDateTime now = LocalDateTime.now();
-
-        List<News> allActiveNews = newsRepository.findAll().stream()
-                .filter(News::isActive)
-                .filter(news -> news.getEndDate() == null || news.getEndDate().isAfter(now))
-                .toList();
-
-        if (username == null) {
-            return allActiveNews.stream()
-                    .map(news -> newsConverter.toNewsDTO(news, false, false))
-                    .toList();
-        }
-
-        Optional<User> optionalUser = userRepository.findByUserNumber(username);
-        if (optionalUser.isEmpty()) {
-            throw new UserNotFoundException();
-        }
-
-        User user = optionalUser.get();
-        List<NewsLike> likedNews = user.getLikedNews();
-        boolean shouldScore = (platform != null || type != null || !likedNews.isEmpty());
-
-        if (!shouldScore) {
-            return allActiveNews.stream()
-                    .map(news -> {
-                        boolean likedByUser = checkIfLikedByUser(news, user);
-                        boolean viewedByUser = checkIfViewedByUser(news, user);
-                        return newsConverter.toNewsDTO(news, likedByUser, viewedByUser);
-                    })
-                    .toList();
-        }
-
-        Set<NewsType> preferredTypes = likedNews.stream()
-                .map(like -> like.getNews().getType())
-                .collect(Collectors.toSet());
-
-        Set<NewsPriority> preferredPriorities = likedNews.stream()
-                .map(like -> like.getNews().getPriority())
-                .collect(Collectors.toSet());
-
-
-        return allActiveNews.stream()
-                .map(news -> {
-                    boolean likedByUser = checkIfLikedByUser(news, user);
-                    boolean viewedByUser = checkIfViewedByUser(news, user);
-
-                    int score = 0;
-
-                    if (type != null && news.getType() == type) score += 3;
-                    if (platform != null && (news.getPlatform() == platform || news.getPlatform().name().equals("ALL")))
-                        score += 3;
-
-                    if (preferredTypes.contains(news.getType())) score += 2;
-                    if (preferredPriorities.contains(news.getPriority())) score += 1;
-
-                    NewsDTO dto = newsConverter.toNewsDTO(news, likedByUser, viewedByUser);
-                    return new AbstractMap.SimpleEntry<>(dto, score);
-                })
-                .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()))
-                .map(Map.Entry::getKey)
-                .toList();
-    }
 
 
     @Override
-    public List<NewsDTO> getNewsByCategoryForUser(String username, NewsType category, PlatformType platform, String clientIp)
-            throws UserNotFoundException {
+    public PageDTO<UserNewsDTO> getNewsByCategoryForUser(String username, NewsType category, PlatformType platform, String clientIp, Pageable pageable) throws UserNotFoundException {
 
-        List<News> newsList = newsRepository.findByTypeAndActiveTrue(category)
+        List<News> filtered = newsRepository.findByTypeAndActiveTrue(category)
                 .stream()
-                .filter(news -> platform == null || news.getPlatform().equals(platform) || news.getPlatform().name().equals("ALL"))
+                .filter(news -> platform == null || news.getPlatform().equals(platform) || news.getPlatform() == PlatformType.ALL)
+                .sorted(Comparator.comparing(News::getCreatedAt).reversed())
                 .toList();
 
+        int offset = (int) pageable.getOffset();
+        int endIndex = Math.min(offset + pageable.getPageSize(), filtered.size());
+        List<News> pageContent = filtered.subList(offset, endIndex);
+
         if (username == null) {
-            return newsList.stream()
+            List<UserNewsDTO> dtoList = pageContent.stream()
                     .map(news -> newsConverter.toNewsDTO(news, false, false))
                     .toList();
+            return new PageDTO<>(new PageImpl<>(dtoList, pageable, filtered.size()));
         }
 
-        Optional<User> optionalUser = userRepository.findByUserNumber(username);
-        if (optionalUser.isEmpty()) {
-            throw new UserNotFoundException();
-        }
-
-        User user = optionalUser.get();
-
-        Set<Long> likedNewsIds = user.getLikedNews().stream()
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
+        Set<Long> likedIds = user.getLikedNews().stream()
                 .map(like -> like.getNews().getId())
                 .collect(Collectors.toSet());
 
-        return newsList.stream()
+        List<UserNewsDTO> personalizedDtos = pageContent.stream()
                 .map(news -> {
-                    boolean liked = likedNewsIds.contains(news.getId());
+                    boolean liked = likedIds.contains(news.getId());
                     boolean viewed = newsViewHistoryRepository.existsByUserAndNews(user, news);
                     return newsConverter.toNewsDTO(news, liked, viewed);
                 })
                 .toList();
+
+        return new PageDTO<>(new PageImpl<>(personalizedDtos, pageable, filtered.size()));
     }
 
 
-    @Override
-    public List<NewsDTO> getSuggestedNews(String username, PlatformType platformType, String clientIp)
-            throws UserNotFoundException {
-
-        User user;
-        boolean isAnonymous = (username == null);
-
-        if (!isAnonymous) {
-            user = userRepository.findByUserNumber(username)
-                    .orElseThrow(UserNotFoundException::new);
-        } else {
-            user = null;
-        }
-
-        LocalDateTime now = LocalDateTime.now();
-
-        List<News> activeNews = newsRepository.findAll().stream()
-                .filter(News::isActive)
-                .filter(news -> news.getEndDate() == null || news.getEndDate().isAfter(now))
-                .filter(news ->
-                        platformType == null ||
-                                news.getPlatform() == platformType ||
-                                news.getPlatform() == PlatformType.ALL
-                )
-                .toList();
-
-        if (isAnonymous) {
-            // 🔹 Anonim kullanıcılar için: popüler ve yüksek öncelikli haberler önerilir
-            return activeNews.stream()
-                    .sorted(Comparator.comparingInt((News news) -> news.getPriority().ordinal()).reversed()
-                            .thenComparing(News::getViewCount, Comparator.reverseOrder()))
-                    .limit(10)
-                    .map(news -> newsConverter.toNewsDTO(news, false, false))
-                    .toList();
-        }
-
-        // 🔹 Giriş yapmış kullanıcılar için kişiselleştirilmiş öneri
-        Set<NewsType> likedTypes = user.getLikedNews().stream()
-                .map(like -> like.getNews().getType())
-                .collect(Collectors.toSet());
-
-        Set<NewsPriority> likedPriorities = user.getLikedNews().stream()
-                .map(like -> like.getNews().getPriority())
-                .collect(Collectors.toSet());
-
-        Set<NewsType> viewedTypes = user.getViewedNews().stream()
-                .map(view -> view.getNews().getType())
-                .collect(Collectors.toSet());
-
-        Set<NewsPriority> viewedPriorities = user.getViewedNews().stream()
-                .map(view -> view.getNews().getPriority())
-                .collect(Collectors.toSet());
-
-        Set<Long> likedNewsIds = user.getLikedNews().stream()
-                .map(like -> like.getNews().getId())
-                .collect(Collectors.toSet());
-
-        return activeNews.stream()
-                .map(news -> {
-                    int score = 0;
-
-                    if (likedTypes.contains(news.getType())) score += 3;
-                    if (likedPriorities.contains(news.getPriority())) score += 2;
-                    if (viewedTypes.contains(news.getType())) score += 2;
-                    if (viewedPriorities.contains(news.getPriority())) score += 1;
-
-                    boolean likedByUser = likedNewsIds.contains(news.getId());
-                    boolean viewedByUser = newsViewHistoryRepository.existsByUserAndNews(user, news);
-
-                    NewsDTO dto = newsConverter.toNewsDTO(news, likedByUser, viewedByUser);
-                    return new AbstractMap.SimpleEntry<>(dto, score);
-                })
-                .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()))
-                .map(Map.Entry::getKey)
-                .limit(10)
-                .toList();
-    }
 
     @Override
     @Transactional
@@ -620,14 +449,15 @@ public class NewsManager implements NewsService {
             newsViewHistory.setViewedAt(LocalDateTime.now());
             newsViewHistoryRepository.save(newsViewHistory);
             user.getViewedNews().add(newsViewHistory);
-        }
 
-        news.setViewCount(news.getViewCount() + 1);
-        newsRepository.save(news);
+            news.setViewCount(news.getViewCount() + 1);
+            newsRepository.save(news);
+        }
     }
 
 
-    @Override
+
+
     @Transactional
     public void recordAnonymousNewsView(String clientIp, Long newsId, String userAgent, String sessionId)
             throws NewsIsNotActiveException, NewsNotFoundException {
@@ -647,7 +477,7 @@ public class NewsManager implements NewsService {
         anonymousNewsViewHistoryRepository.save(view);
     }
 
-    @Override
+
     @Transactional
     public void activateScheduledNews() {
         LocalDateTime now = LocalDateTime.now();
@@ -662,7 +492,6 @@ public class NewsManager implements NewsService {
         }
     }
 
-    @Override
     @Transactional
     public void deactivateExpiredNews() {
         LocalDateTime now = LocalDateTime.now();
@@ -677,7 +506,7 @@ public class NewsManager implements NewsService {
         }
     }
 
-    @Override
+
     @Transactional
     public void performDailyStatusCheck() {
         LocalDateTime now = LocalDateTime.now();
@@ -703,6 +532,98 @@ public class NewsManager implements NewsService {
             newsRepository.saveAll(allNews);
         }
     }
+
+    @Override
+    public Page<AdminNewsDTO> getAllForAdmin(String username, PlatformType platform, Pageable pageable) throws AdminNotFoundException {
+        Page<News> newsPage;
+
+        if (platform == null) {
+            newsPage = newsRepository.findAll(pageable);
+        } else {
+            newsPage = newsRepository.findByPlatform(platform, pageable);
+        }
+
+        return newsPage.map(newsConverter::toAdminNewsDTO);
+    }
+
+    @Override
+    public PageDTO<UserNewsDTO> getActiveNewsForUser(PlatformType platform, NewsType type, String username, String clientIp, Pageable pageable) {
+        Logger logger = LoggerFactory.getLogger(this.getClass());
+
+        logger.info("getActiveNewsForUser çağrıldı -> platform={}, type={}, username={}, clientIp={}", platform, type, username, clientIp);
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<PlatformType> platformsToSearch = List.of(platform, PlatformType.ALL);
+        Page<News> allActiveNews = newsRepository.findByPlatformInAndActiveTrueAndValidEndDate(platformsToSearch, now, pageable);
+
+        Optional<User> optionalUser = username == null ? Optional.empty() : userRepository.findByUserNumber(username);
+        User user = optionalUser.orElse(null);
+
+        Set<Long> likedNewsIds = user != null ?
+                user.getLikedNews().stream().map(like -> like.getNews().getId()).collect(Collectors.toSet()) :
+                Collections.emptySet();
+
+        Set<Long> viewedNewsIds = user != null ?
+                user.getViewedNews().stream().map(view -> view.getNews().getId()).collect(Collectors.toSet()) :
+                Collections.emptySet();
+
+        Set<NewsType> preferredTypes = user != null ?
+                user.getLikedNews().stream().map(like -> like.getNews().getType()).collect(Collectors.toSet()) :
+                Collections.emptySet();
+
+        Set<NewsPriority> preferredPriorities = user != null ?
+                user.getLikedNews().stream().map(like -> like.getNews().getPriority()).collect(Collectors.toSet()) :
+                Collections.emptySet();
+
+        // Haberleri puanlamak ve sıralamak için liste oluşturuyoruz
+        List<NewsWithScore> scoredNews = allActiveNews.getContent().stream()
+                .map(news -> {
+                    boolean likedByUser = likedNewsIds.contains(news.getId());
+                    boolean viewedByUser = viewedNewsIds.contains(news.getId());
+
+                    int score = 0;
+
+                    // 🔹 Kullanıcının beğendiği tür en yüksek öncelik
+                    if (preferredTypes.contains(news.getType())) score += 5;
+                    if (preferredPriorities.contains(news.getPriority())) score += 2;
+
+                    // 🔹 Kullanıcının daha önceki etkileşimleri
+                    if (likedByUser) score += 3;
+                    if (viewedByUser) score += 2;
+
+                    // 🔹 Eğer query'den filtre geldiyse ekstra puan
+                    if (type != null && news.getType() == type) score += 1;
+                    if (platform != null && (news.getPlatform() == platform || news.getPlatform() == PlatformType.ALL)) score += 1;
+
+                    return new NewsWithScore(
+                            newsConverter.toNewsDTO(news, likedByUser, viewedByUser),
+                            score
+                    );
+                })
+                .sorted(Comparator.comparingInt(NewsWithScore::getScore).reversed())
+                .collect(Collectors.toList());
+
+        // Skorlanmış haberleri DTO'ya dönüştürüyoruz
+        List<UserNewsDTO> sortedDtos = scoredNews.stream()
+                .map(NewsWithScore::getUserNewsDto)
+                .collect(Collectors.toList());
+
+        // Yeni bir Page objesi oluşturuyoruz
+        Page<UserNewsDTO> resultPage = new PageImpl<>(sortedDtos, pageable, allActiveNews.getTotalElements());
+        return new PageDTO<>(resultPage);
+    }
+
+
+    @Getter
+    @AllArgsConstructor
+    private static class NewsWithScore {
+        private UserNewsDTO userNewsDto;
+        private int score;
+    }
+
+
+
 
 
 }
