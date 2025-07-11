@@ -28,6 +28,7 @@ import akin.city_card.security.exception.UserNotActiveException;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.security.exception.VerificationCodeStillValidException;
 import akin.city_card.security.repository.SecurityUserRepository;
+import akin.city_card.sms.SmsRequest;
 import akin.city_card.sms.SmsService;
 import akin.city_card.station.exceptions.StationNotFoundException;
 import akin.city_card.station.model.Station;
@@ -152,10 +153,10 @@ public class UserManager implements UserService {
 
         verificationCodeRepository.save(verificationCode);
 
-        // SmsRequest smsRequest = new SmsRequest();
-        // smsRequest.setTo(user.getUserNumber());
-        // smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code + ". Kod 3 dakika geçerlidir.");
-        // smsService.sendSms(smsRequest);
+         SmsRequest smsRequest = new SmsRequest();
+         smsRequest.setTo(user.getUserNumber());
+         smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code + ". Kod 3 dakika geçerlidir.");
+         smsService.sendSms(smsRequest);
 
         System.out.println("📩 Yeni kayıt doğrulama kodu: " + code);
     }
@@ -310,15 +311,14 @@ public class UserManager implements UserService {
 
         verificationCodeRepository.save(verificationCode);
 
-        // SMS gönder
-        /*
+
         SmsRequest smsRequest = new SmsRequest();
         smsRequest.setTo(phone);
         smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code +
                 ". Kod 3 dakika boyunca geçerlidir.");
         smsService.sendSms(smsRequest);
 
-         */
+
         return new ResponseMessage("Doğrulama kodu gönderildi.", true);
     }
 
@@ -404,14 +404,13 @@ public class UserManager implements UserService {
 
         String code = randomSixDigit();
 
-        /*// SMS gönderimi
+
         SmsRequest smsRequest = new SmsRequest();
         smsRequest.setTo(resendPhoneVerification.getTelephone());
         smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code +
                 ". Kod 3 dakika boyunca geçerlidir.");
         smsService.sendSms(smsRequest);
 
-         */
 
         VerificationCode verificationCode = new VerificationCode();
         verificationCode.setCode(code);

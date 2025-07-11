@@ -10,10 +10,9 @@ import akin.city_card.news.core.request.UpdateNewsRequest;
 import akin.city_card.news.core.response.NewsDTO;
 import akin.city_card.news.core.response.NewsHistoryDTO;
 import akin.city_card.news.core.response.NewsStatistics;
-import akin.city_card.news.exceptions.NewsIsNotActiveException;
-import akin.city_card.news.exceptions.NewsNotFoundException;
-import akin.city_card.news.exceptions.OutDatedNewsException;
+import akin.city_card.news.exceptions.*;
 import akin.city_card.news.model.*;
+import akin.city_card.news.repository.AnonymousNewsViewHistoryRepository;
 import akin.city_card.news.repository.NewsLikeRepository;
 import akin.city_card.news.repository.NewsRepository;
 import akin.city_card.news.repository.NewsViewHistoryRepository;
@@ -47,6 +46,7 @@ public class NewsManager implements NewsService {
     private final AdminRepository adminRepository;
     private final UserRepository userRepository;
     private final MediaUploadService mediaUploadService;
+    private final AnonymousNewsViewHistoryRepository anonymousNewsViewHistoryRepository;
 
 
     @Override
@@ -110,29 +110,10 @@ public class NewsManager implements NewsService {
     @Override
     public NewsDTO getNewsByIdForAdmin(String username, Long id) throws NewsIsNotActiveException, NewsNotFoundException, AdminNotFoundException {
         News news = newsRepository.findById(id).orElseThrow(NewsNotFoundException::new);
-     return newsConverter.toNewsDTO(news,false,false);
+        return newsConverter.toNewsDTO(news, false, false);
 
     }
 
-    @Override
-    public NewsDTO getNewsByIdForUser(String username, Long id) throws NewsIsNotActiveException, UserNotFoundException, NewsNotFoundException {
-        User user = userRepository.findByUserNumberWithViewedNews(username)
-                .orElseThrow(UserNotFoundException::new);
-        News news = newsRepository.findById(id).orElseThrow(NewsNotFoundException::new);
-        if (!news.isActive()) {
-            throw new NewsIsNotActiveException(id + " ");
-        }
-        recordNewsView(username, id);
-        NewsViewHistory newsViewHistory = new NewsViewHistory();
-        newsViewHistory.setUser(user);
-        newsViewHistory.setNews(news);
-        newsViewHistory.setViewedAt(LocalDateTime.now());
-        newsViewHistoryRepository.save(newsViewHistory);
-        user.getViewedNews().add(newsViewHistory);
-        NewsDTO newsDTO = newsConverter.toNewsDTO(news,false,false);
-
-        return   newsDTO;
-    }
 
     @Override
     public NewsDTO getActiveNewsForAdmin(PlatformType platform, NewsType type, String username) throws AdminNotFoundException {
@@ -158,83 +139,14 @@ public class NewsManager implements NewsService {
                 .map(news -> newsConverter.toNewsDTO(news, false, false));
     }
 
-    @Override
-    public List<NewsDTO> getActiveNewsForUser(PlatformType platform, NewsType type, String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);;
 
-
-        List<NewsLike> likedNews = user.getLikedNews();
-
-        LocalDateTime now = LocalDateTime.now();
-        List<News> allActiveNews = newsRepository.findAll().stream()
-                .filter(News::isActive)
-                .filter(news -> news.getEndDate() == null || news.getEndDate().isAfter(now))
-                .toList();
-
-        // Eğer hiçbir filtreleme veya beğeni yoksa, tüm haberleri döndür
-        boolean shouldScore = (platform != null || type != null || !likedNews.isEmpty());
-
-        List<NewsDTO> resultNews;
-
-        if (!shouldScore) {
-            // Tüm aktif haberleri döndür
-            resultNews = allActiveNews.stream()
-                    .map(news -> {
-                        boolean likedByUser = false;
-                        boolean viewedByUser = newsViewHistoryRepository.existsByUserAndNews(user, news);
-                        return newsConverter.toNewsDTO(news, likedByUser, viewedByUser);
-                    })
-                    .toList();
-        } else {
-            // Skorlama yapılacaksa
-            Set<NewsType> preferredTypes = likedNews.stream()
-                    .map(like -> like.getNews().getType())
-                    .collect(Collectors.toSet());
-
-            Set<NewsPriority> preferredPriorities = likedNews.stream()
-                    .map(like -> like.getNews().getPriority())
-                    .collect(Collectors.toSet());
-
-            resultNews = allActiveNews.stream()
-                    .map(news -> {
-                        boolean likedByUser = likedNews.stream()
-                                .anyMatch(like -> like.getNews().getId().equals(news.getId()));
-
-                        boolean viewedByUser = newsViewHistoryRepository.existsByUserAndNews(user, news);
-
-                        int score = 0;
-
-                        if (type != null && news.getType() == type) score += 3;
-                        if (platform != null && (news.getPlatform() == platform || news.getPlatform().name().equals("ALL")))
-                            score += 3;
-
-                        if (preferredTypes.contains(news.getType())) score += 2;
-                        if (preferredPriorities.contains(news.getPriority())) score += 1;
-
-                        NewsDTO dto = newsConverter.toNewsDTO(news, likedByUser, viewedByUser);
-                        return new AbstractMap.SimpleEntry<>(dto, score);
-                    })
-                    .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()))
-                    .map(Map.Entry::getKey)
-                    .toList();
-        }
-
-
-
-        return  newsRepository.findAll().stream().map(news -> newsConverter.toNewsDTO(news,
-                checkIfLikedByUser(news,user),
-                checkIfViewedByUser(news,user))).toList();
-    }
-
-    private boolean checkIfLikedByUser(News news,User user) {
-        // Kullanıcının ID'sine göre DB kontrolü yapılabilir
+    private boolean checkIfLikedByUser(News news, User user) {
         return newsLikeRepository.existsByUserIdAndNewsId(user.getId(), news.getId());
     }
 
-    private boolean checkIfViewedByUser(News news,User user) {
+    private boolean checkIfViewedByUser(News news, User user) {
         return newsViewHistoryRepository.existsByUserIdAndNewsId(user.getId(), news.getId());
     }
-
 
 
     @Override
@@ -258,13 +170,11 @@ public class NewsManager implements NewsService {
 
     @Override
     public List<NewsDTO> getLikedNewsByUser(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);;
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
 
         List<NewsLike> newsLikes = user.getLikedNews();
         LocalDateTime now = LocalDateTime.now();
-
-        // likedByUser = true, viewedByUser = false
 
         return newsLikes.stream()
                 .map(NewsLike::getNews)
@@ -276,11 +186,13 @@ public class NewsManager implements NewsService {
 
 
     @Override
-    public ResponseMessage likeNews(Long newsId, String username) throws OutDatedNewsException, NewsIsNotActiveException, NewsNotFoundException, UserNotFoundException {
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
-        NewsLike newsLike = new NewsLike();
-        LocalDateTime now = LocalDateTime.now();
-        News news = newsRepository.findById(newsId).orElseThrow(NewsNotFoundException::new);
+    public ResponseMessage likeNews(Long newsId, String username) throws OutDatedNewsException, NewsIsNotActiveException, NewsNotFoundException, UserNotFoundException, NewsAlreadyLikedException {
+        User user = userRepository.findByUserNumber(username)
+                .orElseThrow(UserNotFoundException::new);
+
+        News news = newsRepository.findById(newsId)
+                .orElseThrow(NewsNotFoundException::new);
+
         if (!news.isActive()) {
             throw new NewsIsNotActiveException(newsId + " ");
         }
@@ -289,21 +201,32 @@ public class NewsManager implements NewsService {
             throw new OutDatedNewsException();
         }
 
+        if (checkIfLikedByUser(news, user)) {
+            throw new NewsAlreadyLikedException();
+        }
+
+        NewsLike newsLike = new NewsLike();
         newsLike.setNews(news);
         newsLike.setUser(user);
-        newsLike.setLikedAt(now);
+        newsLike.setLikedAt(LocalDateTime.now());
+
         newsLikeRepository.save(newsLike);
+
         user.getLikedNews().add(newsLike);
         userRepository.save(user);
-        return new ResponseMessage("haber beğenildi", true);
 
+        return new ResponseMessage("Haber beğenildi", true);
     }
 
-    //beğeni kaldır
+
     @Override
-    public ResponseMessage unlikeNews(Long newsId, String username) throws UserNotFoundException, NewsNotFoundException, NewsIsNotActiveException, OutDatedNewsException {
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);;
-        News news = newsRepository.findById(newsId).orElseThrow(NewsNotFoundException::new);
+    public ResponseMessage unlikeNews(Long newsId, String username) throws UserNotFoundException, NewsNotFoundException, NewsIsNotActiveException, OutDatedNewsException, NewsNotLikedException {
+        User user = userRepository.findByUserNumber(username)
+                .orElseThrow(UserNotFoundException::new);
+
+        News news = newsRepository.findById(newsId)
+                .orElseThrow(NewsNotFoundException::new);
+
         if (!news.isActive()) {
             throw new NewsIsNotActiveException(newsId + " ");
         }
@@ -311,10 +234,17 @@ public class NewsManager implements NewsService {
         if (news.getEndDate() != null && news.getEndDate().isBefore(LocalDateTime.now())) {
             throw new OutDatedNewsException();
         }
-        user.getLikedNews().removeIf(newsLike1 -> newsLike1.getNews().equals(news));
+
+        if (!checkIfLikedByUser(news, user)) {
+            throw new NewsNotLikedException();
+        }
+
+        newsLikeRepository.deleteByUserIdAndNewsId(user.getId(), news.getId());
+
+        user.getLikedNews().removeIf(newsLike -> newsLike.getNews().equals(news));
         userRepository.save(user);
 
-        return new ResponseMessage("beğeni kaldırıldı", true);
+        return new ResponseMessage("Beğeni kaldırıldı", true);
     }
 
 
@@ -325,7 +255,6 @@ public class NewsManager implements NewsService {
             return List.of();
         }
 
-        // Kullanıcının beğendiği ve görüntülediği haberlerden tip ve öncelik setlerini çıkaralım
         Set<NewsType> likedTypes = user.getLikedNews().stream()
                 .map(like -> like.getNews().getType())
                 .collect(Collectors.toSet());
@@ -344,14 +273,12 @@ public class NewsManager implements NewsService {
 
         LocalDateTime now = LocalDateTime.now();
 
-        // Aktif ve süresi dolmamış haberleri filtrele
         List<News> activeNews = newsRepository.findAll().stream()
                 .filter(News::isActive)
                 .filter(news -> platform == null || news.getPlatform().equals(platform))
                 .filter(news -> news.getEndDate() == null || news.getEndDate().isAfter(now))
                 .toList();
 
-        // Kullanıcıya özel skor hesaplayalım
         Set<Long> likedNewsIds = user.getLikedNews().stream()
                 .map(like -> like.getNews().getId())
                 .collect(Collectors.toSet());
@@ -369,12 +296,12 @@ public class NewsManager implements NewsService {
 
                     return new AbstractMap.SimpleEntry<>(newsConverter.toNewsDTO(news, likedByUser, viewedByUser), score);
                 })
-                .filter(entry -> entry.getValue() > 0)  // Sadece ilgisi olan haberler
+                .filter(entry -> entry.getValue() > 0)
                 .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue())) // Skora göre azalan
                 .map(Map.Entry::getKey)
                 .toList();
 
-        return  personalizedNews;
+        return personalizedNews;
     }
 
 
@@ -384,13 +311,10 @@ public class NewsManager implements NewsService {
         if (admin == null || !admin.getRoles().contains(Role.ADMIN)) {
             return List.of();
         }
-
         LocalDateTime startOfMonth = LocalDateTime.now().withDayOfMonth(1);
         List<NewsLike> likesThisMonth = newsLikeRepository.findByLikedAtAfter(startOfMonth);
         List<NewsViewHistory> viewsThisMonth = newsViewHistoryRepository.findByViewedAtAfter(startOfMonth);
-
         List<News> allNews = newsRepository.findAll();
-
         return allNews.stream()
                 .map(news -> newsConverter.toDetailedStatistics(news, likesThisMonth, viewsThisMonth))
                 .sorted(Comparator.comparingInt(NewsStatistics::getViewCountThisMonth).reversed())
@@ -401,33 +325,9 @@ public class NewsManager implements NewsService {
     @Override
     public List<NewsDTO> getNewsByCategoryForAdmin(String username, NewsType category, PlatformType platform) {
         List<News> newsList = newsRepository.findByTypeAndActiveTrue(category);
-
         return newsList.stream()
                 .filter(news -> platform == null || news.getPlatform().equals(platform))
                 .map(news -> newsConverter.toNewsDTO(news, false, false))
-                .toList();
-    }
-
-    @Override
-    public List<NewsDTO> getNewsByCategoryForUser(String username, NewsType category, PlatformType platform) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
-        if (user == null) {
-            return List.of();
-        }
-
-        List<News> newsList = newsRepository.findByTypeAndActiveTrue(category);
-
-        Set<Long> likedNewsIds = user.getLikedNews().stream()
-                .map(like -> like.getNews().getId())
-                .collect(Collectors.toSet());
-
-        return newsList.stream()
-                .filter(news -> platform == null || news.getPlatform().equals(platform))
-                .map(news -> {
-                    boolean liked = likedNewsIds.contains(news.getId());
-                    boolean viewed = newsViewHistoryRepository.existsByUserAndNews(user, news);
-                    return newsConverter.toNewsDTO(news, liked, viewed);
-                })
                 .toList();
     }
 
@@ -452,30 +352,165 @@ public class NewsManager implements NewsService {
 
     }
 
-    @Override
     @Transactional
-    public void recordNewsView(String username, Long newsId) throws NewsIsNotActiveException, UserNotFoundException, NewsNotFoundException {
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
-        News news = newsRepository.findById(newsId).orElseThrow(NewsNotFoundException::new);
+    public NewsDTO getNewsByIdForUser(String username, Long id, String clientIp, String sessionId, String userAgent)
+            throws NewsIsNotActiveException, UserNotFoundException, NewsNotFoundException {
+
+        News news = newsRepository.findById(id)
+                .orElseThrow(NewsNotFoundException::new);
+
         if (!news.isActive()) {
-            throw new NewsIsNotActiveException(newsId + " ");
+            throw new NewsIsNotActiveException("News with ID " + id + " is not active");
         }
-        NewsViewHistory newsViewHistory = new NewsViewHistory();
-        newsViewHistory.setUser(user);
-        newsViewHistory.setNews(news);
-        newsViewHistory.setViewedAt(LocalDateTime.now());
-        newsViewHistoryRepository.save(newsViewHistory);
-        user.getViewedNews().add(newsViewHistory);
+
+        boolean liked = false;
+        boolean viewed = false;
+
+        if (username != null) {
+            User user = userRepository.findByUserNumberWithViewedNews(username)
+                    .orElseThrow(UserNotFoundException::new);
+
+            viewed = newsViewHistoryRepository.existsByUserAndNews(user, news);
+            if (!viewed) {
+                NewsViewHistory viewHistory = new NewsViewHistory();
+                viewHistory.setUser(user);
+                viewHistory.setNews(news);
+                viewHistory.setViewedAt(LocalDateTime.now());
+                newsViewHistoryRepository.save(viewHistory);
+                user.getViewedNews().add(viewHistory);
+            }
+
+            liked = newsLikeRepository.existsByUserAndNews(user, news);
+        } else {
+            boolean alreadyViewed = anonymousNewsViewHistoryRepository.existsByClientIpAndNews(clientIp, news);
+            if (!alreadyViewed) {
+                AnonymousNewsViewHistory anonView = new AnonymousNewsViewHistory();
+                anonView.setNews(news);
+                anonView.setClientIp(clientIp);
+                anonView.setSessionId(sessionId); // 🟢 Burada ekledik!
+                anonView.setUserAgent(userAgent);
+                anonView.setViewedAt(LocalDateTime.now());
+                anonymousNewsViewHistoryRepository.save(anonView);
+            }
+        }
+
+        news.setViewCount(news.getViewCount() + 1);
+        newsRepository.save(news);
+
+        return newsConverter.toNewsDTO(news, liked, viewed);
     }
 
+
     @Override
-    public List<NewsDTO> getSuggestedNews(String username, PlatformType platformType) throws UserNotFoundException {
+    public List<NewsDTO> getActiveNewsForUser(PlatformType platform, NewsType type, String username, String clientIp)
+            throws UserNotFoundException {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        List<News> allActiveNews = newsRepository.findAll().stream()
+                .filter(News::isActive)
+                .filter(news -> news.getEndDate() == null || news.getEndDate().isAfter(now))
+                .toList();
+
+        if (username == null) {
+            return allActiveNews.stream()
+                    .map(news -> newsConverter.toNewsDTO(news, false, false))
+                    .toList();
+        }
+
+        Optional<User> optionalUser = userRepository.findByUserNumber(username);
+        if (optionalUser.isEmpty()) {
+            throw new UserNotFoundException();
+        }
+
+        User user = optionalUser.get();
+        List<NewsLike> likedNews = user.getLikedNews();
+        boolean shouldScore = (platform != null || type != null || !likedNews.isEmpty());
+
+        if (!shouldScore) {
+            return allActiveNews.stream()
+                    .map(news -> {
+                        boolean likedByUser = checkIfLikedByUser(news, user);
+                        boolean viewedByUser = checkIfViewedByUser(news, user);
+                        return newsConverter.toNewsDTO(news, likedByUser, viewedByUser);
+                    })
+                    .toList();
+        }
+
+        Set<NewsType> preferredTypes = likedNews.stream()
+                .map(like -> like.getNews().getType())
+                .collect(Collectors.toSet());
+
+        Set<NewsPriority> preferredPriorities = likedNews.stream()
+                .map(like -> like.getNews().getPriority())
+                .collect(Collectors.toSet());
+
+
+        return allActiveNews.stream()
+                .map(news -> {
+                    boolean likedByUser = checkIfLikedByUser(news, user);
+                    boolean viewedByUser = checkIfViewedByUser(news, user);
+
+                    int score = 0;
+
+                    if (type != null && news.getType() == type) score += 3;
+                    if (platform != null && (news.getPlatform() == platform || news.getPlatform().name().equals("ALL")))
+                        score += 3;
+
+                    if (preferredTypes.contains(news.getType())) score += 2;
+                    if (preferredPriorities.contains(news.getPriority())) score += 1;
+
+                    NewsDTO dto = newsConverter.toNewsDTO(news, likedByUser, viewedByUser);
+                    return new AbstractMap.SimpleEntry<>(dto, score);
+                })
+                .sorted((e1, e2) -> Integer.compare(e2.getValue(), e1.getValue()))
+                .map(Map.Entry::getKey)
+                .toList();
+    }
+
+
+    @Override
+    public List<NewsDTO> getNewsByCategoryForUser(String username, NewsType category, PlatformType platform, String clientIp)
+            throws UserNotFoundException {
+
+        List<News> newsList = newsRepository.findByTypeAndActiveTrue(category)
+                .stream()
+                .filter(news -> platform == null || news.getPlatform().equals(platform) || news.getPlatform().name().equals("ALL"))
+                .toList();
+
+        if (username == null) {
+            return newsList.stream()
+                    .map(news -> newsConverter.toNewsDTO(news, false, false))
+                    .toList();
+        }
+
+        Optional<User> optionalUser = userRepository.findByUserNumber(username);
+        if (optionalUser.isEmpty()) {
+            throw new UserNotFoundException();
+        }
+
+        User user = optionalUser.get();
+
+        Set<Long> likedNewsIds = user.getLikedNews().stream()
+                .map(like -> like.getNews().getId())
+                .collect(Collectors.toSet());
+
+        return newsList.stream()
+                .map(news -> {
+                    boolean liked = likedNewsIds.contains(news.getId());
+                    boolean viewed = newsViewHistoryRepository.existsByUserAndNews(user, news);
+                    return newsConverter.toNewsDTO(news, liked, viewed);
+                })
+                .toList();
+    }
+
+
+    @Override
+    public List<NewsDTO> getSuggestedNews(String username, PlatformType platformType, String clientIp) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         if (user == null) {
             return List.of();
         }
-
-        // Kullanıcının beğendiği ve görüntülediği haberleri çek
         Set<NewsType> likedTypes = new HashSet<>();
         Set<NewsPriority> likedPriorities = new HashSet<>();
 
@@ -507,14 +542,11 @@ public class NewsManager implements NewsService {
                 .map(like -> like.getNews().getId())
                 .collect(Collectors.toSet());
 
-        // Beğeni bazlı
-        // Görüntülenme bazlı
 
         return activeNews.stream()
                 .map(news -> {
                     int score = 0;
 
-                    // Beğeni bazlı
                     if (likedTypes.contains(news.getType())) score += 3;
                     if (likedPriorities.contains(news.getPriority())) score += 2;
 
@@ -532,5 +564,113 @@ public class NewsManager implements NewsService {
                 .map(Map.Entry::getKey)
                 .toList();
     }
+
+    @Override
+    @Transactional
+    public void recordNewsView(String username, Long newsId)
+            throws NewsIsNotActiveException, UserNotFoundException, NewsNotFoundException {
+
+        User user = userRepository.findByUserNumber(username)
+                .orElseThrow(UserNotFoundException::new);
+
+        News news = newsRepository.findById(newsId)
+                .orElseThrow(NewsNotFoundException::new);
+
+        if (!news.isActive()) {
+            throw new NewsIsNotActiveException(newsId + "");
+        }
+
+        boolean alreadyViewed = newsViewHistoryRepository.existsByUserAndNews(user, news);
+        if (!alreadyViewed) {
+            NewsViewHistory newsViewHistory = new NewsViewHistory();
+            newsViewHistory.setUser(user);
+            newsViewHistory.setNews(news);
+            newsViewHistory.setViewedAt(LocalDateTime.now());
+            newsViewHistoryRepository.save(newsViewHistory);
+            user.getViewedNews().add(newsViewHistory);
+        }
+
+        news.setViewCount(news.getViewCount() + 1);
+        newsRepository.save(news);
+    }
+
+
+    @Override
+    @Transactional
+    public void recordAnonymousNewsView(String clientIp, Long newsId, String userAgent, String sessionId)
+            throws NewsIsNotActiveException, NewsNotFoundException {
+        News news = newsRepository.findById(newsId).orElseThrow(NewsNotFoundException::new);
+
+        if (!news.isActive()) {
+            throw new NewsIsNotActiveException(newsId + " ");
+        }
+
+        AnonymousNewsViewHistory view = new AnonymousNewsViewHistory();
+        view.setNews(news);
+        view.setClientIp(clientIp);
+        view.setUserAgent(userAgent);
+        view.setSessionId(sessionId);
+        view.setViewedAt(LocalDateTime.now());
+
+        anonymousNewsViewHistoryRepository.save(view);
+    }
+
+    @Override
+    @Transactional
+    public void activateScheduledNews() {
+        LocalDateTime now = LocalDateTime.now();
+        List<News> newsToActivate = newsRepository.findByStartDateBeforeAndActiveFalse(now);
+
+        for (News news : newsToActivate) {
+            news.setActive(true);
+        }
+
+        if (!newsToActivate.isEmpty()) {
+            newsRepository.saveAll(newsToActivate);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void deactivateExpiredNews() {
+        LocalDateTime now = LocalDateTime.now();
+        List<News> newsToDeactivate = newsRepository.findByEndDateBeforeAndActiveTrue(now);
+
+        for (News news : newsToDeactivate) {
+            news.setActive(false);
+        }
+
+        if (!newsToDeactivate.isEmpty()) {
+            newsRepository.saveAll(newsToDeactivate);
+        }
+    }
+
+    @Override
+    @Transactional
+    public void performDailyStatusCheck() {
+        LocalDateTime now = LocalDateTime.now();
+        List<News> allNews = newsRepository.findAll();
+
+        boolean updated = false;
+
+        for (News news : allNews) {
+            boolean shouldBeActive =
+                    (news.getStartDate() == null || !news.getStartDate().isAfter(now)) &&
+                            (news.getEndDate() == null || news.getEndDate().isAfter(now));
+
+            if (shouldBeActive && !news.isActive()) {
+                news.setActive(true);
+                updated = true;
+            } else if (!shouldBeActive && news.isActive()) {
+                news.setActive(false);
+                updated = true;
+            }
+        }
+
+        if (updated) {
+            newsRepository.saveAll(allNews);
+        }
+    }
+
 
 }

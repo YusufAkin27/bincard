@@ -16,6 +16,7 @@ import akin.city_card.security.exception.*;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.security.repository.TokenRepository;
 import akin.city_card.security.service.JwtService;
+import akin.city_card.sms.SmsRequest;
 import akin.city_card.sms.SmsService;
 import akin.city_card.superadmin.model.SuperAdmin;
 import akin.city_card.superadmin.repository.SuperAdminRepository;
@@ -31,7 +32,6 @@ import akin.city_card.verification.model.VerificationPurpose;
 import akin.city_card.verification.repository.VerificationCodeRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.BeanUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -60,7 +60,8 @@ public class AuthManager implements AuthService {
     @Override
     @Transactional
     public ResponseMessage logout(String username) throws UserNotFoundException, TokenNotFoundException {
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);;
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
+        ;
 
 
         List<Token> tokens = tokenRepository.findAllBySecurityUserId(user.getId());
@@ -159,7 +160,6 @@ public class AuthManager implements AuthService {
 
         return new ResponseMessage("SMS gönderildi, lütfen giriş için kodu giriniz", true);
     }
-
 
 
     @Override
@@ -296,7 +296,7 @@ public class AuthManager implements AuthService {
                 throw new UnrecognizedDeviceException();
             }
 
-        TokenResponseDTO tokenResponseDTO = generateTokenResponse(
+            TokenResponseDTO tokenResponseDTO = generateTokenResponse(
                     user,
                     metadata.getIpAddress(),
                     metadata.getDeviceInfo()
@@ -318,6 +318,7 @@ public class AuthManager implements AuthService {
         }
         return xfHeader.split(",")[0];  // Eğer proxy varsa ilk IP gerçek istemcidir
     }
+
     public LoginMetadataDTO extractClientMetadata(HttpServletRequest request) {
         String ipAddress = extractClientIp(request);
         String userAgent = request.getHeader("User-Agent"); // Tarayıcı / OS bilgisi
@@ -425,16 +426,14 @@ public class AuthManager implements AuthService {
             long remainingSeconds = cooldownSeconds - secondsSinceSent;
 
             if (remainingSeconds > 0) {
-                throw new VerificationCooldownException(remainingSeconds); // Süre dolmamış
+                throw new VerificationCooldownException(remainingSeconds);
             }
 
-            throw new VerificationCodeStillValidException(); // Süre dolmuş ama kod hâlâ geçerli
+            throw new VerificationCodeStillValidException();
         }
 
-        // 3. Tüm eski LOGIN kodlarını iptal et (önceki aktifleri geçersiz yap)
         verificationCodeRepository.cancelAllActiveCodes(user.getId(), VerificationPurpose.LOGIN);
 
-        // 4. Yeni kod oluştur
         String code = randomSixDigit();
 
         VerificationCode verificationCode = VerificationCode.builder()
@@ -452,17 +451,15 @@ public class AuthManager implements AuthService {
 
         verificationCodeRepository.save(verificationCode);
 
-        // SMS servis entegrasyonu
-    /*
-    SmsRequest smsRequest = new SmsRequest();
-    smsRequest.setMessage(verificationCode.getCode());
-    smsRequest.setTo(request.getTelephone());
-    smsService.sendSms(smsRequest);
-    */
+
+        SmsRequest smsRequest = new SmsRequest();
+        smsRequest.setMessage(verificationCode.getCode());
+        smsRequest.setTo(telephone);
+        smsService.sendSms(smsRequest);
+
 
         System.out.println("📩 Yeni gönderilen kod: " + code);
     }
-
 
 
     public String randomSixDigit() {
@@ -509,7 +506,6 @@ public class AuthManager implements AuthService {
                 TokenType.ACCESS
         );
     }
-
 
 
 }

@@ -49,16 +49,20 @@ public class SecurityConfig {
                 "/v3/api-docs/**",
 
                 // Ödeme noktası herkese açık görüntüleme uçları
-                "/v1/api/payment-point",                         // GET
-                "/v1/api/payment-point/search",                  // POST
-                "/v1/api/payment-point/nearby",                  // GET
-                "/v1/api/payment-point/by-city/**",              // GET
-                "/v1/api/payment-point/by-payment-method",       // GET
-                "/v1/api/payment-point/*",                       // GET tekil detay (id)
-                "/v1/api/payment-point/*/photos",                // GET (varsa)
-                "/v1/api/payment-point/*/photos/*",              // GET (varsa)
-                "/v1/api/payment-point/*/status"                 // GET (varsa)
+                "/v1/api/payment-point",
+                "/v1/api/payment-point/search",
+                "/v1/api/payment-point/nearby",
+                "/v1/api/payment-point/by-city/**",
+                "/v1/api/payment-point/by-payment-method",
+                "/v1/api/payment-point/*",
+                "/v1/api/payment-point/*/photos",
+                "/v1/api/payment-point/*/photos/*",
+                "/v1/api/payment-point/*/status",
+
+                // ✅ Haber görüntüleme uçları - HERKESE AÇIK
+                "/v1/api/news/**"
         };
+
 
 
         // Sadece admin için yollar
