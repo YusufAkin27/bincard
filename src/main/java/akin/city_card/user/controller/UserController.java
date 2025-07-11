@@ -136,6 +136,12 @@ public class UserController {
         return userService.updateProfilePhoto(userDetails.getUsername(), file);
     }
 
+    @DeleteMapping("/profile/photo")
+    public ResponseMessage deleteProfilePhoto(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException, PhotoSizeLargerException, IOException {
+        return userService.deleteProfilePhoto(userDetails.getUsername());
+    }
+
+
     // 5. Hesap pasifleştirme (soft delete gibi)
     @DeleteMapping("/deactivate")
     public ResponseMessage deactivateUser(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {

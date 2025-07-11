@@ -1,10 +1,13 @@
 package akin.city_card.security.filter;
 
-;
 import akin.city_card.security.entity.Role;
 import akin.city_card.security.entity.SecurityUser;
+import akin.city_card.security.exception.TokenIsExpiredException;
+import akin.city_card.security.exception.TokenNotFoundException;
 import akin.city_card.security.service.JwtService;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,17 +19,21 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
     @Autowired
     private JwtService jwtService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+            throws ServletException, IOException {
+
         String path = request.getServletPath();
         if (path.contains("/auth") && !path.contains("/logout")) {
             filterChain.doFilter(request, response);
@@ -39,23 +46,36 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             try {
                 if (jwtService.validateAccessToken(token)) {
                     Claims claims = jwtService.getAccessTokenClaims(token);
-                    String userNumber = claims.getSubject(); // Kullanıcı numarasını alıyoruz
+                    String userNumber = claims.getSubject();
+
                     List<String> rolesAsString = (List<String>) claims.get("role");
-                    Set<Role> roles = rolesAsString.stream()
+                    Set<Role> roles = rolesAsString != null
+                            ? rolesAsString.stream()
                             .map(roleStr -> Role.valueOf(roleStr.toUpperCase()))
-                            .collect(Collectors.toSet());
+                            .collect(Collectors.toSet())
+                            : Collections.emptySet();
 
                     SecurityUser userDetails = new SecurityUser(userNumber, roles);
                     UsernamePasswordAuthenticationToken authenticationToken =
                             new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
                     SecurityContextHolder.getContext().setAuthentication(authenticationToken);
                 }
-            } catch (Exception exception) {
-                exception.printStackTrace();
+                filterChain.doFilter(request, response);
+            } catch (TokenIsExpiredException e) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"" + e.getMessage() + "\"}");
+            } catch (TokenNotFoundException e) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"" + e.getMessage() + "\"}");
+            } catch (Exception e) {
+                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                response.setContentType("application/json");
+                response.getWriter().write("{\"error\": \"Sunucu hatası oluştu.\"}");
             }
+        } else {
+            filterChain.doFilter(request, response);
         }
-        filterChain.doFilter(request, response);
     }
 }
-
-

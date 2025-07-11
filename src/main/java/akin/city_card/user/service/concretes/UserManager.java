@@ -798,6 +798,16 @@ public class UserManager implements UserService {
         return auditLogsPage.map(auditLogConverter::mapToDto);
     }
 
+    @Override
+    public ResponseMessage deleteProfilePhoto(String username) throws UserNotFoundException {
+        User user= userRepository.findByUserNumber(username);
+        if (user.getProfileInfo()!=null){
+            user.getProfileInfo().setProfilePicture("https://thumbs.dreamstime.com/z/default-profile-picture-icon-high-resolution-high-resolution-default-profile-picture-icon-symbolizing-no-display-picture-360167031.jpg");
+        }
+        return new ResponseMessage("Profil fotoğrafı silindi", true);
+
+    }
+
 
     private String buildEmailBodyFromCacheDTO(CacheUserDTO dto) {
         StringBuilder sb = new StringBuilder();

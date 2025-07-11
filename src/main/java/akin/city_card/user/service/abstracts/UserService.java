@@ -97,4 +97,6 @@ public interface UserService {
     ResponseMessage deleteGeoAlert(String username, Long alertId) throws UserNotFoundException;
 
     Page<AuditLogDTO> getUserActivityLog(String username, Pageable pageable) throws UserNotFoundException;
+
+    ResponseMessage deleteProfilePhoto(String username) throws UserNotFoundException;
 }
