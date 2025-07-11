@@ -173,7 +173,7 @@ public class NewsController {
         return newsService.getMonthlyNewsStatistics(userDetails.getUsername());
     }
 
-    @GetMapping("/admin/by-category")
+    @GetMapping("/admin/by-category")//Boş liste döndürüyor
     @JsonView(Views.Admin.class) // Admin görünümleri
     public List<NewsDTO> getNewsByCategoryForAdmin(
             @AuthenticationPrincipal UserDetails userDetails,
