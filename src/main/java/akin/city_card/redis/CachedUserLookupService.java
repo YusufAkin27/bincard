@@ -18,7 +18,7 @@ public class CachedUserLookupService {
     @Cacheable(value = "users", key = "#username")
     public CacheUserDTO findByUsername(String username) throws UserNotFoundException {
         System.out.println("Veritabanından çağrılıyor ve cache'e eklenecek: " + username);
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         if (user == null) {
             throw new UserNotFoundException();
         }

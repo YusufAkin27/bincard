@@ -160,10 +160,8 @@ public class NewsManager implements NewsService {
 
     @Override
     public List<NewsDTO> getActiveNewsForUser(PlatformType platform, NewsType type, String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
-        if (user == null) {
-            throw new UserNotFoundException();
-        }
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);;
+
 
         List<NewsLike> likedNews = user.getLikedNews();
 
@@ -260,10 +258,8 @@ public class NewsManager implements NewsService {
 
     @Override
     public List<NewsDTO> getLikedNewsByUser(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
-        if (user == null) {
-            throw new UserNotFoundException();
-        }
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);;
+
 
         List<NewsLike> newsLikes = user.getLikedNews();
         LocalDateTime now = LocalDateTime.now();
@@ -281,7 +277,7 @@ public class NewsManager implements NewsService {
 
     @Override
     public ResponseMessage likeNews(Long newsId, String username) throws OutDatedNewsException, NewsIsNotActiveException, NewsNotFoundException, UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         NewsLike newsLike = new NewsLike();
         LocalDateTime now = LocalDateTime.now();
         News news = newsRepository.findById(newsId).orElseThrow(NewsNotFoundException::new);
@@ -306,8 +302,7 @@ public class NewsManager implements NewsService {
     //beğeni kaldır
     @Override
     public ResponseMessage unlikeNews(Long newsId, String username) throws UserNotFoundException, NewsNotFoundException, NewsIsNotActiveException, OutDatedNewsException {
-        User user = userRepository.findByUserNumber(username);
-        LocalDateTime now = LocalDateTime.now();
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);;
         News news = newsRepository.findById(newsId).orElseThrow(NewsNotFoundException::new);
         if (!news.isActive()) {
             throw new NewsIsNotActiveException(newsId + " ");
@@ -325,7 +320,7 @@ public class NewsManager implements NewsService {
 
     @Override
     public List<NewsDTO> getPersonalizedNews(String username, PlatformType platform) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         if (user == null) {
             return List.of();
         }
@@ -415,7 +410,7 @@ public class NewsManager implements NewsService {
 
     @Override
     public List<NewsDTO> getNewsByCategoryForUser(String username, NewsType category, PlatformType platform) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         if (user == null) {
             return List.of();
         }
@@ -439,7 +434,7 @@ public class NewsManager implements NewsService {
 
     @Override
     public List<NewsHistoryDTO> getNewsViewHistory(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -460,7 +455,7 @@ public class NewsManager implements NewsService {
     @Override
     @Transactional
     public void recordNewsView(String username, Long newsId) throws NewsIsNotActiveException, UserNotFoundException, NewsNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         News news = newsRepository.findById(newsId).orElseThrow(NewsNotFoundException::new);
         if (!news.isActive()) {
             throw new NewsIsNotActiveException(newsId + " ");
@@ -475,7 +470,7 @@ public class NewsManager implements NewsService {
 
     @Override
     public List<NewsDTO> getSuggestedNews(String username, PlatformType platformType) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         if (user == null) {
             return List.of();
         }

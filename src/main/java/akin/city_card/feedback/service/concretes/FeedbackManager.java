@@ -41,8 +41,7 @@ public class FeedbackManager implements FeedbackService {
 
     @Override
     public ResponseMessage sendFeedback(UserDetails userDetails, FeedbackRequest request) throws OnlyPhotosAndVideosException, PhotoSizeLargerException, IOException, VideoSizeLargerException, FileFormatCouldNotException, UserNotFoundException {
-        User user = userRepository.findByUserNumber(userDetails.getUsername());
-        if (user == null) return new ResponseMessage("Kullanıcı bulunamadı", false);
+        User user = userRepository.findByUserNumber(userDetails.getUsername()).orElseThrow(UserNotFoundException::new);;
 
         String photoUrl = null;
         MultipartFile photo = request.getPhoto();

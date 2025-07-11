@@ -225,10 +225,8 @@ public class BusManager implements BusService {
 
     @Override
     public DataResponseMessage<BusLocationDTO> getCurrentLocation(Long busId, String username) throws UserNotFoundException, BusNotFoundException {
-        User user = userRepository.findByUserNumber(username);
-        if (user == null) {
-            throw new UserNotFoundException();
-        }
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
+
 
         Bus bus = busRepository.findById(busId)
                 .orElseThrow(() -> new BusNotFoundException(busId));

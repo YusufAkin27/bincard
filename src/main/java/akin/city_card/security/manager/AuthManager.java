@@ -60,10 +60,8 @@ public class AuthManager implements AuthService {
     @Override
     @Transactional
     public ResponseMessage logout(String username) throws UserNotFoundException, TokenNotFoundException {
-        User user = userRepository.findByUserNumber(username);
-        if (user == null) {
-            throw new UserNotFoundException();
-        }
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);;
+     
 
         List<Token> tokens = tokenRepository.findAllBySecurityUserId(user.getId());
         if (tokens == null || tokens.isEmpty()) {

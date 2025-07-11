@@ -15,6 +15,7 @@ import akin.city_card.wallet.core.request.ProcessIdentityRequest;
 import akin.city_card.wallet.core.request.CreateWalletRequest;
 import akin.city_card.wallet.core.request.TopUpBalanceRequest;
 import akin.city_card.wallet.core.request.WalletTransferRequest;
+import akin.city_card.wallet.core.response.BalanceHistoryDTO;
 import akin.city_card.wallet.core.response.WalletActivityDTO;
 import akin.city_card.wallet.core.response.WalletDTO;
 import akin.city_card.wallet.core.response.WalletStatsDTO;
@@ -39,7 +40,7 @@ public interface WalletService {
 
     DataResponseMessage<?> getTransferDetail(String username, Long id) throws UnauthorizedAccessException, UserNotFoundException, TransferNotFoundException;
 
-    DataResponseMessage<List<BigDecimal>> getBalanceHistory(String username, LocalDate start, LocalDate end);
+    DataResponseMessage<List<BalanceHistoryDTO>> getBalanceHistory(String username, LocalDate start, LocalDate end) throws WalletNotFoundException, WalletNotActiveException, UserNotFoundException;
 
     ResponseMessage changeStatusAsAdmin(String username, String userNumber, boolean activate, String statusReason);
 

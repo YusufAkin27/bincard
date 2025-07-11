@@ -4,7 +4,6 @@ import akin.city_card.admin.core.response.AuditLogDTO;
 import akin.city_card.bus.exceptions.RouteNotFoundException;
 import akin.city_card.buscard.core.request.FavoriteCardRequest;
 import akin.city_card.buscard.core.response.FavoriteBusCardDTO;
-
 import akin.city_card.buscard.exceptions.BusCardNotFoundException;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
 import akin.city_card.notification.core.request.NotificationPreferencesDTO;
@@ -15,7 +14,10 @@ import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.security.exception.VerificationCodeStillValidException;
 import akin.city_card.station.exceptions.StationNotFoundException;
 import akin.city_card.user.core.request.*;
-import akin.city_card.user.core.response.*;
+import akin.city_card.user.core.response.AutoTopUpConfigDTO;
+import akin.city_card.user.core.response.CacheUserDTO;
+import akin.city_card.user.core.response.GeoAlertDTO;
+import akin.city_card.user.core.response.SearchHistoryDTO;
 import akin.city_card.user.exceptions.*;
 import akin.city_card.user.service.abstracts.UserService;
 import akin.city_card.verification.exceptions.ExpiredVerificationCodeException;
@@ -179,9 +181,9 @@ public class UserController {
     // Tek sorgu ile kullanıcı arama (sayfalı)
     @GetMapping("/admin/search")
     public Page<CacheUserDTO> searchUser(@RequestParam String query,
-                                    @AuthenticationPrincipal UserDetails userDetails,
-                                    @RequestParam(defaultValue = "0") int page,
-                                    @RequestParam(defaultValue = "10") int size)
+                                         @AuthenticationPrincipal UserDetails userDetails,
+                                         @RequestParam(defaultValue = "0") int page,
+                                         @RequestParam(defaultValue = "10") int size)
             throws UserNotFoundException, UnauthorizedAreaException, UserNotActiveException {
         return userService.searchUser(userDetails.getUsername(), query, page, size);
     }
@@ -214,7 +216,7 @@ public class UserController {
     // BİLDİRİM TERCİHLERİ
     @PutMapping("/notification-preferences")
     public CacheUserDTO updateNotificationPreferences(@AuthenticationPrincipal UserDetails userDetails,
-                                                         @RequestBody NotificationPreferencesDTO preferences) throws UserNotFoundException {
+                                                      @RequestBody NotificationPreferencesDTO preferences) throws UserNotFoundException {
         return userService.updateNotificationPreferences(userDetails.getUsername(), preferences);
     }
 
@@ -224,63 +226,62 @@ public class UserController {
         return userService.getAutoTopUpConfigs(userDetails.getUsername());
     }
 
-        @PostMapping("/auto-top-up")
-        public ResponseMessage addAutoTopUpConfig(@AuthenticationPrincipal UserDetails userDetails,
-                                                  @RequestBody AutoTopUpConfigRequest configRequest) throws UserNotFoundException, BusCardNotFoundException, WalletIsEmptyException {
-            return userService.addAutoTopUpConfig(userDetails.getUsername(), configRequest);
-        }
+    @PostMapping("/auto-top-up")
+    public ResponseMessage addAutoTopUpConfig(@AuthenticationPrincipal UserDetails userDetails,
+                                              @RequestBody AutoTopUpConfigRequest configRequest) throws UserNotFoundException, BusCardNotFoundException, WalletIsEmptyException {
+        return userService.addAutoTopUpConfig(userDetails.getUsername(), configRequest);
+    }
 
-        @DeleteMapping("/auto-top-up/{configId}")
-        public ResponseMessage deleteAutoTopUpConfig(@AuthenticationPrincipal UserDetails userDetails,
-                                                     @PathVariable Long configId) throws UserNotFoundException, AutoTopUpConfigNotFoundException {
-            return userService.deleteAutoTopUpConfig(userDetails.getUsername(), configId);
-        }
+    @DeleteMapping("/auto-top-up/{configId}")
+    public ResponseMessage deleteAutoTopUpConfig(@AuthenticationPrincipal UserDetails userDetails,
+                                                 @PathVariable Long configId) throws UserNotFoundException, AutoTopUpConfigNotFoundException {
+        return userService.deleteAutoTopUpConfig(userDetails.getUsername(), configId);
+    }
 
-        // DÜŞÜK BAKİYE UYARISI
-        @PutMapping("/balance-alert")
-        public ResponseMessage setLowBalanceAlert(@AuthenticationPrincipal UserDetails userDetails,
-                                                  @RequestBody LowBalanceAlertRequest request) throws UserNotFoundException, BusCardNotFoundException, AlreadyBusCardLowBalanceException {
-            return userService.setLowBalanceThreshold(userDetails.getUsername(),request);
-        }
+    // DÜŞÜK BAKİYE UYARISI
+    @PutMapping("/balance-alert")
+    public ResponseMessage setLowBalanceAlert(@AuthenticationPrincipal UserDetails userDetails,
+                                              @RequestBody LowBalanceAlertRequest request) throws UserNotFoundException, BusCardNotFoundException, AlreadyBusCardLowBalanceException {
+        return userService.setLowBalanceThreshold(userDetails.getUsername(), request);
+    }
 
-        // ARAMA GEÇMİŞİ
-        @GetMapping("/search-history")
-        public List<SearchHistoryDTO> getSearchHistory(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-            return userService.getSearchHistory(userDetails.getUsername());
-        }
+    // ARAMA GEÇMİŞİ
+    @GetMapping("/search-history")
+    public List<SearchHistoryDTO> getSearchHistory(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+        return userService.getSearchHistory(userDetails.getUsername());
+    }
 
-        @DeleteMapping("/search-history")
-        public ResponseMessage clearSearchHistory(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-            return userService.clearSearchHistory(userDetails.getUsername());
-        }
+    @DeleteMapping("/search-history")
+    public ResponseMessage clearSearchHistory(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+        return userService.clearSearchHistory(userDetails.getUsername());
+    }
 
-        // KONUMA DAYALI UYARILAR
-        @GetMapping("/geo-alerts")
-        public List<GeoAlertDTO> getGeoAlerts(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-            return userService.getGeoAlerts(userDetails.getUsername());
-        }
+    // KONUMA DAYALI UYARILAR
+    @GetMapping("/geo-alerts")
+    public List<GeoAlertDTO> getGeoAlerts(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+        return userService.getGeoAlerts(userDetails.getUsername());
+    }
 
-        @PostMapping("/geo-alerts")
-        public ResponseMessage addGeoAlert(@AuthenticationPrincipal UserDetails userDetails,
-                                           @RequestBody GeoAlertRequest alertRequest) throws UserNotFoundException, StationNotFoundException, RouteNotFoundException, RouteNotFoundStationException {
-            return userService.addGeoAlert(userDetails.getUsername(), alertRequest);
-        }
+    @PostMapping("/geo-alerts")
+    public ResponseMessage addGeoAlert(@AuthenticationPrincipal UserDetails userDetails,
+                                       @RequestBody GeoAlertRequest alertRequest) throws UserNotFoundException, StationNotFoundException, RouteNotFoundException, RouteNotFoundStationException {
+        return userService.addGeoAlert(userDetails.getUsername(), alertRequest);
+    }
 
-        @DeleteMapping("/geo-alerts/{alertId}")
-        public ResponseMessage deleteGeoAlert(@AuthenticationPrincipal UserDetails userDetails,
-                                              @PathVariable Long alertId) throws UserNotFoundException {
-            return userService.deleteGeoAlert(userDetails.getUsername(), alertId);
-        }
+    @DeleteMapping("/geo-alerts/{alertId}")
+    public ResponseMessage deleteGeoAlert(@AuthenticationPrincipal UserDetails userDetails,
+                                          @PathVariable Long alertId) throws UserNotFoundException {
+        return userService.deleteGeoAlert(userDetails.getUsername(), alertId);
+    }
 
 
-
-        @GetMapping("/activity-log")
-        public Page<AuditLogDTO> getUserActivityLog(
-                @AuthenticationPrincipal UserDetails userDetails,
-                @PageableDefault(size = 10, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable
-        ) throws UserNotFoundException {
-            return userService.getUserActivityLog(userDetails.getUsername(), pageable);
-        }
+    @GetMapping("/activity-log")
+    public Page<AuditLogDTO> getUserActivityLog(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 10, sort = "timestamp", direction = Sort.Direction.DESC) Pageable pageable
+    ) throws UserNotFoundException {
+        return userService.getUserActivityLog(userDetails.getUsername(), pageable);
+    }
 
 
     @GetMapping("/export")

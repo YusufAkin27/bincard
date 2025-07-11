@@ -205,14 +205,14 @@ public class UserManager implements UserService {
     @Override
     @JsonView(Views.User.class)
     public CacheUserDTO getProfile(String username) throws UserNotFoundException {
-        return userConverter.toCacheUserDTO(userRepository.findByUserNumber(username));
+        return userConverter.toCacheUserDTO(userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new));
     }
 
 
     @Override
     @Transactional
     public ResponseMessage updateProfile(String username, UpdateProfileRequest updateProfileRequest) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
         boolean isUpdated = false;
 
@@ -246,7 +246,7 @@ public class UserManager implements UserService {
 
     @Override
     public ResponseMessage deactivateUser(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         user.setActive(false);
         user.setDeleted(true);
         return new ResponseMessage("Kullanıcı hesabı silindi.", true);
@@ -268,7 +268,7 @@ public class UserManager implements UserService {
     public ResponseMessage updateProfilePhoto(String username, MultipartFile file)
             throws PhotoSizeLargerException, IOException, UserNotFoundException {
 
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
         try {
             CompletableFuture<String> futureUrl = mediaUploadService.uploadAndOptimizeMedia(file);
@@ -365,10 +365,7 @@ public class UserManager implements UserService {
     public ResponseMessage changePassword(String username, ChangePasswordRequest request)
             throws UserIsDeletedException, UserNotActiveException, UserNotFoundException, PasswordsDoNotMatchException, InvalidNewPasswordException, IncorrectCurrentPasswordException, SamePasswordException {
 
-        User user = userRepository.findByUserNumber(username);
-        if (user == null) {
-            throw new UserNotFoundException();
-        }
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
         if (!user.isActive()) {
             throw new UserNotActiveException();
@@ -402,10 +399,7 @@ public class UserManager implements UserService {
         String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(resendPhoneVerification.getTelephone());
         resendPhoneVerification.setTelephone(normalizedPhone);
 
-        User user = userRepository.findByUserNumber(resendPhoneVerification.getTelephone());
-        if (user == null) {
-            throw new UserNotFoundException();
-        }
+        User user = userRepository.findByUserNumber(resendPhoneVerification.getTelephone()).orElseThrow(UserNotFoundException::new);
 
         String code = randomSixDigit();
 
@@ -567,7 +561,7 @@ public class UserManager implements UserService {
 
     @Override
     public ResponseMessage removeFavoriteCard(String username, Long cardId) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
         List<UserFavoriteCard> favoriteCards = user.getFavoriteCards();
         boolean isSuccess = favoriteCards.removeIf(fav ->
@@ -583,7 +577,7 @@ public class UserManager implements UserService {
 
     @Override
     public WalletDTO getWallet(String username) throws WalletIsEmptyException, UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
         Wallet wallet = user.getWallet();
         if (wallet == null) {
@@ -602,7 +596,7 @@ public class UserManager implements UserService {
             throw new IllegalArgumentException("Bildirim süresi negatif olamaz");
         }
 
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
         NotificationPreferences preferences = Optional.ofNullable(user.getNotificationPreferences())
                 .orElseGet(NotificationPreferences::new);
@@ -622,7 +616,7 @@ public class UserManager implements UserService {
 
     @Override
     public List<AutoTopUpConfigDTO> getAutoTopUpConfigs(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
         List<AutoTopUpConfig> configs = user.getAutoTopUpConfigs();
 
@@ -676,10 +670,8 @@ public class UserManager implements UserService {
     @Override
     @Transactional
     public ResponseMessage addAutoTopUpConfig(String username, AutoTopUpConfigRequest configRequest) throws UserNotFoundException, BusCardNotFoundException, WalletIsEmptyException {
-        User user = userRepository.findByUserNumber(username);
-        if (user == null) {
-            throw new UserNotFoundException();
-        }
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
+
         Optional<BusCard> busCard = busCardRepository.findById(configRequest.getBusCard());
         if (busCard.isEmpty()) {
             throw new BusCardNotFoundException();
@@ -705,7 +697,7 @@ public class UserManager implements UserService {
     @Override
     @Transactional
     public ResponseMessage deleteAutoTopUpConfig(String username, Long configId) throws AutoTopUpConfigNotFoundException, UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         AutoTopUpConfig autoTopUpConfig = user.getAutoTopUpConfigs().stream().filter(a -> a.getId().equals(configId)).findFirst().orElseThrow(AutoTopUpConfigNotFoundException::new);
         autoTopUpConfig.setActive(false);
         autoTopUpConfigRepository.save(autoTopUpConfig);
@@ -714,7 +706,7 @@ public class UserManager implements UserService {
 
     @Override
     public ResponseMessage setLowBalanceThreshold(String username, LowBalanceAlertRequest request) throws UserNotFoundException, BusCardNotFoundException, AlreadyBusCardLowBalanceException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         Optional<BusCard> busCard = busCardRepository.findById(request.getBusCardId());
         if (busCard.isEmpty()) {
             throw new BusCardNotFoundException();
@@ -731,13 +723,13 @@ public class UserManager implements UserService {
     @Override
     @JsonView(Views.User.class)
     public List<SearchHistoryDTO> getSearchHistory(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         return user.getSearchHistory().stream().filter(SearchHistory::isActive).map(userConverter::toSearchHistoryDTO).toList();
     }
 
     @Override
     public ResponseMessage clearSearchHistory(String username) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         for (SearchHistory searchHistory : user.getSearchHistory()) {
             searchHistory.setActive(false);
             searchHistory.setDeleted(true);
@@ -749,12 +741,12 @@ public class UserManager implements UserService {
     @Override
     @JsonView(Views.User.class)
     public List<GeoAlertDTO> getGeoAlerts(String username) throws UserNotFoundException {
-        return userRepository.findByUserNumber(username).getGeoAlerts().stream().filter(GeoAlert::isActive).map(userConverter::toGeoAlertDTO).toList();
+        return userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new).getGeoAlerts().stream().filter(GeoAlert::isActive).map(userConverter::toGeoAlertDTO).toList();
     }
 
     @Override
     public ResponseMessage addGeoAlert(String username, GeoAlertRequest alertRequest) throws UserNotFoundException, RouteNotFoundException, StationNotFoundException, RouteNotFoundStationException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         Optional<Route> route = routeRepository.findById(alertRequest.getRouteId());
         if (route.isEmpty()) {
             throw new RouteNotFoundException(route.get().getId());
@@ -782,7 +774,7 @@ public class UserManager implements UserService {
 
     @Override
     public ResponseMessage deleteGeoAlert(String username, Long alertId) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         boolean isDeleted = user.getGeoAlerts().removeIf(g -> g.getId().equals(alertId));
         if (isDeleted) {
             return new ResponseMessage(alertId + "araç konum uyarısı silindi", true);
@@ -793,14 +785,14 @@ public class UserManager implements UserService {
     @Override
     @JsonView(Views.User.class)
     public Page<AuditLogDTO> getUserActivityLog(String username, Pageable pageable) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         Page<AuditLog> auditLogsPage = auditLogRepository.findByUser(user, pageable);
         return auditLogsPage.map(auditLogConverter::mapToDto);
     }
 
     @Override
     public ResponseMessage deleteProfilePhoto(String username) throws UserNotFoundException {
-        User user= userRepository.findByUserNumber(username);
+        User user= userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         if (user.getProfileInfo()!=null){
             user.getProfileInfo().setProfilePicture("https://thumbs.dreamstime.com/z/default-profile-picture-icon-high-resolution-high-resolution-default-profile-picture-icon-symbolizing-no-display-picture-360167031.jpg");
         }

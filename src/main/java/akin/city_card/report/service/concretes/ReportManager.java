@@ -12,8 +12,8 @@ import akin.city_card.report.core.response.UserReportDTO;
 import akin.city_card.report.exceptions.*;
 import akin.city_card.report.model.*;
 import akin.city_card.report.repository.ReportRepository;
-import akin.city_card.report.repository.ReportResponseRepository;
 import akin.city_card.report.repository.ReportResponseRatingRepository;
+import akin.city_card.report.repository.ReportResponseRepository;
 import akin.city_card.report.service.abstracts.ReportService;
 import akin.city_card.report.service.abstracts.ReportSpecification;
 import akin.city_card.response.ResponseMessage;
@@ -276,7 +276,7 @@ public class ReportManager implements ReportService {
 
         // Check if user is admin or owns the response
         Admin admin = adminRepository.findByUserNumber(username);
-        User user = userRepository.findByUserNumber(username);
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
         boolean canDelete = false;
         if (admin != null) {
@@ -492,21 +492,15 @@ public class ReportManager implements ReportService {
             return reportRepository.findAllByCategory(category);
         }
 
-        User user = userRepository.findByUserNumber(username);
-        if (user == null) {
-            throw new UserNotFoundException();
-        }
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
+
 
         return reportRepository.findAllByCategoryAndUserAndDeletedFalse(category, user);
     }
 
     // Helper methods
     private User findByUserName(String userName) throws UserNotFoundException {
-        User user = userRepository.findByUserNumber(userName);
-        if (user == null) {
-            throw new UserNotFoundException();
-        }
-        return user;
+        return userRepository.findByUserNumber(userName).orElseThrow(UserNotFoundException::new);
     }
 
     private Report findById(Long reportId) throws ReportNotFoundException {

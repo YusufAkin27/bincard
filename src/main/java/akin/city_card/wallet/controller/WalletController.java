@@ -12,10 +12,7 @@ import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.exceptions.VideoSizeLargerException;
 import akin.city_card.user.model.RequestStatus;
 import akin.city_card.wallet.core.request.*;
-import akin.city_card.wallet.core.response.QRCodeDTO;
-import akin.city_card.wallet.core.response.WalletActivityDTO;
-import akin.city_card.wallet.core.response.WalletDTO;
-import akin.city_card.wallet.core.response.WalletStatsDTO;
+import akin.city_card.wallet.core.response.*;
 import akin.city_card.wallet.exceptions.*;
 import akin.city_card.wallet.model.WalletActivityType;
 import akin.city_card.wallet.service.abstracts.QRCodeService;
@@ -51,6 +48,7 @@ public class WalletController {
     private final QRCodeService qrCodeService;
 
     // ========== Mevcut Endpoint'ler ==========
+    //user
     @PostMapping(path = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseMessage create(
             @ModelAttribute CreateWalletRequest request,
@@ -58,6 +56,7 @@ public class WalletController {
         return walletService.createWallet(user.getUsername(), request);
     }
 
+    //admin
     @PostMapping("/process")
     public ResponseMessage processIdentityRequest(
             @RequestBody @Valid ProcessIdentityRequest request,
@@ -65,6 +64,7 @@ public class WalletController {
         return walletService.approveOrReject(request, userDetails.getUsername());
     }
 
+    //admin
     @GetMapping("/identity-requests")
     public DataResponseMessage<Page<IdentityVerificationRequestDTO>> getIdentityRequests(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -81,11 +81,13 @@ public class WalletController {
         );
     }
 
+    //user
     @GetMapping("/balance")
     public DataResponseMessage<BigDecimal> getBalance(@AuthenticationPrincipal UserDetails user) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException {
         return walletService.getWalletBalance(user.getUsername());
     }
 
+    //user
     @PostMapping("/transfer")
     public ResponseMessage transfer(
             @AuthenticationPrincipal UserDetails sender,
@@ -93,13 +95,14 @@ public class WalletController {
         return walletService.transfer(sender.getUsername(), walletTransferRequest);
     }
 
+    //user
     @PutMapping("/toggleWalletStatus")
     public ResponseMessage toggleWalletStatus(@AuthenticationPrincipal UserDetails user,
                                               @RequestParam(name = "isActive") boolean isActive) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException, WalletDeactivationException {
-        return walletService.toggleWalletStatus(user.getUsername(),isActive);
+        return walletService.toggleWalletStatus(user.getUsername(), isActive);
     }
 
-
+    //user
     @GetMapping("/activities")
     public DataResponseMessage<Page<WalletActivityDTO>> getActivities(
             @AuthenticationPrincipal UserDetails user,
@@ -121,6 +124,7 @@ public class WalletController {
                 pageable
         );
     }
+
     private Sort parseSortParam(String sortParam) {
         if (sortParam == null || sortParam.isBlank()) {
             return Sort.by(Sort.Order.desc("activityDate"));
@@ -133,9 +137,7 @@ public class WalletController {
         return Sort.by(new Sort.Order(direction, property));
     }
 
-
-
-
+    //user
     @GetMapping("/transfer/{id}")
     public DataResponseMessage<?> getTransferDetail(
             @AuthenticationPrincipal UserDetails user,
@@ -143,20 +145,22 @@ public class WalletController {
         return walletService.getTransferDetail(user.getUsername(), id);
     }
 
-
+    //user
     @GetMapping("/my-wallet")
     public WalletDTO getMyWallet(@AuthenticationPrincipal UserDetails user) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException {
         return walletService.getMyWallet(user.getUsername());
     }
 
+    //user
     @GetMapping("/balance/history")
-    public DataResponseMessage<List<BigDecimal>> getBalanceHistory(
+    public DataResponseMessage<List<BalanceHistoryDTO>> getBalanceHistory(
             @AuthenticationPrincipal UserDetails user,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException {
         return walletService.getBalanceHistory(user.getUsername(), start, end);
     }
 
+    //admin
     @PostMapping("/admin/change-status")
     public ResponseMessage changeWalletStatusAsAdmin(
             @RequestParam String userNumber,
@@ -166,6 +170,7 @@ public class WalletController {
         return walletService.changeStatusAsAdmin(admin.getUsername(), userNumber, activate, statusReason);
     }
 
+    //user
     @PostMapping("/top-up")
     public ResponseMessage topUpBalance(
             @AuthenticationPrincipal UserDetails user,
@@ -174,7 +179,7 @@ public class WalletController {
     }
 
     // ========== QR Kod İşlemleri ==========
-
+//user
     @PostMapping("/qr/generate")
     public DataResponseMessage<QRCodeDTO> generateQRCode(
             @AuthenticationPrincipal UserDetails user,
@@ -184,6 +189,7 @@ public class WalletController {
         return qrCodeService.generateQRCode(user.getUsername(), amount, description, expirationMinutes);
     }
 
+    //user
     @PostMapping("/qr/generate/payment")
     public DataResponseMessage<QRCodeDTO> generatePaymentQRCode(
             @AuthenticationPrincipal UserDetails user,
@@ -191,6 +197,7 @@ public class WalletController {
         return qrCodeService.generatePaymentQRCode(user.getUsername(), description);
     }
 
+    //user
     @PostMapping("/qr/scan")
     public DataResponseMessage<?> scanQRCode(
             @AuthenticationPrincipal UserDetails user,
@@ -198,6 +205,7 @@ public class WalletController {
         return qrCodeService.scanQRCode(user.getUsername(), qrData);
     }
 
+    //user
     @PostMapping("/qr/scan/image")
     public DataResponseMessage<?> scanQRCodeFromImage(
             @AuthenticationPrincipal UserDetails user,
@@ -205,6 +213,7 @@ public class WalletController {
         return qrCodeService.scanQRCodeFromImage(user.getUsername(), image);
     }
 
+    //user
     @PostMapping("/qr/transfer")
     public ResponseMessage transferViaQR(
             @AuthenticationPrincipal UserDetails user,
@@ -212,6 +221,7 @@ public class WalletController {
         return qrCodeService.transferViaQR(user.getUsername(), request);
     }
 
+    //user
     @PostMapping("/qr/payment")
     public ResponseMessage payViaQR(
             @AuthenticationPrincipal UserDetails user,
@@ -221,6 +231,7 @@ public class WalletController {
         return qrCodeService.payViaQR(user.getUsername(), qrCode, amount, description);
     }
 
+    //user
     @GetMapping("/qr/history")
     public DataResponseMessage<List<QRCodeDTO>> getQRHistory(
             @AuthenticationPrincipal UserDetails user,
@@ -229,6 +240,7 @@ public class WalletController {
         return qrCodeService.getQRHistory(user.getUsername(), page, size);
     }
 
+    //user
     @PostMapping("/qr/{qrId}/cancel")
     public ResponseMessage cancelQRCode(
             @AuthenticationPrincipal UserDetails user,
@@ -237,17 +249,8 @@ public class WalletController {
     }
 
 
-    @GetMapping("/withdraw/history")
-    public DataResponseMessage<List<?>> getWithdrawHistory(
-            @AuthenticationPrincipal UserDetails user,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-        return walletService.getWithdrawHistory(user.getUsername(), page, size);
-    }
-
-
     // ========== İstatistik ve Raporlama ==========
-
+//admin
     @GetMapping("/stats")
     public DataResponseMessage<WalletStatsDTO> getWalletStats(
             @AuthenticationPrincipal UserDetails user,
@@ -256,7 +259,7 @@ public class WalletController {
         return walletService.getWalletStats(user.getUsername(), start, end);
     }
 
-
+    //admin
     @GetMapping("/report/monthly")
     public DataResponseMessage<byte[]> getMonthlyReport(
             @AuthenticationPrincipal UserDetails user,
@@ -265,6 +268,7 @@ public class WalletController {
         return walletService.getMonthlyReport(user.getUsername(), year, month);
     }
 
+    //admin
     @GetMapping("/report/yearly")
     public DataResponseMessage<byte[]> getYearlyReport(
             @AuthenticationPrincipal UserDetails user,
@@ -274,7 +278,7 @@ public class WalletController {
 
 
     // ========== Bildirim ve Ayarlar ==========
-
+//user
     @PostMapping("/notifications/settings")
     public ResponseMessage setNotificationSettings(
             @AuthenticationPrincipal UserDetails user,
@@ -284,6 +288,7 @@ public class WalletController {
         return walletService.setNotificationSettings(user.getUsername(), emailNotifications, smsNotifications, pushNotifications);
     }
 
+    //user
     @GetMapping("/notifications/settings")
     public DataResponseMessage<?> getNotificationSettings(
             @AuthenticationPrincipal UserDetails user) {
@@ -292,7 +297,7 @@ public class WalletController {
 
 
     // ========== Admin İşlemleri ==========
-
+//admin
     @GetMapping("/admin/all")
     public DataResponseMessage<Page<WalletDTO>> getAllWallets(
             @AuthenticationPrincipal UserDetails admin,
@@ -304,6 +309,7 @@ public class WalletController {
 
         return walletService.getAllWallets(admin.getUsername(), pageable);
     }
+
     private Sort parseSortParams(String sortParams) {
         List<Sort.Order> orders = new ArrayList<>();
 
@@ -325,13 +331,14 @@ public class WalletController {
         return Sort.by(orders);
     }
 
-
+    //admin
     @GetMapping("/admin/stats")
     public DataResponseMessage<Map<String, Object>> getSystemStats(
             @AuthenticationPrincipal UserDetails admin) {
         return walletService.getSystemStats(admin.getUsername());
     }
 
+    //admin
     @PostMapping("/admin/force-transaction")
     public ResponseMessage forceTransaction(
             @AuthenticationPrincipal UserDetails admin,
@@ -341,7 +348,7 @@ public class WalletController {
         return walletService.forceTransaction(admin.getUsername(), userPhone, amount, reason);
     }
 
-
+    //admin
     @GetMapping("/admin/suspicious-activities")
     public DataResponseMessage<List<?>> getSuspiciousActivities(
             @AuthenticationPrincipal UserDetails admin,
@@ -353,7 +360,7 @@ public class WalletController {
 
     // ========== Özel İşlemler ==========
 
-
+    //admin
     @GetMapping("/admin/export/transactions/excel")
     public ResponseEntity<byte[]> exportAllTransactionsExcel(
             @AuthenticationPrincipal UserDetails admin,
@@ -368,7 +375,7 @@ public class WalletController {
                 .body(response.getData());
     }
 
-
+    //admin
     @PostMapping("/export/pdf")
     public DataResponseMessage<byte[]> exportTransactionsPDF(
             @AuthenticationPrincipal UserDetails user,
