@@ -152,12 +152,14 @@ public class UserManager implements UserService {
                 .build();
 
         verificationCodeRepository.save(verificationCode);
-
+/*
          SmsRequest smsRequest = new SmsRequest();
          smsRequest.setTo(user.getUserNumber());
          smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code + ". Kod 3 dakika geçerlidir.");
          smsService.sendSms(smsRequest);
 
+
+ */
         System.out.println("📩 Yeni kayıt doğrulama kodu: " + code);
     }
 
@@ -311,13 +313,15 @@ public class UserManager implements UserService {
 
         verificationCodeRepository.save(verificationCode);
 
-
+/*
         SmsRequest smsRequest = new SmsRequest();
         smsRequest.setTo(phone);
         smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code +
                 ". Kod 3 dakika boyunca geçerlidir.");
         smsService.sendSms(smsRequest);
 
+
+ */
 
         return new ResponseMessage("Doğrulama kodu gönderildi.", true);
     }
@@ -404,13 +408,15 @@ public class UserManager implements UserService {
 
         String code = randomSixDigit();
 
-
+/*
         SmsRequest smsRequest = new SmsRequest();
         smsRequest.setTo(resendPhoneVerification.getTelephone());
         smsRequest.setMessage("City Card - Doğrulama kodunuz: " + code +
                 ". Kod 3 dakika boyunca geçerlidir.");
         smsService.sendSms(smsRequest);
 
+
+ */
 
         VerificationCode verificationCode = new VerificationCode();
         verificationCode.setCode(code);

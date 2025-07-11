@@ -451,12 +451,14 @@ public class AuthManager implements AuthService {
 
         verificationCodeRepository.save(verificationCode);
 
-
+/*
         SmsRequest smsRequest = new SmsRequest();
         smsRequest.setMessage(verificationCode.getCode());
         smsRequest.setTo(telephone);
         smsService.sendSms(smsRequest);
 
+
+ */
 
         System.out.println("📩 Yeni gönderilen kod: " + code);
     }
