@@ -19,6 +19,7 @@ import akin.city_card.superadmin.model.SuperAdmin;
 import akin.city_card.superadmin.repository.SuperAdminRepository;
 import akin.city_card.superadmin.service.abstracts.SuperAdminService;
 import akin.city_card.user.core.response.Views;
+import akin.city_card.user.model.UserStatus;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -63,7 +64,7 @@ public class SuperAdminManager implements SuperAdminService {
         adminApprovalRequestRepository.save(request);
 
         Admin admin = request.getAdmin();
-        admin.setActive(true);
+        admin.setStatus(UserStatus.ACTIVE);
         admin.setSuperAdminApproved(true);
         admin.setApprovedAt(LocalDateTime.now());
         adminRepository.save(admin);
@@ -91,7 +92,7 @@ public class SuperAdminManager implements SuperAdminService {
         adminApprovalRequestRepository.save(request);
 
         Admin admin = request.getAdmin();
-        admin.setActive(false);
+        admin.setStatus(UserStatus.INACTIVE);
         admin.setSuperAdminApproved(false);
         adminRepository.save(admin);
         return new ResponseMessage("Admin request rejected successfully", true);

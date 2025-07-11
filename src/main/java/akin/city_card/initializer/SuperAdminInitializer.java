@@ -4,6 +4,7 @@ import akin.city_card.security.entity.ProfileInfo;
 import akin.city_card.security.entity.Role;
 import akin.city_card.superadmin.model.SuperAdmin;
 import akin.city_card.superadmin.repository.SuperAdminRepository;
+import akin.city_card.user.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -40,9 +41,9 @@ public class SuperAdminInitializer implements CommandLineRunner {
         superAdmin.setUserNumber(defaultPhone);
         superAdmin.setPassword(passwordEncoder.encode(defaultPassword));
         superAdmin.setRoles(Set.of(Role.SUPERADMIN, Role.ADMIN, Role.USER, Role.DRVIER));
-        superAdmin.setActive(true);
+        superAdmin.setStatus(UserStatus.ACTIVE);
         superAdmin.setDeleted(false);
-        superAdmin.setProfileInfo(profileInfo); // ➕ burası önemli
+        superAdmin.setProfileInfo(profileInfo);
         superAdmin.setEmailVerified(true);
         superAdmin.setPhoneVerified(true);
 

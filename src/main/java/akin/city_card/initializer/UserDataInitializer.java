@@ -9,6 +9,7 @@ import akin.city_card.security.entity.ProfileInfo;
 import akin.city_card.security.entity.Role;
 import akin.city_card.user.model.User;
 import akin.city_card.user.model.UserIdentityInfo;
+import akin.city_card.user.model.UserStatus;
 import akin.city_card.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
@@ -56,7 +57,7 @@ private final PasswordEncoder passwordEncoder;
                 .userNumber(phoneNumber)
                 .password(passwordEncoder.encode("123456"))
                 .roles(Set.of(Role.USER))
-                .isActive(true)
+                .status(UserStatus.ACTIVE)
                 .isDeleted(false)
                 .emailVerified(true)
                 .phoneVerified(true)

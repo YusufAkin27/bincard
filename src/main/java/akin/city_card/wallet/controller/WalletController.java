@@ -15,6 +15,7 @@ import akin.city_card.wallet.core.request.*;
 import akin.city_card.wallet.core.response.*;
 import akin.city_card.wallet.exceptions.*;
 import akin.city_card.wallet.model.WalletActivityType;
+import akin.city_card.wallet.model.WalletStatus;
 import akin.city_card.wallet.service.abstracts.QRCodeService;
 import akin.city_card.wallet.service.abstracts.WalletService;
 import jakarta.validation.Valid;
@@ -165,9 +166,9 @@ public class WalletController {
     public ResponseMessage changeWalletStatusAsAdmin(
             @RequestParam String userNumber,
             @RequestParam String statusReason,
-            @RequestParam boolean activate,
-            @AuthenticationPrincipal UserDetails admin) {
-        return walletService.changeStatusAsAdmin(admin.getUsername(), userNumber, activate, statusReason);
+            @RequestParam WalletStatus walletStatus,
+            @AuthenticationPrincipal UserDetails admin) throws UserNotFoundException, WalletNotFoundException, AdminOrSuperAdminNotFoundException {
+        return walletService.changeStatusAsAdmin(admin.getUsername(), userNumber, walletStatus, statusReason);
     }
 
     //user
@@ -250,49 +251,30 @@ public class WalletController {
 
 
     // ========== İstatistik ve Raporlama ==========
-//admin
+//user
     @GetMapping("/stats")
     public DataResponseMessage<WalletStatsDTO> getWalletStats(
             @AuthenticationPrincipal UserDetails user,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) {
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate end) throws UserNotFoundException, WalletNotFoundException {
         return walletService.getWalletStats(user.getUsername(), start, end);
     }
 
-    //admin
+    //user
     @GetMapping("/report/monthly")
     public DataResponseMessage<byte[]> getMonthlyReport(
             @AuthenticationPrincipal UserDetails user,
             @RequestParam int year,
-            @RequestParam int month) {
+            @RequestParam int month) throws UserNotFoundException, WalletNotFoundException {
         return walletService.getMonthlyReport(user.getUsername(), year, month);
     }
 
-    //admin
+    //user
     @GetMapping("/report/yearly")
     public DataResponseMessage<byte[]> getYearlyReport(
             @AuthenticationPrincipal UserDetails user,
-            @RequestParam int year) {
+            @RequestParam int year) throws UserNotFoundException, WalletNotFoundException {
         return walletService.getYearlyReport(user.getUsername(), year);
-    }
-
-
-    // ========== Bildirim ve Ayarlar ==========
-//user
-    @PostMapping("/notifications/settings")
-    public ResponseMessage setNotificationSettings(
-            @AuthenticationPrincipal UserDetails user,
-            @RequestParam boolean emailNotifications,
-            @RequestParam boolean smsNotifications,
-            @RequestParam boolean pushNotifications) {
-        return walletService.setNotificationSettings(user.getUsername(), emailNotifications, smsNotifications, pushNotifications);
-    }
-
-    //user
-    @GetMapping("/notifications/settings")
-    public DataResponseMessage<?> getNotificationSettings(
-            @AuthenticationPrincipal UserDetails user) {
-        return walletService.getNotificationSettings(user.getUsername());
     }
 
 
@@ -334,7 +316,7 @@ public class WalletController {
     //admin
     @GetMapping("/admin/stats")
     public DataResponseMessage<Map<String, Object>> getSystemStats(
-            @AuthenticationPrincipal UserDetails admin) {
+            @AuthenticationPrincipal UserDetails admin) throws AdminOrSuperAdminNotFoundException {
         return walletService.getSystemStats(admin.getUsername());
     }
 

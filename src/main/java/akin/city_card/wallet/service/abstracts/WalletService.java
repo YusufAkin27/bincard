@@ -21,6 +21,7 @@ import akin.city_card.wallet.core.response.WalletDTO;
 import akin.city_card.wallet.core.response.WalletStatsDTO;
 import akin.city_card.wallet.exceptions.*;
 import akin.city_card.wallet.model.WalletActivityType;
+import akin.city_card.wallet.model.WalletStatus;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,31 +43,17 @@ public interface WalletService {
 
     DataResponseMessage<List<BalanceHistoryDTO>> getBalanceHistory(String username, LocalDate start, LocalDate end) throws WalletNotFoundException, WalletNotActiveException, UserNotFoundException;
 
-    ResponseMessage changeStatusAsAdmin(String username, String userNumber, boolean activate, String statusReason);
+    ResponseMessage changeStatusAsAdmin(String username, String userNumber, WalletStatus walletStatus, String statusReason) throws UserNotFoundException, AdminOrSuperAdminNotFoundException, WalletNotFoundException;
 
 
-    ResponseMessage transferToWiban(String username, String receiverWiban, BigDecimal amount, String description);
+    DataResponseMessage<WalletStatsDTO> getWalletStats(String username, LocalDate start, LocalDate end) throws WalletNotFoundException, UserNotFoundException;
 
-    ResponseMessage transferToEmail(String username, String receiverEmail, BigDecimal amount, String description);
+    DataResponseMessage<byte[]> getMonthlyReport(String username, int year, int month) throws UserNotFoundException, WalletNotFoundException;
 
-    ResponseMessage withdrawToBank(String username, BigDecimal amount, String bankAccount, String bankCode);
-
-    DataResponseMessage<List<?>> getWithdrawHistory(String username, int page, int size);
-
-    DataResponseMessage<WalletStatsDTO> getWalletStats(String username, LocalDate start, LocalDate end);
-
-    DataResponseMessage<byte[]> getMonthlyReport(String username, int year, int month);
-
-    DataResponseMessage<byte[]> getYearlyReport(String username, int year);
-
-    DataResponseMessage<WalletDTO> getWalletInfo(String username);
-
-    ResponseMessage setNotificationSettings(String username, boolean emailNotifications, boolean smsNotifications, boolean pushNotifications);
-
-    DataResponseMessage<?> getNotificationSettings(String username);
+    DataResponseMessage<byte[]> getYearlyReport(String username, int year) throws UserNotFoundException, WalletNotFoundException;
 
 
-    DataResponseMessage<Map<String, Object>> getSystemStats(String username);
+    DataResponseMessage<Map<String, Object>> getSystemStats(String username) throws AdminOrSuperAdminNotFoundException;
 
     ResponseMessage forceTransaction(String username, String userPhone, BigDecimal amount, String reason);
 

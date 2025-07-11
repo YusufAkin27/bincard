@@ -3,6 +3,7 @@ package akin.city_card.user.repository;
 import akin.city_card.buscard.model.UserFavoriteCard;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.model.User;
+import akin.city_card.user.model.UserStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -39,4 +40,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.viewedNews WHERE u.userNumber = :userNumber")
     Optional<User> findByUserNumberWithViewedNews(String userNumber);
+
+    long countByStatus(UserStatus status);
 }

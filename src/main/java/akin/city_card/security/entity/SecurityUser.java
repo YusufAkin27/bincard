@@ -3,9 +3,11 @@ package akin.city_card.security.entity;
 import akin.city_card.admin.model.AuditLog;
 import akin.city_card.location.model.Location;
 import akin.city_card.user.model.LoginHistory;
+import akin.city_card.user.model.UserStatus;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
@@ -55,7 +57,11 @@ public class SecurityUser implements UserDetails, Serializable {
     @Embedded
     private ProfileInfo profileInfo;
 
-    private boolean isActive = true;
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Builder.Default
+    private UserStatus status = UserStatus.UNVERIFIED;
+
     private boolean isDeleted = false;
     private boolean emailVerified = false;
     private boolean phoneVerified = false;
@@ -102,6 +108,13 @@ public class SecurityUser implements UserDetails, Serializable {
                 .map(role -> new SimpleGrantedAuthority(role.getAuthority()))
                 .collect(Collectors.toSet());
     }
+    public boolean hasRole(String roleName) {
+        if (roles == null) return false;
+        return roles.stream()
+                .map(Role::getAuthority)
+                .anyMatch(r -> r.equalsIgnoreCase(roleName));
+    }
+
 
     @Override
     public String getUsername() {
@@ -128,6 +141,6 @@ public class SecurityUser implements UserDetails, Serializable {
 
     @Override
     public boolean isEnabled() {
-        return isActive;
+        return !isDeleted && status == UserStatus.ACTIVE;
     }
 }

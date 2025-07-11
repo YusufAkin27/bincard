@@ -25,6 +25,7 @@ import akin.city_card.user.core.request.ChangePasswordRequest;
 import akin.city_card.user.core.request.UpdateProfileRequest;
 import akin.city_card.user.exceptions.*;
 import akin.city_card.user.model.LoginHistory;
+import akin.city_card.user.model.UserStatus;
 import akin.city_card.user.repository.LoginHistoryRepository;
 import akin.city_card.user.service.concretes.PhoneNumberFormatter;
 import jakarta.transaction.Transactional;
@@ -79,7 +80,7 @@ public class AdminManager implements AdminService {
                 .userNumber(normalizedPhone)
                 .superAdminApproved(false)   // Süper admin onayı bekleniyor
                 .isDeleted(false)
-                .isActive(true)
+                .status(UserStatus.ACTIVE)
                 .phoneVerified(true)         // Telefon doğrulama durumu
                 .emailVerified(false)        // E-posta doğrulama durumu
                 .build();

@@ -1,5 +1,6 @@
 package akin.city_card.wallet.repository;
 
+import akin.city_card.wallet.model.TransactionStatus;
 import akin.city_card.wallet.model.TransactionType;
 import akin.city_card.wallet.model.Wallet;
 import akin.city_card.wallet.model.WalletTransaction;
@@ -16,4 +17,8 @@ public interface WalletTransactionRepository extends JpaRepository<WalletTransac
     );
 
     List<WalletTransaction> findAllByWalletAndTimestampBetweenOrderByTimestampAsc(Wallet wallet, LocalDateTime start, LocalDateTime end);
+
+    List<WalletTransaction> findAllByWalletAndTimestampBetweenAndStatus(Wallet wallet, LocalDateTime localDateTime, LocalDateTime localDateTime1, TransactionStatus transactionStatus);
+
+    long countByStatus(TransactionStatus status);
 }

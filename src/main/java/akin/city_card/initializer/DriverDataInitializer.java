@@ -7,6 +7,7 @@ import akin.city_card.driver.repository.DriverRepository;
 import akin.city_card.security.entity.DeviceInfo;
 import akin.city_card.security.entity.ProfileInfo;
 import akin.city_card.security.entity.Role;
+import akin.city_card.user.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -42,7 +43,7 @@ public class DriverDataInitializer implements ApplicationRunner {
                 .roles(Set.of(Role.DRVIER))
                 .emailVerified(true)
                 .phoneVerified(true)
-                .isActive(true)
+                .status(UserStatus.ACTIVE)
                 .profileInfo(ProfileInfo.builder()
                         .name("Sürücü" + i)
                         .surname("Soyad" + i)

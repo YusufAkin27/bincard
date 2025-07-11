@@ -124,6 +124,7 @@ public class UserManager implements UserService {
         }
 
         User user = userConverter.convertUserToCreateUser(request);
+        user.setStatus(UserStatus.UNVERIFIED);
         userRepository.save(user);
 
         sendVerificationCode(user, request.getIpAddress(), request.getUserAgent(), VerificationPurpose.REGISTER);
@@ -190,7 +191,7 @@ public class UserManager implements UserService {
         }
 
         user.setPhoneVerified(true);
-        user.setActive(true);
+        user.setStatus(UserStatus.ACTIVE);
         userRepository.save(user);
 
         verificationCode.setUsed(true);
@@ -247,7 +248,7 @@ public class UserManager implements UserService {
     @Override
     public ResponseMessage deactivateUser(String username) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
-        user.setActive(false);
+        user.setStatus(UserStatus.INACTIVE);
         user.setDeleted(true);
         return new ResponseMessage("Kullanıcı hesabı silindi.", true);
     }
@@ -367,7 +368,7 @@ public class UserManager implements UserService {
 
         User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
-        if (!user.isActive()) {
+        if (!user.isEnabled()) {
             throw new UserNotActiveException();
         }
 

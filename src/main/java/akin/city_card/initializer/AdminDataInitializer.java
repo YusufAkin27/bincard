@@ -5,6 +5,7 @@ import akin.city_card.admin.repository.AdminRepository;
 import akin.city_card.security.entity.DeviceInfo;
 import akin.city_card.security.entity.ProfileInfo;
 import akin.city_card.security.entity.Role;
+import akin.city_card.user.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -43,7 +44,7 @@ public class AdminDataInitializer implements ApplicationRunner {
                 .userNumber(phoneNumber)
                 .password(passwordEncoder.encode("123456")) // Gerçek uygulamada hashlenmeli
                 .roles(Set.of(Role.ADMIN))
-                .isActive(true)
+                .status(UserStatus.ACTIVE)
                 .isDeleted(false)
                 .emailVerified(true)
                 .phoneVerified(true)

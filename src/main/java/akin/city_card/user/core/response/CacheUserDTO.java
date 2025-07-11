@@ -1,5 +1,6 @@
 package akin.city_card.user.core.response;
 
+import akin.city_card.user.model.UserStatus;
 import com.fasterxml.jackson.annotation.JsonView;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,7 +43,7 @@ public class CacheUserDTO implements Serializable {
     private String profilePicture;
 
     @JsonView(Views.Public.class)
-    private boolean active;
+    private UserStatus status;
 
     // DeviceInfo
     @JsonView(Views.User.class)

@@ -61,7 +61,7 @@ public class AuthManager implements AuthService {
     @Transactional
     public ResponseMessage logout(String username) throws UserNotFoundException, TokenNotFoundException {
         User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);;
-     
+
 
         List<Token> tokens = tokenRepository.findAllBySecurityUserId(user.getId());
         if (tokens == null || tokens.isEmpty()) {
@@ -147,7 +147,7 @@ public class AuthManager implements AuthService {
 
         if (admin.isDeleted()) throw new UserDeletedException();
         if (!admin.isSuperAdminApproved()) throw new AdminNotApprovedException();
-        if (!admin.isActive()) throw new UserNotActiveException();
+        if (!admin.isEnabled()) throw new UserNotActiveException();
 
         LoginMetadataDTO metadata = extractClientMetadata(request);
 
@@ -183,7 +183,7 @@ public class AuthManager implements AuthService {
         }
 
         if (superAdmin.isDeleted()) throw new UserDeletedException();
-        if (!superAdmin.isActive()) throw new UserNotActiveException();
+        if (!superAdmin.isEnabled()) throw new UserNotActiveException();
 
         LoginMetadataDTO metadata = extractClientMetadata(request);
 
@@ -274,7 +274,7 @@ public class AuthManager implements AuthService {
         }
 
         if (securityUser instanceof User user) {
-            if (!user.isActive()) throw new UserNotActiveException();
+            if (!user.isEnabled()) throw new UserNotActiveException();
 
             LoginMetadataDTO metadata = extractClientMetadata(request);
 

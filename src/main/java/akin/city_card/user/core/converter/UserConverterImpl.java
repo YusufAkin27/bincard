@@ -79,7 +79,7 @@ public class UserConverterImpl implements UserConverter {
                 .surname(user.getProfileInfo() != null ? user.getProfileInfo().getSurname() : null)
                 .email(user.getProfileInfo() != null ? user.getProfileInfo().getEmail() : null)
                 .profilePicture(user.getProfileInfo() != null ? user.getProfileInfo().getProfilePicture() : null)
-                .active(user.isActive())
+                .status(user.getStatus())
                 .deleted(user.isDeleted())
                 .password(user.getPassword())
                 // Device Info
@@ -156,7 +156,7 @@ public class UserConverterImpl implements UserConverter {
                 .userNumber(request.getTelephone())
                 .password(passwordEncoder.encode(request.getPassword()))
                 .roles(Collections.singleton(Role.USER))
-                .isActive(false)
+                .status(UserStatus.UNVERIFIED)
                 .allowNegativeBalance(false)
                 .negativeBalanceLimit(0.0)
                 .emailVerified(false)

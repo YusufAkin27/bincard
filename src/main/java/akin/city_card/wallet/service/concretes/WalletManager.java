@@ -15,10 +15,7 @@ import akin.city_card.user.exceptions.FileFormatCouldNotException;
 import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.exceptions.VideoSizeLargerException;
-import akin.city_card.user.model.IdentityVerificationRequest;
-import akin.city_card.user.model.RequestStatus;
-import akin.city_card.user.model.User;
-import akin.city_card.user.model.UserIdentityInfo;
+import akin.city_card.user.model.*;
 import akin.city_card.user.repository.IdentityVerificationRequestRepository;
 import akin.city_card.user.repository.UserIdentityInfoRepository;
 import akin.city_card.user.repository.UserRepository;
@@ -53,8 +50,10 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -79,7 +78,8 @@ public class WalletManager implements WalletService {
 
     @Override
     public DataResponseMessage<BigDecimal> getWalletBalance(String phone) throws WalletNotFoundException, UserNotFoundException, WalletNotActiveException {
-        User user = userRepository.findByUserNumber(phone).orElseThrow(UserNotFoundException::new);;
+        User user = userRepository.findByUserNumber(phone).orElseThrow(UserNotFoundException::new);
+        ;
 
         if (user.getWallet() == null) throw new WalletNotFoundException();
 
@@ -113,7 +113,8 @@ public class WalletManager implements WalletService {
 
     @Override
     public ResponseMessage transfer(String senderPhone, WalletTransferRequest walletTransferRequest) throws UserNotFoundException, ReceiverNotFoundException, WalletNotFoundException, ReceiverWalletNotFoundException, WalletNotActiveException, ReceiverWalletNotActiveException, InsufficientFundsException {
-        User sender = userRepository.findByUserNumber(PhoneNumberFormatter.normalizeTurkishPhoneNumber(senderPhone)).orElseThrow(UserNotFoundException::new);;
+        User sender = userRepository.findByUserNumber(PhoneNumberFormatter.normalizeTurkishPhoneNumber(senderPhone)).orElseThrow(UserNotFoundException::new);
+        ;
         User receiver = findReceiverByIdentifier(walletTransferRequest.getReceiverIdentifier());
         if (receiver == null) {
             throw new ReceiverNotFoundException();
@@ -224,7 +225,8 @@ public class WalletManager implements WalletService {
     @Transactional
     public ResponseMessage toggleWalletStatus(String phone, boolean isActive) throws WalletNotFoundException, WalletNotActiveException, UserNotFoundException, WalletDeactivationException {
 
-        User user = userRepository.findByUserNumber(phone).orElseThrow(UserNotFoundException::new);;
+        User user = userRepository.findByUserNumber(phone).orElseThrow(UserNotFoundException::new);
+        ;
 
         Wallet wallet = user.getWallet();
         if (wallet == null) {
@@ -282,7 +284,8 @@ public class WalletManager implements WalletService {
     @Override
     public DataResponseMessage<Page<WalletActivityDTO>> getActivities(String username, WalletActivityType type, LocalDate start, LocalDate end, Pageable pageable) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException {
 
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);;
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
+        ;
 
 
         Wallet wallet = user.getWallet();
@@ -333,7 +336,8 @@ public class WalletManager implements WalletService {
     @Override
     @Transactional
     public ResponseMessage createWallet(String phone, CreateWalletRequest request) throws UserNotFoundException, OnlyPhotosAndVideosException, PhotoSizeLargerException, IOException, VideoSizeLargerException, FileFormatCouldNotException {
-        User user = userRepository.findByUserNumber(phone).orElseThrow(UserNotFoundException::new);;
+        User user = userRepository.findByUserNumber(phone).orElseThrow(UserNotFoundException::new);
+        ;
 
         List<IdentityVerificationRequest> existingRequests = identityVerificationRequestRepository.findByRequestedBy(user);
 
@@ -431,69 +435,204 @@ public class WalletManager implements WalletService {
                     .build());
         }
 
-        return new DataResponseMessage<>("bakiye geçmişi",true,balanceHistory);
+        return new DataResponseMessage<>("bakiye geçmişi", true, balanceHistory);
     }
 
 
     @Override
-    public ResponseMessage changeStatusAsAdmin(String username, String userNumber, boolean activate, String statusReason) {
-        return null;
-    }
+    @Transactional
+    public ResponseMessage changeStatusAsAdmin(String username, String userNumber, WalletStatus newStatus, String statusReason)
+            throws UserNotFoundException, AdminOrSuperAdminNotFoundException, WalletNotFoundException {
 
+        SecurityUser adminUser = securityUserRepository.findByUserNumber(username)
+                .orElseThrow(UserNotFoundException::new);
 
-    public ResponseMessage transferToWiban(String username, String receiverWiban, BigDecimal amount, String description) {
-        return null;
-    }
+        if (!adminUser.hasRole("ADMIN") && !adminUser.hasRole("SUPERADMIN")) {
+            throw new AdminOrSuperAdminNotFoundException();
+        }
 
-    @Override
-    public ResponseMessage transferToEmail(String username, String receiverEmail, BigDecimal amount, String description) {
-        return null;
-    }
+        User targetUser = userRepository.findByUserNumber(userNumber)
+                .orElseThrow(UserNotFoundException::new);
 
-    @Override
-    public ResponseMessage withdrawToBank(String username, BigDecimal amount, String bankAccount, String bankCode) {
-        return null;
-    }
+        Wallet wallet = targetUser.getWallet();
 
-    @Override
-    public DataResponseMessage<List<?>> getWithdrawHistory(String username, int page, int size) {
-        return null;
-    }
+        if (wallet == null) {
+            throw new WalletNotFoundException();
+        }
 
-    @Override
-    public DataResponseMessage<WalletStatsDTO> getWalletStats(String username, LocalDate start, LocalDate end) {
-        return null;
-    }
+        WalletStatus currentStatus = wallet.getStatus();
 
-    @Override
-    public DataResponseMessage<byte[]> getMonthlyReport(String username, int year, int month) {
-        return null;
-    }
+        if (currentStatus == newStatus) {
+            throw new IllegalStateException("Cüzdan zaten " + newStatus.name() + " durumunda.");
+        }
 
-    @Override
-    public DataResponseMessage<byte[]> getYearlyReport(String username, int year) {
-        return null;
-    }
+        wallet.setStatus(newStatus);
 
-    @Override
-    public DataResponseMessage<WalletDTO> getWalletInfo(String username) {
-        return null;
-    }
+        WalletStatusLog log = WalletStatusLog.builder()
+                .wallet(wallet)
+                .oldStatus(currentStatus)
+                .newStatus(newStatus)
+                .changedAt(LocalDateTime.now())
+                .reason(statusReason)
+                .changedByUserId(adminUser.getId())
+                .build();
 
-    @Override
-    public ResponseMessage setNotificationSettings(String username, boolean emailNotifications, boolean smsNotifications, boolean pushNotifications) {
-        return null;
-    }
+        wallet.getStatusLogs().add(log);
+        walletRepository.save(wallet);
 
-    @Override
-    public DataResponseMessage<?> getNotificationSettings(String username) {
-        return null;
+        return new ResponseMessage("Cüzdan durumu başarıyla " + newStatus.name() + " olarak güncellendi.", true);
     }
 
 
     @Override
-    public DataResponseMessage<Map<String, Object>> getSystemStats(String username) {
-        return null;
+    public DataResponseMessage<WalletStatsDTO> getWalletStats(String username, LocalDate start, LocalDate end) throws WalletNotFoundException, UserNotFoundException {
+        User user = userRepository.findByUserNumber(username)
+                .orElseThrow(UserNotFoundException::new);
+
+        Wallet wallet = user.getWallet();
+
+        if (wallet == null) {
+            throw new WalletNotFoundException();
+        }
+
+        List<WalletTransaction> transactions = walletTransactionRepository
+                .findAllByWalletAndTimestampBetweenAndStatus(wallet,
+                        start.atStartOfDay(),
+                        end.atTime(23, 59, 59),
+                        TransactionStatus.SUCCESS);
+
+        int totalCount = transactions.size();
+        BigDecimal totalDeposit = BigDecimal.ZERO;
+        BigDecimal totalWithdraw = BigDecimal.ZERO;
+
+        for (WalletTransaction tx : transactions) {
+            if (tx.getType() == TransactionType.DEPOSIT) {
+                totalDeposit = totalDeposit.add(tx.getAmount());
+            } else if (tx.getType() == TransactionType.WITHDRAW) {
+                totalWithdraw = totalWithdraw.subtract(tx.getAmount());
+            }
+        }
+
+        BigDecimal netChange = totalDeposit.add(totalWithdraw); // withdraw zaten eksi
+
+        WalletStatsDTO stats = WalletStatsDTO.builder()
+                .totalTransactionCount(totalCount)
+                .totalDepositAmount(totalDeposit)
+                .totalWithdrawAmount(totalWithdraw.abs())
+                .netChange(netChange)
+                .build();
+
+        return new DataResponseMessage<>("cüzdan istatistiklerin", true, stats);
+    }
+
+    private LocalDateTime getStartOfMonth(int year, int month) {
+        return LocalDate.of(year, month, 1).atStartOfDay();
+    }
+
+    private LocalDateTime getEndOfMonth(int year, int month) {
+        return YearMonth.of(year, month).atEndOfMonth().atTime(23, 59, 59);
+    }
+
+    private LocalDateTime getStartOfYear(int year) {
+        return LocalDate.of(year, 1, 1).atStartOfDay();
+    }
+
+    private LocalDateTime getEndOfYear(int year) {
+        return LocalDate.of(year, 12, 31).atTime(23, 59, 59);
+    }
+
+    private byte[] generateMockReport(List<WalletTransaction> transactions, String reportTitle) {
+        StringBuilder reportBuilder = new StringBuilder();
+        reportBuilder.append(reportTitle).append("\n");
+        reportBuilder.append("Tarih, Tip, Tutar, Açıklama\n");
+
+        for (WalletTransaction tx : transactions) {
+            reportBuilder.append(tx.getTimestamp()).append(", ")
+                    .append(tx.getType()).append(", ")
+                    .append(tx.getAmount()).append(", ")
+                    .append(tx.getDescription() == null ? "-" : tx.getDescription()).append("\n");
+        }
+
+        return reportBuilder.toString().getBytes(StandardCharsets.UTF_8); // geçici olarak text dosya gibi
+    }
+
+    @Override
+    public DataResponseMessage<byte[]> getMonthlyReport(String username, int year, int month) throws UserNotFoundException, WalletNotFoundException {
+        User user = userRepository.findByUserNumber(username)
+                .orElseThrow(UserNotFoundException::new);
+
+        Wallet wallet = user.getWallet();
+        if (wallet == null) {
+            throw new WalletNotFoundException();
+        }
+
+        LocalDateTime start = getStartOfMonth(year, month);
+        LocalDateTime end = getEndOfMonth(year, month);
+
+        List<WalletTransaction> transactions = walletTransactionRepository
+                .findAllByWalletAndTimestampBetweenAndStatus(wallet, start, end, TransactionStatus.SUCCESS);
+
+        byte[] reportData = generateMockReport(transactions,
+                String.format("%d-%02d Aylık Cüzdan Raporu", year, month));
+
+        return new DataResponseMessage<>("aylık raporun", true, reportData);
+    }
+
+
+    @Override
+    public DataResponseMessage<byte[]> getYearlyReport(String username, int year) throws UserNotFoundException, WalletNotFoundException {
+        User user = userRepository.findByUserNumber(username)
+                .orElseThrow(UserNotFoundException::new);
+
+        Wallet wallet = user.getWallet();
+        if (wallet == null) {
+            throw new WalletNotFoundException();
+        }
+
+        LocalDateTime start = getStartOfYear(year);
+        LocalDateTime end = getEndOfYear(year);
+
+        List<WalletTransaction> transactions = walletTransactionRepository
+                .findAllByWalletAndTimestampBetweenAndStatus(wallet, start, end, TransactionStatus.SUCCESS);
+
+        byte[] reportData = generateMockReport(transactions,
+                String.format("%d Yıllık Cüzdan Raporu", year));
+
+        return new DataResponseMessage<>("yıllık raporun", true, reportData);
+    }
+
+
+    @Override
+    public DataResponseMessage<Map<String, Object>> getSystemStats(String username) throws AdminOrSuperAdminNotFoundException {
+        SecurityUser adminUser = securityUserRepository.findByUserNumber(username)
+                .orElseThrow(AdminOrSuperAdminNotFoundException::new);
+
+        if (!adminUser.hasRole("ADMIN") && !adminUser.hasRole("SUPERADMIN")) {
+            throw new AdminOrSuperAdminNotFoundException();
+        }
+
+        Map<String, Object> stats = new HashMap<>();
+
+        // Kullanıcı verileri
+        stats.put("totalUsers", userRepository.count());
+        stats.put("activeUsers", userRepository.countByStatus(UserStatus.ACTIVE));
+        stats.put("suspendedUsers", userRepository.countByStatus(UserStatus.SUSPENDED));
+
+        // Cüzdan istatistikleri
+        stats.put("totalWallets", walletRepository.count());
+        stats.put("totalBalance", walletRepository.sumAllBalances());
+        stats.put("activeWallets", walletRepository.countByStatus(WalletStatus.ACTIVE));
+        stats.put("lockedWallets", walletRepository.countByStatus(WalletStatus.LOCKED));
+
+        // İşlem verileri
+        stats.put("totalTransactions", walletTransactionRepository.count());
+        stats.put("successfulTransactions", walletTransactionRepository.countByStatus(TransactionStatus.SUCCESS));
+        stats.put("failedTransactions", walletTransactionRepository.countByStatus(TransactionStatus.FAILED));
+
+        // Zaman verisi
+        stats.put("serverTime", LocalDateTime.now());
+
+        return new DataResponseMessage<>("sistem istatistikleri", true, stats);
     }
 
     @Override
@@ -650,7 +789,8 @@ public class WalletManager implements WalletService {
 
     @Override
     public WalletDTO getMyWallet(String username) throws WalletNotFoundException, WalletNotActiveException, UserNotFoundException {
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);;
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
+        ;
         Wallet wallet = user.getWallet();
         if (wallet == null) throw new WalletNotFoundException();
         if (!wallet.getStatus().equals(WalletStatus.ACTIVE)) throw new WalletNotActiveException();
@@ -661,10 +801,10 @@ public class WalletManager implements WalletService {
     @Override
     @Transactional
     public ResponseMessage topUp(String username, TopUpBalanceRequest topUpBalanceRequest) throws UserNotFoundException, WalletNotFoundException {
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);;
+        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
 
-        if (!user.isActive()) {
+        if (!user.isEnabled()) {
             return new ResponseMessage("Kullanıcı hesabı aktif değil.", false);
         }
 

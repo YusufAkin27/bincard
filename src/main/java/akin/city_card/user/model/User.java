@@ -35,6 +35,8 @@ public class User extends SecurityUser {
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private UserIdentityInfo identityInfo;
 
+
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore
     private List<PasswordResetToken> resetTokens = new ArrayList<>();
