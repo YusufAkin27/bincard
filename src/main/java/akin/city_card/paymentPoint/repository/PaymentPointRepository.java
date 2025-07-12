@@ -17,6 +17,8 @@ public interface PaymentPointRepository extends JpaRepository<PaymentPoint, Long
     // Aktif/pasif durumuna göre filtreleme
     Page<PaymentPoint> findByActive(boolean active, Pageable pageable);
 
+    List<PaymentPoint> findByActive(boolean active);
+
     // İsme göre arama
     Page<PaymentPoint> findByNameContainingIgnoreCase(String name, Pageable pageable);
 
@@ -24,25 +26,30 @@ public interface PaymentPointRepository extends JpaRepository<PaymentPoint, Long
     @Query("SELECT p FROM PaymentPoint p JOIN p.paymentMethods pm WHERE pm = :paymentMethod")
     Page<PaymentPoint> findByPaymentMethodsContaining(@Param("paymentMethod") PaymentMethod paymentMethod, Pageable pageable);
 
-    // Yakındaki ödeme noktalarını bul (Haversine formülü ile)
     @Query(value = """
+    SELECT * FROM (
         SELECT p.*, 
-               (6371 * acos(cos(radians(:latitude)) * cos(radians(p.latitude)) * 
-                           cos(radians(p.longitude) - radians(:longitude)) + 
-                           sin(radians(:latitude)) * sin(radians(p.latitude)))) as distance
+        (6371 * acos(cos(radians(:latitude)) * cos(radians(p.latitude)) * 
+                     cos(radians(p.longitude) - radians(:longitude)) + 
+                     sin(radians(:latitude)) * sin(radians(p.latitude)))) AS distance
         FROM payment_points p 
         WHERE p.active = true
-        HAVING distance <= :radiusKm 
-        ORDER BY distance
-        """,
+    ) sub
+    WHERE sub.distance <= :radiusKm
+    ORDER BY sub.distance
+    LIMIT :#{#pageable.pageSize} OFFSET :#{#pageable.offset}
+    """,
             countQuery = """
-        SELECT COUNT(*)
-        FROM payment_points p 
-        WHERE p.active = true
-        AND (6371 * acos(cos(radians(:latitude)) * cos(radians(p.latitude)) * 
-                        cos(radians(p.longitude) - radians(:longitude)) + 
-                        sin(radians(:latitude)) * sin(radians(p.latitude)))) <= :radiusKm
-        """,
+        SELECT COUNT(*) FROM (
+            SELECT p.id,
+            (6371 * acos(cos(radians(:latitude)) * cos(radians(p.latitude)) * 
+                         cos(radians(p.longitude) - radians(:longitude)) + 
+                         sin(radians(:latitude)) * sin(radians(p.latitude)))) AS distance
+            FROM payment_points p 
+            WHERE p.active = true
+        ) sub
+        WHERE sub.distance <= :radiusKm
+    """,
             nativeQuery = true)
     Page<PaymentPoint> findNearbyPaymentPoints(
             @Param("latitude") double latitude,
@@ -51,21 +58,21 @@ public interface PaymentPointRepository extends JpaRepository<PaymentPoint, Long
             Pageable pageable
     );
 
-    // Kapsamlı arama sorgusu
     @Query("""
-        SELECT DISTINCT p FROM PaymentPoint p 
-        LEFT JOIN p.paymentMethods pm
-        WHERE (:latitude IS NULL OR :longitude IS NULL OR :radiusKm IS NULL OR
-               (6371 * acos(cos(radians(:latitude)) * cos(radians(p.location.latitude)) * 
-                           cos(radians(p.location.longitude) - radians(:longitude)) + 
-                           sin(radians(:latitude)) * sin(radians(p.location.latitude)))) <= :radiusKm)
-        AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
-        AND (:city IS NULL OR LOWER(p.address.city) LIKE LOWER(CONCAT('%', :city, '%')))
-        AND (:district IS NULL OR LOWER(p.address.district) LIKE LOWER(CONCAT('%', :district, '%')))
-        AND (:active IS NULL OR p.active = :active)
-        AND (:paymentMethods IS NULL OR pm IN :paymentMethods)
-        ORDER BY p.name
-        """)
+                SELECT DISTINCT p FROM PaymentPoint p
+                LEFT JOIN p.paymentMethods pm
+                WHERE 
+                  (:latitude IS NULL OR :longitude IS NULL OR :radiusKm IS NULL OR
+                   (6371 * acos(cos(radians(:latitude)) * cos(radians(p.location.latitude)) *
+                               cos(radians(p.location.longitude) - radians(:longitude)) +
+                               sin(radians(:latitude)) * sin(radians(p.location.latitude)))) <= :radiusKm)
+                  AND (:name IS NULL OR LOWER(p.name) LIKE LOWER(CONCAT('%', :name, '%')))
+                  AND (:city IS NULL OR LOWER(p.address.city) LIKE LOWER(CONCAT('%', :city, '%')))
+                  AND (:district IS NULL OR LOWER(p.address.district) LIKE LOWER(CONCAT('%', :district, '%')))
+                  AND (:active IS NULL OR p.active = :active)
+                  AND (:paymentMethods IS NULL OR pm IN :paymentMethods)
+                ORDER BY p.name
+            """)
     Page<PaymentPoint> searchPaymentPoints(
             @Param("latitude") Double latitude,
             @Param("longitude") Double longitude,
@@ -77,6 +84,7 @@ public interface PaymentPointRepository extends JpaRepository<PaymentPoint, Long
             @Param("active") Boolean active,
             Pageable pageable
     );
+
 
     // İlçe bazlı arama
     Page<PaymentPoint> findByAddress_DistrictContainingIgnoreCase(String district, Pageable pageable);

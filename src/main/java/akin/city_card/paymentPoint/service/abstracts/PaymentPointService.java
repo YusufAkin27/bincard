@@ -8,6 +8,7 @@ import akin.city_card.paymentPoint.core.response.PaymentPointDTO;
 import akin.city_card.paymentPoint.model.PaymentMethod;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.exception.UserNotFoundException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,12 +19,13 @@ public interface PaymentPointService {
     ResponseMessage update(Long id, UpdatePaymentPointRequest request, String username);
     DataResponseMessage<PaymentPointDTO> getById(Long id, String username);
     DataResponseMessage<PageDTO<PaymentPointDTO>> getAll(String username, Pageable pageable);
-    DataResponseMessage<PageDTO<PaymentPointDTO>> getNearby(double latitude, double longitude, double radiusKm, String username, Pageable pageable);
-    DataResponseMessage<PageDTO<PaymentPointDTO>> search(PaymentPointSearchRequest searchRequest, String username, Pageable pageable);
+    DataResponseMessage<PageDTO<PaymentPointDTO>> search(PaymentPointSearchRequest searchRequest, String username, Pageable pageable) throws UserNotFoundException;
     ResponseMessage toggleStatus(Long id, boolean active, String username);
     ResponseMessage addPhotos(Long id, List<MultipartFile> files, String username);
     ResponseMessage delete(Long id, String username);
     ResponseMessage deletePhoto(Long id, Long photoId, String username);
     DataResponseMessage<PageDTO<PaymentPointDTO>> getByCity(String city, String username, Pageable pageable);
     DataResponseMessage<PageDTO<PaymentPointDTO>> getByPaymentMethod(PaymentMethod paymentMethod, String username, Pageable pageable);
+
+    DataResponseMessage<PageDTO<PaymentPointDTO>> getNearby(double latitude, double longitude, double radiusKm, String username, Pageable pageable);
 }

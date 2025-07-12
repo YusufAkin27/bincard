@@ -14,19 +14,26 @@ import akin.city_card.paymentPoint.repository.PaymentPointRepository;
 import akin.city_card.paymentPoint.service.abstracts.PaymentPointService;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.exceptions.FileFormatCouldNotException;
 import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.exceptions.VideoSizeLargerException;
+import akin.city_card.user.model.SearchHistory;
+import akin.city_card.user.model.SearchType;
+import akin.city_card.user.model.User;
+import akin.city_card.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
@@ -40,6 +47,7 @@ public class PaymentPointManager implements PaymentPointService {
     private final PaymentPointRepository paymentPointRepository;
     private final PaymentPointConverter paymentPointConverter;
     private final MediaUploadService fileUploadService;
+    private final UserRepository userRepository;
 
     @Override
     public ResponseMessage add(AddPaymentPointRequest request, String username) {
@@ -113,7 +121,15 @@ public class PaymentPointManager implements PaymentPointService {
     public DataResponseMessage<PageDTO<PaymentPointDTO>> getAll(String username, Pageable pageable) {
         try {
             Page<PaymentPoint> paymentPoints = paymentPointRepository.findAll(pageable);
-            Page<PaymentPointDTO> dtoPage = paymentPoints.map(paymentPointConverter::toDto);
+
+            // Aktif olanları filtrele
+            List<PaymentPointDTO> filteredList = paymentPoints.getContent().stream()
+                    .filter(PaymentPoint::isActive)
+                    .map(paymentPointConverter::toDto)
+                    .toList();
+
+            // Yeni sayfa objesi oluştur
+            Page<PaymentPointDTO> dtoPage = new PageImpl<>(filteredList, pageable, filteredList.size());
             PageDTO<PaymentPointDTO> pageDTO = new PageDTO<>(dtoPage);
 
             return new DataResponseMessage<>(
@@ -131,62 +147,116 @@ public class PaymentPointManager implements PaymentPointService {
         }
     }
 
+
+
     @Override
     @Transactional(readOnly = true)
-    public DataResponseMessage<PageDTO<PaymentPointDTO>> getNearby(double latitude, double longitude, double radiusKm, String username, Pageable pageable) {
-        try {
-            Page<PaymentPoint> paymentPoints = paymentPointRepository.findNearbyPaymentPoints(
-                    latitude, longitude, radiusKm, pageable
-            );
-
-            Page<PaymentPointDTO> dtoPage = paymentPoints.map(paymentPointConverter::toDto);
-            PageDTO<PaymentPointDTO> pageDTO = new PageDTO<>(dtoPage);
-
-            return new DataResponseMessage<>(
-                    "Yakındaki ödeme noktaları başarıyla getirildi",
-                    true,
-                    pageDTO
-            );
-        } catch (Exception e) {
-            log.error("Error getting nearby payment points for user: {}", username, e);
-            return new DataResponseMessage<>(
-                    "Yakındaki ödeme noktaları getirilirken hata oluştu: " + e.getMessage(),
-                    false,
-                    null
-            );
+    public DataResponseMessage<PageDTO<PaymentPointDTO>> search(PaymentPointSearchRequest searchRequest, String username, Pageable pageable) throws UserNotFoundException {
+        if (username != null) {
+            User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
+            SearchHistory searchHistory = new SearchHistory();
+            searchHistory.setUser(user);
+            searchHistory.setDeleted(false);
+            searchHistory.setActive(true);
+            searchHistory.setSearchedAt(LocalDateTime.now());
+            searchHistory.setQuery(searchRequest.getCity());
+            searchHistory.setSearchType(SearchType.PAYMENT_POINT);
+            user.getSearchHistory().add(searchHistory);
+            userRepository.save(user);
+            log.info("Search history added for user: {}", username);
         }
-    }
 
-    @Override
-    @Transactional(readOnly = true)
-    public DataResponseMessage<PageDTO<PaymentPointDTO>> search(PaymentPointSearchRequest searchRequest, String username, Pageable pageable) {
         try {
-            Page<PaymentPoint> paymentPoints = paymentPointRepository.searchPaymentPoints(
-                    searchRequest.getLatitude(),
-                    searchRequest.getLongitude(),
-                    searchRequest.getRadiusKm(),
-                    searchRequest.getName(),
-                    searchRequest.getCity(),
-                    searchRequest.getDistrict(),
-                    searchRequest.getPaymentMethods(),
-                    searchRequest.getActive(),
-                    pageable
-            );
+            // Öncelikle tüm aktif ödeme noktalarını DB'den çek (veya aktif parametre varsa ona göre filtrele)
+            List<PaymentPoint> allPoints;
 
-            Page<PaymentPointDTO> dtoPage = paymentPoints.map(paymentPointConverter::toDto);
-            PageDTO<PaymentPointDTO> pageDTO = new PageDTO<>(dtoPage);
+            if (searchRequest.getActive() != null) {
+                allPoints = paymentPointRepository.findByActive(searchRequest.getActive());
+            } else {
+                allPoints = paymentPointRepository.findAll();
+            }
+
+            // Java'da filtreleme yap
+            List<PaymentPoint> filteredPoints = allPoints.stream()
+                    // Koordinat & radius kontrolü
+                    .filter(pp -> {
+                        if (searchRequest.getLatitude() == null || searchRequest.getLongitude() == null || searchRequest.getRadiusKm() == null) {
+                            return true; // Koordinat filtreleme yoksa geç
+                        }
+                        double distance = haversineDistance(
+                                searchRequest.getLatitude(),
+                                searchRequest.getLongitude(),
+                                pp.getLocation().getLatitude(),
+                                pp.getLocation().getLongitude()
+                        );
+                        return distance <= searchRequest.getRadiusKm();
+                    })
+                    // İsim filtreleme
+                    .filter(pp -> {
+                        if (searchRequest.getName() == null || searchRequest.getName().isBlank()) return true;
+                        return pp.getName().toLowerCase().contains(searchRequest.getName().toLowerCase());
+                    })
+                    // Şehir filtreleme
+                    .filter(pp -> {
+                        if (searchRequest.getCity() == null || searchRequest.getCity().isBlank()) return true;
+                        return pp.getAddress().getCity() != null && pp.getAddress().getCity().toLowerCase().contains(searchRequest.getCity().toLowerCase());
+                    })
+                    // İlçe filtreleme
+                    .filter(pp -> {
+                        if (searchRequest.getDistrict() == null || searchRequest.getDistrict().isBlank()) return true;
+                        return pp.getAddress().getDistrict() != null && pp.getAddress().getDistrict().toLowerCase().contains(searchRequest.getDistrict().toLowerCase());
+                    })
+                    // Ödeme yöntemi filtreleme
+                    .filter(pp -> {
+                        if (searchRequest.getPaymentMethods() == null || searchRequest.getPaymentMethods().isEmpty()) return true;
+                        if (pp.getPaymentMethods() == null) return false;
+                        // En az bir eşleşme yeter
+                        return pp.getPaymentMethods().stream().anyMatch(searchRequest.getPaymentMethods()::contains);
+                    })
+                    // Çalışma saati filtrelemesini eklersin (string ise, örn: "08:00-18:00")
+                    // Burada örnek olarak basit contains ile arama yapabiliriz
+                    .filter(pp -> {
+                        if (searchRequest.getWorkingHours() == null || searchRequest.getWorkingHours().isBlank()) return true;
+                        return pp.getWorkingHours() != null && pp.getWorkingHours().contains(searchRequest.getWorkingHours());
+                    })
+                    .toList();
+
+            // Sayfalama için Java Stream'den slice alalım
+            int start = (int) pageable.getOffset();
+            int end = Math.min((start + pageable.getPageSize()), filteredPoints.size());
+            List<PaymentPointDTO> pageContent = filteredPoints.subList(start, end).stream()
+                    .map(paymentPointConverter::toDto)
+                    .toList();
+
+            PageDTO<PaymentPointDTO> pageDTO = new PageDTO<>(
+                    new PageImpl<>(pageContent, pageable, filteredPoints.size())
+            );
 
             return new DataResponseMessage<>(
                     "Arama sonuçları başarıyla getirildi",
                     true,
                     pageDTO
             );
+
         } catch (Exception e) {
             log.error("Error searching payment points for user: {}", username, e);
-            throw e; // rollback olursa düzgün rollback olur
+            throw e;
         }
     }
 
+    /**
+     * Haversine mesafe hesaplama (km cinsinden)
+     */
+    private double haversineDistance(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371; // Dünya yarıçapı km
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLon = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
 
     @Override
     public ResponseMessage toggleStatus(Long id, boolean active, String username) {
@@ -212,6 +282,7 @@ public class PaymentPointManager implements PaymentPointService {
     }
 
     @Override
+    @Transactional
     public ResponseMessage addPhotos(Long id, List<MultipartFile> files, String username) {
         try {
             PaymentPoint paymentPoint = paymentPointRepository.findById(id)
@@ -352,4 +423,31 @@ public class PaymentPointManager implements PaymentPointService {
             );
         }
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DataResponseMessage<PageDTO<PaymentPointDTO>> getNearby(double latitude, double longitude, double radiusKm, String username, Pageable pageable) {
+        try {
+            // Repo'dan sayfalı veriyi çek
+            Page<PaymentPoint> paymentPoints = paymentPointRepository.findNearbyPaymentPoints(latitude, longitude, radiusKm, pageable);
+
+            // DTO dönüştür
+            Page<PaymentPointDTO> dtoPage = paymentPoints.map(paymentPointConverter::toDto);
+            PageDTO<PaymentPointDTO> pageDTO = new PageDTO<>(dtoPage);
+
+            return new DataResponseMessage<>(
+                    "Yakındaki ödeme noktaları başarıyla getirildi",
+                    true,
+                    pageDTO
+            );
+        } catch (Exception e) {
+            log.error("Yakındaki ödeme noktaları getirilirken hata oluştu, kullanıcı: {}", username, e);
+            return new DataResponseMessage<>(
+                    "Yakındaki ödeme noktaları getirilirken hata oluştu: " + e.getMessage(),
+                    false,
+                    null
+            );
+        }
+    }
+
 }

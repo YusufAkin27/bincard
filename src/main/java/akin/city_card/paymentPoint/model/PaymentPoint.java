@@ -23,8 +23,11 @@ public class PaymentPoint {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, length = 150, columnDefinition = "VARCHAR(150)")
     private String name;
+
+    @Column(length = 100, columnDefinition = "VARCHAR(100)")
+    private String workingHours;
 
     @Embedded
     private Location location;
@@ -34,9 +37,6 @@ public class PaymentPoint {
 
     @Column(length = 20)
     private String contactNumber;
-
-    @Column(length = 100)
-    private String workingHours;
 
     @ElementCollection(fetch = FetchType.EAGER)
     @Enumerated(EnumType.STRING)

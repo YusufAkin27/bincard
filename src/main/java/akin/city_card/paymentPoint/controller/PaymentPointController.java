@@ -10,6 +10,7 @@ import akin.city_card.paymentPoint.model.PaymentMethod;
 import akin.city_card.paymentPoint.service.abstracts.PaymentPointService;
 import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.exception.UserNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -104,7 +105,7 @@ public class PaymentPointController {
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody PaymentPointSearchRequest searchRequest,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "10") int size) throws UserNotFoundException {
         String username = userDetails != null ? userDetails.getUsername() : null;
         Pageable pageable = PageRequest.of(page, size);
         return paymentPointService.search(searchRequest, username, pageable);
@@ -161,12 +162,20 @@ public class PaymentPointController {
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("files") List<MultipartFile> files) throws UnauthorizedAreaException {
+
         if (!isAdminOrSuperAdmin(userDetails)) {
             throw new UnauthorizedAreaException();
         }
+
+        if (files == null || files.isEmpty()) {
+            return ResponseMessage.builder()
+                    .isSuccess(false)
+                    .message("Yüklenecek fotoğraf bulunamadı.")
+                    .build();
+        }
+
         return paymentPointService.addPhotos(id, files, userDetails.getUsername());
     }
-
     /**
      * Ödeme noktasından fotoğraf siler - Sadece admin veya süper admin
      */

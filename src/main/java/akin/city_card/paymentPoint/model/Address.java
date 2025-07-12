@@ -13,16 +13,15 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class Address {
-
-    @Column(length = 255)
+    @Column(length = 255, columnDefinition = "VARCHAR(255)")
     private String street;
 
-    @Column(length = 100)
+    @Column(length = 100, columnDefinition = "VARCHAR(100)")
     private String district;
 
-    @Column(length = 100)
+    @Column(length = 100, columnDefinition = "VARCHAR(100)")
     private String city;
 
-    @Column(length = 20)
+    @Column(length = 20, columnDefinition = "VARCHAR(20)")
     private String postalCode;
 }
