@@ -214,7 +214,7 @@ public class AuthManager implements AuthService {
                 long remainingMinutes = bruteForceService.getRemainingLockTimeMinutes(normalizedPhone);
                 auditService.logSecurityEvent(SecurityEventType.ACCOUNT_LOCKED, normalizedPhone, request,
                         "Admin login attempt on locked account");
-                throw new AccountFrozenException(remainingMinutes);
+                throw new AccountFrozenException();
             }
 
             loginRequestDTO.setTelephone(normalizedPhone);
@@ -286,7 +286,7 @@ public class AuthManager implements AuthService {
                 long remainingMinutes = bruteForceService.getRemainingLockTimeMinutes(normalizedPhone);
                 auditService.logSecurityEvent(SecurityEventType.ACCOUNT_LOCKED, normalizedPhone, request,
                         "SuperAdmin login attempt on locked account");
-                throw new AccountFrozenException(remainingMinutes);
+                throw new AccountFrozenException();
             }
 
             loginRequestDTO.setTelephone(normalizedPhone);
@@ -421,7 +421,7 @@ public class AuthManager implements AuthService {
             if (bruteForceService.isAccountLocked(normalizedPhone)) {
                 auditService.logSecurityEvent(SecurityEventType.ACCOUNT_LOCKED, normalizedPhone, request,
                         "Login attempt on locked account");
-                throw new AccountFrozenException(remainingMinutes);
+                throw new AccountFrozenException();
             }
 
             loginRequestDTO.setTelephone(normalizedPhone);
@@ -437,7 +437,7 @@ public class AuthManager implements AuthService {
             // Mevcut validasyonlar...
             if (securityUser.getStatus() == UserStatus.FROZEN) {
                 auditService.logLoginFailure(normalizedPhone, request, "Account frozen");
-                throw new AccountFrozenException(remainingMinutes);
+                throw new AccountFrozenException();
             }
 
             if (securityUser.isDeleted()) {
@@ -603,8 +603,9 @@ public class AuthManager implements AuthService {
     @Transactional
     public ResponseMessage unfreezeAccount(UnfreezeAccountRequest request, HttpServletRequest httpRequest)
             throws AccountNotFrozenException, UserNotFoundException, IncorrectPasswordException {
+        String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(request.getTelephone());
 
-        User user = userRepository.findByUserNumber(request.getTelephone())
+        User user = userRepository.findByUserNumber(normalizedPhone)
                 .orElseThrow(UserNotFoundException::new);
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
