@@ -2,6 +2,7 @@ package akin.city_card.user.repository;
 
 import akin.city_card.buscard.model.UserFavoriteCard;
 import akin.city_card.news.model.NewsType;
+import akin.city_card.security.entity.Role;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.model.UserStatus;
@@ -37,8 +38,7 @@ public interface UserRepository extends JpaRepository<User, Long> , JpaSpecifica
     @Query("SELECT ufc FROM UserFavoriteCard ufc WHERE ufc.user.userNumber = :username")
     List<UserFavoriteCard> findFavoriteCardsByUserNumber(@Param("username") String username);
 
-    @Query("SELECT u FROM User u LEFT JOIN FETCH u.wallet")
-    List<User> findAllWithWallet();
+
 
     @Query("SELECT u FROM User u LEFT JOIN FETCH u.viewedNews WHERE u.userNumber = :userNumber")
     Optional<User> findByUserNumberWithViewedNews(String userNumber);
@@ -46,5 +46,20 @@ public interface UserRepository extends JpaRepository<User, Long> , JpaSpecifica
     long countByStatus(UserStatus status);
 
 
-    boolean existsByUserNumber(String telephone);
+
+    long countByIsDeleted(boolean b);
+
+    long countByWalletActivated(boolean b);
+
+    @Query("""
+    SELECT u FROM User u
+    WHERE (:userIds IS NULL OR u.id IN :userIds)
+      AND (:status IS NULL OR u.status = :status)
+      AND (:role IS NULL OR :role MEMBER OF u.roles)
+""")
+    List<User> findUsersByFilters(
+            @Param("userIds") List<Long> userIds,
+            @Param("status") UserStatus status,
+            @Param("role") Role role
+    );
 }

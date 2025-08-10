@@ -19,6 +19,21 @@ public class UserConverterImpl implements UserConverter {
 
     private final PasswordEncoder passwordEncoder;
 
+
+    @Override
+    public SearchHistoryDTO toDto(SearchHistory sh) {
+        return SearchHistoryDTO.builder()
+                .id(sh.getId())
+                .userId(sh.getUser().getId())
+                .query(sh.getQuery())
+                .active(sh.isActive())
+                .searchedAt(sh.getSearchedAt())
+                .searchType(sh.getSearchType())
+                .deleted(sh.isDeleted())
+                .deletedAt(sh.getDeletedAt())
+                .createdAt(sh.getCreatedAt())
+                .build();
+    }
     @Override
     public UserIdentityInfoDTO toUserIdentityInfoDTO(UserIdentityInfo entity) {
         if (entity == null) return null;

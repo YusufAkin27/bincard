@@ -14,6 +14,7 @@ public class EmailMessage {
     private String subject;
     private String body;
     private boolean isHtml;
+    private List<EmailAttachment> attachments;
 
 
 }

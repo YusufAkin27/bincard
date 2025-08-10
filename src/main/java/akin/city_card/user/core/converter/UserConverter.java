@@ -9,7 +9,7 @@ import akin.city_card.user.model.*;
 public interface UserConverter {
 
     User convertUserToCreateUser(CreateUserRequest createUserRequest);
-
+    SearchHistoryDTO toDto(SearchHistory sh);
     CacheUserDTO toCacheUserDTO(User user);
 
     SearchHistoryDTO toSearchHistoryDTO(SearchHistory searchHistory);

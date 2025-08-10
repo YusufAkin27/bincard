@@ -12,6 +12,7 @@ import akin.city_card.user.core.request.PermanentDeleteRequest;
 import akin.city_card.user.core.request.SuspendUserRequest;
 import akin.city_card.user.core.request.UnsuspendUserRequest;
 import akin.city_card.user.core.response.CacheUserDTO;
+import akin.city_card.user.core.response.SearchHistoryDTO;
 import akin.city_card.user.core.response.Views;
 import akin.city_card.user.exceptions.InvalidPhoneNumberFormatException;
 import akin.city_card.user.exceptions.PhoneNumberAlreadyExistsException;
@@ -20,6 +21,7 @@ import akin.city_card.user.model.*;
 import akin.city_card.user.service.abstracts.AdminUserService;
 import akin.city_card.wallet.exceptions.AdminOrSuperAdminNotFoundException;
 import com.fasterxml.jackson.annotation.JsonView;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -179,7 +181,7 @@ public class AdminUserController {
     @PostMapping("/bulk-role-assignment")
     public ResponseMessage bulkAssignRoles(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody Map<String, Object> request) throws UnauthorizedAccessException {
+            @RequestBody Map<String, Object> request) throws UnauthorizedAccessException, UserNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
         List<Long> userIds = (List<Long>) request.get("userIds");
@@ -198,15 +200,16 @@ public class AdminUserController {
     public ResponseMessage resetUserPassword(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
-            @RequestBody Map<String, String> request) throws UnauthorizedAccessException {
+            @RequestParam String newPassword) throws UnauthorizedAccessException, UserNotFoundException {
+
         isAdminOrSuperAdmin(userDetails);
 
-        String newPassword = request.get("newPassword");
-        boolean forceChange = Boolean.parseBoolean(request.getOrDefault("forceChange", "true"));
-
-     return adminUserService.resetUserPassword(userId, newPassword, forceChange, userDetails.getUsername());
-
+        return adminUserService.resetUserPassword(
+                userId,newPassword,
+                userDetails.getUsername()
+        );
     }
+
 
 
     /**
@@ -401,7 +404,7 @@ public class AdminUserController {
      * Kullanıcı arama geçmişi
      */
     @GetMapping("/{userId}/search-history")
-    public Page<SearchHistory> getUserSearchHistory(
+    public Page<SearchHistoryDTO> getUserSearchHistory(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
             @RequestParam(required = false) String startDate,
@@ -421,7 +424,7 @@ public class AdminUserController {
     public ResponseMessage sendNotificationToUser(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
-            @RequestBody Map<String, Object> notificationData) throws UnauthorizedAccessException {
+            @RequestBody Map<String, Object> notificationData) throws UnauthorizedAccessException, UserNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
         String title = (String) notificationData.get("title");
@@ -453,19 +456,37 @@ public class AdminUserController {
     /**
      * Kullanıcı bilgilerini PDF olarak e-posta ile gönderme
      */
-    @PostMapping("/{userId}/export-pdf")
-    public ResponseMessage exportUserDataToPdf(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
-            @RequestBody Map<String, String> request) throws UnauthorizedAccessException {
-        isAdminOrSuperAdmin(userDetails);
+    @GetMapping("/{userId}/export-pdf")
+    public void exportUserPdf(@PathVariable Long userId, HttpServletResponse response) {
+        try {
+            byte[] pdfBytes = adminUserService.generateUserDataPdf(userId);
 
-        String emailAddress = request.get("emailAddress");
-        String language = request.getOrDefault("language", "tr");
+            response.setContentType("application/pdf");
+            response.setHeader("Content-Disposition", "attachment; filename=user_" + userId + "_report.pdf");
+            response.setContentLength(pdfBytes.length);
 
-        return adminUserService.exportUserDataToPdf(userId, emailAddress, language, userDetails.getUsername());
+            ServletOutputStream os = response.getOutputStream();
+            os.write(pdfBytes);
+            os.flush();
+        } catch (UserNotFoundException e) {
+            response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+        } catch (Exception e) {
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
     }
 
+    // Eğer mail ile PDF göndermek istersen ayrı endpoint
+    @PostMapping("/{userId}/send-pdf-email")
+    public ResponseMessage sendUserPdfByEmail(@PathVariable Long userId, @RequestParam String email) {
+        try {
+            adminUserService.sendUserDataPdfByEmail(userId, email);
+            return new ResponseMessage("PDF mail olarak gönderildi.",true);
+        } catch (UserNotFoundException e) {
+            return new  ResponseMessage("Kullanıcı bulunamadı.",false);
+        } catch (Exception e) {
+            return new ResponseMessage("PDF gönderilirken hata oluştu.",false);
+        }
+    }
     /**
      * Kullanıcı verilerini Excel olarak dışa aktarma
      */

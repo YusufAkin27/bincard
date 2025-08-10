@@ -10,6 +10,7 @@ import akin.city_card.user.core.request.PermanentDeleteRequest;
 import akin.city_card.user.core.request.SuspendUserRequest;
 import akin.city_card.user.core.request.UnsuspendUserRequest;
 import akin.city_card.user.core.response.CacheUserDTO;
+import akin.city_card.user.core.response.SearchHistoryDTO;
 import akin.city_card.user.exceptions.InvalidPhoneNumberFormatException;
 import akin.city_card.user.exceptions.PhoneNumberAlreadyExistsException;
 import akin.city_card.user.exceptions.PhoneNumberRequiredException;
@@ -46,9 +47,9 @@ public interface AdminUserService {
 
     ResponseMessage removeRolesFromUser(Long userId, Set<Role> roles, String username);
 
-    ResponseMessage bulkAssignRoles(List<Long> userIds, Set<Role> roles, String username);
+    ResponseMessage bulkAssignRoles(List<Long> userIds, Set<Role> roles, String username) throws UserNotFoundException;
 
-    ResponseMessage resetUserPassword(Long userId, String newPassword, boolean forceChange, String username);
+    ResponseMessage resetUserPassword(Long userId, String newPassword, String username) throws UserNotFoundException;
 
 
     ResponseMessage updateEmailVerificationStatus(Long userId, boolean verified, String username);
@@ -80,16 +81,19 @@ public interface AdminUserService {
 
     Page<LoginHistory> getUserLoginHistory(Long userId, String startDate, String endDate, Pageable pageable);
 
-    Page<SearchHistory> getUserSearchHistory(Long userId, String startDate, String endDate, Pageable pageable);
+    Page<SearchHistoryDTO> getUserSearchHistory(Long userId, String startDate, String endDate, Pageable pageable);
 
-    ResponseMessage sendNotificationToUser(Long userId, String title, String message, String type, String username);
+    ResponseMessage sendNotificationToUser(Long userId, String title, String message, String type, String username) throws UserNotFoundException;
 
     ResponseMessage sendBulkNotification(List<Long> userIds, String title, String message, String type, String username);
 
-    ResponseMessage exportUserDataToPdf(Long userId, String emailAddress, String language, String username);
 
     void exportUsersToExcel(List<Long> userIds, UserStatus status, Role role, HttpServletResponse response, String username);
 
 
     Map<String, Object> getUserBehaviorAnalysis(Long userId, int days);
+
+    byte[] generateUserDataPdf(Long userId) throws UserNotFoundException;
+
+    void sendUserDataPdfByEmail(Long userId, String email) throws UserNotFoundException;
 }

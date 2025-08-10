@@ -5,8 +5,12 @@ import akin.city_card.admin.model.AuditLog;
 import akin.city_card.admin.repository.AuditLogRepository;
 import akin.city_card.geoIpService.GeoIpService;
 import akin.city_card.geoIpService.GeoLocationData;
+import akin.city_card.mail.EmailAttachment;
+import akin.city_card.mail.EmailMessage;
+import akin.city_card.mail.MailService;
 import akin.city_card.news.core.response.PageDTO;
 import akin.city_card.notification.model.Notification;
+import akin.city_card.notification.model.NotificationPreferences;
 import akin.city_card.notification.model.NotificationType;
 import akin.city_card.notification.repository.NotificationRepository;
 import akin.city_card.notification.service.FCMService;
@@ -18,34 +22,52 @@ import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.security.exception.VerificationCodeStillValidException;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.security.repository.TokenRepository;
+import akin.city_card.sms.SmsRequest;
+import akin.city_card.sms.SmsService;
 import akin.city_card.user.core.converter.UserConverter;
 import akin.city_card.user.core.request.CreateUserRequest;
 import akin.city_card.user.core.request.PermanentDeleteRequest;
 import akin.city_card.user.core.request.SuspendUserRequest;
 import akin.city_card.user.core.request.UnsuspendUserRequest;
 import akin.city_card.user.core.response.CacheUserDTO;
+import akin.city_card.user.core.response.SearchHistoryDTO;
 import akin.city_card.user.exceptions.InvalidPhoneNumberFormatException;
 import akin.city_card.user.exceptions.PhoneNumberAlreadyExistsException;
 import akin.city_card.user.exceptions.PhoneNumberRequiredException;
 import akin.city_card.user.model.*;
 import akin.city_card.user.repository.LoginHistoryRepository;
+import akin.city_card.user.repository.SearchHistoryRepository;
 import akin.city_card.user.repository.UserRepository;
 import akin.city_card.user.service.abstracts.AdminUserService;
 import akin.city_card.user.service.abstracts.UserService;
 import akin.city_card.wallet.exceptions.AdminOrSuperAdminNotFoundException;
+import akin.city_card.wallet.repository.WalletRepository;
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
@@ -62,6 +84,11 @@ public class AdminUserManager implements AdminUserService {
     private final LoginHistoryRepository loginHistoryRepository;
     private final AuditLogRepository auditLogRepository;
     private final UserService userService;
+    private final PasswordEncoder passwordEncoder;
+    private final WalletRepository walletRepository;
+    private final SearchHistoryRepository searchHistoryRepository;
+    private final SmsService smsService;
+    private final MailService mailService;
 
     @Override
     public PageDTO<CacheUserDTO> getAllUsers(Pageable pageable) {
@@ -69,22 +96,6 @@ public class AdminUserManager implements AdminUserService {
         return new PageDTO<>(userPage.map(userConverter::toCacheUserDTO));
     }
 
-    public void createNotification(User user,
-                                   String title,
-                                   String message,
-                                   NotificationType type,
-                                   String targetUrl) {
-
-        Notification notification = Notification.builder()
-                .user(user)
-                .title(title)
-                .message(message)
-                .type(type)
-                .targetUrl(targetUrl)
-                .build();
-
-        notificationRepository.save(notification);
-    }
 
     private String extractClientIp(HttpServletRequest request) {
         String xForwardedFor = request.getHeader("X-Forwarded-For");
@@ -296,24 +307,91 @@ public class AdminUserManager implements AdminUserService {
     }
 
     @Override
-    public ResponseMessage assignRolesToUser(Long userId, Set<Role> roles, String username) throws AdminOrSuperAdminNotFoundException {
-        return null;
+    @Transactional
+    public ResponseMessage assignRolesToUser(Long userId, Set<Role> roles, String username)
+            throws AdminOrSuperAdminNotFoundException {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(AdminOrSuperAdminNotFoundException::new);
+
+        user.setRoles(roles);
+
+        userRepository.save(user);
+
+        return new ResponseMessage("Rol güncellendi " + userId, true);
     }
 
+
     @Override
+    @Transactional
     public ResponseMessage removeRolesFromUser(Long userId, Set<Role> roles, String username) {
-        return null;
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+
+        Set<Role> currentRoles = user.getRoles();
+        boolean changed = false;
+
+        for (Role role : roles) {
+            if (currentRoles.contains(role)) {
+                currentRoles.remove(role);
+                changed = true;
+            }
+        }
+
+        if (!changed) {
+            return new ResponseMessage("Rol bulunamadı" + userId, false);
+        }
+
+        user.setRoles(currentRoles);
+        userRepository.save(user);
+
+
+        return new ResponseMessage("Removed roles successfully from user " + userId, true);
     }
 
     @Override
-    public ResponseMessage bulkAssignRoles(List<Long> userIds, Set<Role> roles, String username) {
-        return null;
+    @Transactional
+    public ResponseMessage bulkAssignRoles(List<Long> userIds, Set<Role> roles, String username) throws UserNotFoundException {
+        List<Long> updatedUsers = new ArrayList<>();
+
+        for (Long userId : userIds) {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(UserNotFoundException::new);
+
+            Set<Role> currentRoles = user.getRoles();
+            boolean changed = false;
+
+            for (Role role : roles) {
+                if (!currentRoles.contains(role)) {
+                    currentRoles.add(role);
+                    changed = true;
+                }
+            }
+
+            if (changed) {
+                user.setRoles(currentRoles);
+                userRepository.save(user);
+                updatedUsers.add(userId);
+            }
+        }
+
+        return new ResponseMessage("Roles assigned to users: " + updatedUsers, true);
     }
 
     @Override
-    public ResponseMessage resetUserPassword(Long userId, String newPassword, boolean forceChange, String username) {
-        return null;
+    @Transactional
+    public ResponseMessage resetUserPassword(Long userId, String newPassword, String username) throws UserNotFoundException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
+
+        userRepository.save(user);
+
+        return new ResponseMessage("Password reset successfully for user " + userId, true);
     }
+
 
     @Override
     public ResponseMessage updateEmailVerificationStatus(Long userId, boolean verified, String username) {
@@ -388,13 +466,13 @@ public class AdminUserManager implements AdminUserService {
             List<User> affectedUsers = userRepository.findAll().stream()
                     .filter(user -> user.getDeviceHistory().stream()
                             .anyMatch(device -> ipAddress.equals(device.getIpAddress())))
-                    .collect(Collectors.toList());
+                    .toList();
 
             // IP adresine ait tüm cihaz geçmişlerini güncelle
             for (User user : affectedUsers) {
                 List<DeviceHistory> devicesWithIP = user.getDeviceHistory().stream()
                         .filter(device -> ipAddress.equals(device.getIpAddress()))
-                        .collect(Collectors.toList());
+                        .toList();
 
                 for (DeviceHistory device : devicesWithIP) {
                     device.setIsBanned(true);
@@ -635,8 +713,30 @@ public class AdminUserManager implements AdminUserService {
 
     @Override
     public Map<String, Object> getUserStatistics() {
-        return Map.of();
+        long totalUsers = userRepository.count();
+        long activeUsers = userRepository.countByStatus(UserStatus.ACTIVE);
+        long deletedUsers = userRepository.countByIsDeleted(true);
+        long walletActivatedUsers = userRepository.countByWalletActivated(true);
+
+        BigDecimal totalWalletBalance = walletRepository.getTotalBalance();
+
+        Map<Role, Long> roleCounts = userRepository.findAll().stream()
+                .flatMap(u -> u.getRoles().stream())
+                .collect(Collectors.groupingBy(
+                        role -> role,
+                        Collectors.counting()
+                ));
+
+        return Map.of(
+                "totalUsers", totalUsers,
+                "activeUsers", activeUsers,
+                "deletedUsers", deletedUsers,
+                "walletActivatedUsers", walletActivatedUsers,
+                "totalWalletBalance", totalWalletBalance,
+                "roleCounts", roleCounts
+        );
     }
+
 
     @Override
     @Transactional
@@ -729,34 +829,290 @@ public class AdminUserManager implements AdminUserService {
 
 
     @Override
-    public Page<SearchHistory> getUserSearchHistory(Long userId, String startDate, String endDate, Pageable pageable) {
-        return null;
+    public Page<SearchHistoryDTO> getUserSearchHistory(Long userId, String startDate, String endDate, Pageable pageable) {
+        LocalDateTime start = (startDate != null && !startDate.isBlank())
+                ? LocalDateTime.parse(startDate) : null;
+        LocalDateTime end = (endDate != null && !endDate.isBlank())
+                ? LocalDateTime.parse(endDate) : null;
+
+        Page<SearchHistory> page = searchHistoryRepository.findByUserIdAndDateRange(userId, start, end, pageable);
+
+        return page.map(userConverter::toDto);
     }
 
+
     @Override
-    public ResponseMessage sendNotificationToUser(Long userId, String title, String message, String type, String username) {
-        return null;
+    public ResponseMessage sendNotificationToUser(Long userId, String title, String message, String type, String senderUsername) throws UserNotFoundException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        NotificationPreferences prefs = user.getNotificationPreferences();
+        if (prefs == null) {
+            prefs = new NotificationPreferences(); // default
+        }
+
+        NotificationType notificationType = NotificationType.valueOf(type.toUpperCase());
+
+        // Push Bildirim
+        if (prefs.isPushEnabled() && prefs.isFcmActive()) {
+            fcmService.sendNotificationToToken(user, title, message, notificationType, null);
+        }
+
+        if (prefs.isSmsEnabled()) {
+            SmsRequest smsRequest = new SmsRequest();
+            smsRequest.setTo(user.getUserNumber());
+            smsRequest.setMessage(message);
+            smsService.sendSms(smsRequest);
+        }
+
+        if (prefs.isEmailEnabled() && user.getProfileInfo().getEmail() != null) {
+            String fullName = (user.getProfileInfo().getName() != null ? user.getProfileInfo().getName() : "") + " "
+                    + (user.getProfileInfo().getSurname() != null ? user.getProfileInfo().getSurname() : "");
+
+            String htmlContent = """
+                    <html>
+                      <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 30px;">
+                        <div style="max-width: 600px; margin: auto; background-color: #ffffff; padding: 20px; border-radius: 8px;">
+                          <h2 style="color: #333;">%s</h2>
+                          <p>Merhaba <strong>%s</strong>,</p>
+                          <p>%s</p>
+                          <hr style="border: none; border-top: 1px solid #eee;">
+                          <p style="font-size: 12px; color: #888;">Bu mesajı siz istemediyseniz lütfen dikkate almayın.</p>
+                        </div>
+                      </body>
+                    </html>
+                    """.formatted(title, fullName.trim(), message);
+
+            EmailMessage emailMessage = new EmailMessage();
+            emailMessage.setToEmail(user.getProfileInfo().getEmail());
+            emailMessage.setSubject(title);
+            emailMessage.setBody(htmlContent);
+            emailMessage.setHtml(true);
+            mailService.queueEmail(emailMessage);
+        }
+
+        fcmService.sendNotificationToToken(user, title, message, notificationType, null);
+        return new ResponseMessage("Bildirim gönderildi.", true);
     }
 
     @Override
     public ResponseMessage sendBulkNotification(List<Long> userIds, String title, String message, String type, String username) {
-        return null;
+        List<String> failedUsers = new ArrayList<>();
+
+        userIds.parallelStream().forEach(userId -> {
+            try {
+                sendNotificationToUser(userId, title, message, type, username);
+            } catch (Exception e) {
+                failedUsers.add(userId.toString());
+            }
+        });
+
+        if (failedUsers.isEmpty()) {
+            return new ResponseMessage("Tüm kullanıcılara bildirim gönderildi.",true);
+        } else {
+            return new ResponseMessage("Bazı kullanıcılara bildirim gönderilemedi: " + String.join(", ", failedUsers),false);
+        }
     }
 
-    @Override
-    public ResponseMessage exportUserDataToPdf(Long userId, String emailAddress, String language, String username) {
-        return null;
-    }
+
+
+
 
     @Override
     public void exportUsersToExcel(List<Long> userIds, UserStatus status, Role role, HttpServletResponse response, String username) {
+        try {
+            List<User> users = userRepository.findUsersByFilters(userIds, status, role);
 
+            Workbook workbook = new XSSFWorkbook();
+            Sheet sheet = workbook.createSheet("Users");
+
+            Row headerRow = sheet.createRow(0);
+            String[] columns = {"ID", "Username", "Email", "Status", "Role", "Created At"};
+            for (int i = 0; i < columns.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(columns[i]);
+            }
+
+            int rowIdx = 1;
+            for (User user : users) {
+                Row row = sheet.createRow(rowIdx++);
+
+                row.createCell(0).setCellValue(user.getId());
+                row.createCell(1).setCellValue(user.getUsername());
+                row.createCell(2).setCellValue(user.getProfileInfo().getEmail());
+                row.createCell(3).setCellValue(user.getStatus().name());
+                row.createCell(4).setCellValue(user.getRoles().stream()
+                        .map(Role::getAuthority)
+                        .anyMatch(r -> r.equalsIgnoreCase(role.name())));
+                row.createCell(5).setCellValue(user.getCreatedAt().toString());
+            }
+
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+            String fileName = "users_export_" + System.currentTimeMillis() + ".xlsx";
+            response.setHeader("Content-Disposition", "attachment; filename=" + fileName);
+
+            workbook.write(response.getOutputStream());
+            workbook.close();
+            response.getOutputStream().flush();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Excel export hatası: " + e.getMessage(), e);
+        }
     }
+
 
     @Override
     public Map<String, Object> getUserBehaviorAnalysis(Long userId, int days) {
-        return Map.of();
+        LocalDateTime since = LocalDateTime.now().minusDays(days);
+
+        int loginCount = auditLogRepository.countLogins(userId, since);
+        int logoutCount = auditLogRepository.countActions(userId, List.of(ActionType.LOGOUT), since);
+
+        int passwordChanges = auditLogRepository.countActions(userId, List.of(ActionType.CHANGE_PASSWORD, ActionType.RESET_PASSWORD), since);
+
+        int profileUpdates = auditLogRepository.countActions(userId, List.of(ActionType.UPDATE_PROFILE, ActionType.USER_PROFILE_UPDATED), since);
+
+        List<ActionType> cardActions = List.of(
+                ActionType.ADD_BUS_CARD,
+                ActionType.DELETE_BUS_CARD,
+                ActionType.BUS_CARD_TOP_UP,
+                ActionType.BUS_CARD_TRANSFER,
+                ActionType.UPDATE_BUS_CARD_ALIAS
+        );
+        int cardActivityCount = auditLogRepository.countActions(userId, cardActions, since);
+
+        List<ActionType> notificationActions = List.of(ActionType.NOTIFICATION_RECEIVED, ActionType.NOTIFICATION_READ);
+        int notificationsReceived = auditLogRepository.countActions(userId, notificationActions, since);
+
+        int terminatedSessions = auditLogRepository.countActions(userId, List.of(ActionType.TERMINATE_SESSION, ActionType.TERMINATE_ALL_SESSIONS), since);
+
+        List<AuditLog> recentActivities = auditLogRepository.findByUserSince(userId, since);
+
+        Map<LocalDateTime, Long> activitiesPerDay = recentActivities.stream()
+                .collect(Collectors.groupingBy(a -> a.getTimestamp().toLocalDate().atStartOfDay(), Collectors.counting()));
+
+        LocalDateTime mostActiveDay = activitiesPerDay.entrySet().stream()
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getKey)
+                .orElse(null);
+        Long mostActiveDayCount = activitiesPerDay.getOrDefault(mostActiveDay, 0L);
+
+        Map<String, Object> analysis = new HashMap<>();
+        analysis.put("loginCount", loginCount);
+        analysis.put("logoutCount", logoutCount);
+        analysis.put("passwordChanges", passwordChanges);
+        analysis.put("profileUpdates", profileUpdates);
+        analysis.put("cardActivityCount", cardActivityCount);
+        analysis.put("notificationsReceived", notificationsReceived);
+        analysis.put("terminatedSessions", terminatedSessions);
+        analysis.put("mostActiveDay", mostActiveDay);
+        analysis.put("mostActiveDayActivityCount", mostActiveDayCount);
+        analysis.put("days", days);
+
+        return analysis;
     }
 
+
+    public byte[] generateUserDataPdf(Long userId) throws UserNotFoundException {
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
+            Document document = new Document(PageSize.A4, 36, 36, 54, 36);
+            PdfWriter.getInstance(document, baos);
+            document.open();
+
+            // Font ayarları
+            Font titleFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 20, BaseColor.BLUE);
+            Font headerFont = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 12, BaseColor.WHITE);
+            Font normalFont = FontFactory.getFont(FontFactory.HELVETICA, 12, BaseColor.BLACK);
+
+            // Başlık
+            Paragraph title = new Paragraph("Kullanıcı Bilgileri Raporu", titleFont);
+            title.setAlignment(Element.ALIGN_CENTER);
+            title.setSpacingAfter(20);
+            document.add(title);
+
+            // Kullanıcı bilgileri tablosu
+            PdfPTable table = new PdfPTable(2); // 2 sütunlu
+            table.setWidthPercentage(80);
+            table.setSpacingBefore(10f);
+            table.setSpacingAfter(10f);
+            table.setWidths(new float[]{2f, 4f});
+
+            // Header hücreleri
+            PdfPCell cell;
+
+            cell = new PdfPCell(new Phrase("Alan", headerFont));
+            cell.setBackgroundColor(BaseColor.GRAY);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cell.setPadding(8);
+            table.addCell(cell);
+
+            cell = new PdfPCell(new Phrase("Değer", headerFont));
+            cell.setBackgroundColor(BaseColor.GRAY);
+            cell.setHorizontalAlignment(Element.ALIGN_CENTER);
+            cell.setPadding(8);
+            table.addCell(cell);
+
+            // Satırlar
+            addTableRow(table, "ID", String.valueOf(user.getId()), normalFont);
+            addTableRow(table, "Ad", user.getProfileInfo().getName(), normalFont);
+            addTableRow(table, "Soyad", user.getProfileInfo().getSurname(), normalFont);
+            addTableRow(table, "Email", user.getProfileInfo().getEmail(), normalFont);
+            addTableRow(table, "Telefon", user.getUserNumber(), normalFont);
+            // İstersen daha fazla alan ekle
+
+            document.add(table);
+
+            // Tarih ve footer
+            Paragraph footer = new Paragraph("Rapor oluşturulma tarihi: " + java.time.LocalDate.now().toString(), FontFactory.getFont(FontFactory.HELVETICA_OBLIQUE, 10, BaseColor.DARK_GRAY));
+            footer.setAlignment(Element.ALIGN_RIGHT);
+            document.add(footer);
+
+            document.close();
+
+            return baos.toByteArray();
+
+        } catch (Exception e) {
+            throw new RuntimeException("PDF oluşturulurken hata oluştu", e);
+        }
+    }
+
+    @Override
+    public void sendUserDataPdfByEmail(Long userId, String email) throws UserNotFoundException {
+        // PDF byte dizisini oluştur
+        byte[] pdfBytes = generateUserDataPdf(userId);
+
+        // Email mesajını oluştur
+        EmailMessage emailMessage = new EmailMessage();
+        emailMessage.setToEmail(email);
+        emailMessage.setSubject("Kullanıcı Bilgileri PDF Raporu");
+        emailMessage.setBody("Sayın Admin,\n\nİstediğiniz kullanıcı bilgileri ekte PDF olarak gönderilmiştir.\n\nİyi çalışmalar.");
+        emailMessage.setHtml(false);
+
+        // PDF dosya eki oluştur
+        EmailAttachment attachment = new EmailAttachment();
+        attachment.setName("user_" + userId + "_report.pdf");
+        attachment.setContent(pdfBytes);
+        attachment.setContentType("application/pdf");
+        attachment.setDisposition(EmailAttachment.ATTACHMENT);
+
+        emailMessage.setAttachments(List.of(attachment));
+
+        // Mail servisine gönderim kuyruğuna ekle
+        mailService.queueEmail(emailMessage);
+    }
+
+
+    private void addTableRow(PdfPTable table, String key, String value, Font font) {
+        PdfPCell cellKey = new PdfPCell(new Phrase(key, font));
+        cellKey.setPadding(6);
+        table.addCell(cellKey);
+
+        PdfPCell cellValue = new PdfPCell(new Phrase(value != null ? value : "-", font));
+        cellValue.setPadding(6);
+        table.addCell(cellValue);
+    }
 
 }

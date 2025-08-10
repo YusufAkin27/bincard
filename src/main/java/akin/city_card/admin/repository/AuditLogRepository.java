@@ -64,4 +64,12 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
             @Param("end") LocalDateTime end,
             @Param("actionType") ActionType actionType,
             Pageable pageable);
-}
+
+    @Query("SELECT COUNT(a) FROM AuditLog a WHERE a.user.id = :userId AND a.action = 'LOGIN' AND a.timestamp >= :since")
+    int countLogins(@Param("userId") Long userId, @Param("since") LocalDateTime since);
+
+    @Query("SELECT COUNT(a) FROM AuditLog a WHERE a.user.id = :userId AND a.action IN :actions AND a.timestamp >= :since")
+    int countActions(@Param("userId") Long userId, @Param("actions") List<ActionType> actions, @Param("since") LocalDateTime since);
+
+    @Query("SELECT a FROM AuditLog a WHERE a.user.id = :userId AND a.timestamp >= :since ORDER BY a.timestamp ASC")
+    List<AuditLog> findByUserSince(@Param("userId") Long userId, @Param("since") LocalDateTime since);}
