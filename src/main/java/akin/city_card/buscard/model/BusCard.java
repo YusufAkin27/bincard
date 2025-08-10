@@ -1,15 +1,12 @@
 package akin.city_card.buscard.model;
 
-import akin.city_card.card_visa.model.CardVisa;
-import akin.city_card.user.model.User;
+import akin.city_card.security.entity.SecurityUser;
 import jakarta.persistence.*;
 import lombok.Data;
-
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-
 
 @Entity
 @Data
@@ -25,6 +22,7 @@ public class BusCard {
     private String fullName;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "card_type")
     private CardType type;
 
     private BigDecimal balance;
@@ -39,18 +37,23 @@ public class BusCard {
 
     private boolean lowBalanceNotified = false;
 
+    // Yeni alanlar
+    private BigDecimal lastTransactionAmount;
+
+    private LocalDate lastTransactionDate;
+
+    private boolean visaCompleted;
+
+    @Embedded
+    private SubscriptionInfo subscriptionInfo;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
-    private User user;
+    private SecurityUser user;
 
-    //kartı kimler favori kartlarına eklemiş
     @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserFavoriteCard> favoredByUsers;
 
-
-
     @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Activity> activities;
-
 }

@@ -233,12 +233,7 @@
             <version>4.5.13</version>
         </dependency>
 
-        <!-- Stripe Payment -->
-        <dependency>
-            <groupId>com.stripe</groupId>
-            <artifactId>stripe-java</artifactId>
-            <version>22.21.0</version>
-        </dependency>
+
 
         <!-- Test -->
         <dependency>

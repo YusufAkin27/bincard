@@ -10,6 +10,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@RequiredArgsConstructor
 public class JwtService {
 
     private static final Logger logger = LoggerFactory.getLogger(JwtService.class);
@@ -41,8 +43,7 @@ public class JwtService {
     private final String fallbackAccessSecret = generateSecureSecret();
     private final String fallbackRefreshSecret = generateSecureSecret();
 
-    @Autowired
-    private TokenRepository tokenRepository;
+    private final TokenRepository tokenRepository;
 
     private String getAccessSecret() {
         return accessSecretFromEnv != null ? accessSecretFromEnv : fallbackAccessSecret;
