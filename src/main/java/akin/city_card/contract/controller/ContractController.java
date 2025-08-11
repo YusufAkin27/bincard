@@ -42,6 +42,7 @@ public class ContractController {
 
     /**
      * Kullanıcının zorunlu sözleşmelerini getir
+     * bunu kayıt olurken kullanıcının önüne getir hangi zorunlu sözleşmeler var göster
      */
     @GetMapping("/contracts/mandatory")
     public ResponseEntity<List<UserContractDTO>> getMandatoryContracts(
