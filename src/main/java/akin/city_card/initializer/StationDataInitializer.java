@@ -17,7 +17,7 @@ import java.util.stream.IntStream;
 
 @Component
 @RequiredArgsConstructor
-@Order(1)
+@Order(7)
 public class StationDataInitializer implements ApplicationRunner {
 
     private final StationRepository stationRepository;

@@ -20,7 +20,7 @@ import java.util.*;
 
 @Component
 @RequiredArgsConstructor
-@Order(4)
+@Order(9)
 public class BusDataInitializer implements ApplicationRunner {
 
     private final BusRepository busRepository;

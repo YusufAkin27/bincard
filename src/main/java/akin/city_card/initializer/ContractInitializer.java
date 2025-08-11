@@ -8,6 +8,7 @@ import akin.city_card.security.repository.SecurityUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.Optional;
@@ -15,6 +16,7 @@ import java.util.Optional;
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@Order(1)  // İlk sırada
 public class ContractInitializer implements CommandLineRunner {
 
     private final ContractRepository contractRepository;

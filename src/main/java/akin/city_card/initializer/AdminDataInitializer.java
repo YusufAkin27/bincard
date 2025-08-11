@@ -14,6 +14,7 @@ import akin.city_card.user.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -25,6 +26,7 @@ import java.util.stream.IntStream;
 
 @Component
 @RequiredArgsConstructor
+@Order(6)
 public class AdminDataInitializer implements ApplicationRunner {
 
     private final AdminRepository adminRepository;

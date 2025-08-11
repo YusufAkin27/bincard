@@ -1,4 +1,4 @@
-/*package akin.city_card.initializer;
+package akin.city_card.initializer;
 
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
@@ -8,6 +8,7 @@ import akin.city_card.wallet.repository.WalletRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -16,6 +17,7 @@ import java.util.Random;
 
 @Component
 @RequiredArgsConstructor
+@Order(4)  // Dördüncü sırada - Kullanıcılar oluştuktan sonra
 public class WalletDataInitializer implements ApplicationRunner {
 
     private final UserRepository userRepository;
@@ -25,38 +27,46 @@ public class WalletDataInitializer implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        List<User> users = userRepository.findAllWithWallet(); // JOIN FETCH
+        // Sadece USER rolüne sahip kullanıcıları al (Admin, Driver değil)
+        List<User> users = userRepository.findAll().stream()
+                .filter(user -> user.getRoles().contains(akin.city_card.security.entity.Role.USER))
+                .filter(user -> !user.getRoles().contains(akin.city_card.security.entity.Role.ADMIN))
+                .filter(user -> !user.getRoles().contains(akin.city_card.security.entity.Role.DRIVER))
+                .toList();
+
+        if (users.isEmpty()) {
+            System.out.println("⚠️ Kullanıcı bulunamadı. Cüzdan oluşturulmadı.");
+            return;
+        }
+
+        // Zaten cüzdanı olan kullanıcıları kontrol et
+        long existingWalletCount = walletRepository.count();
+        if (existingWalletCount > 0) {
+            System.out.println("✅ Cüzdanlar zaten oluşturulmuş. Yeni cüzdan eklenmedi.");
+            return;
+        }
 
         List<Wallet> wallets = users.stream()
-                .filter(user -> user.getWallet() == null)
                 .map(this::createWalletForUser)
                 .toList();
 
         walletRepository.saveAll(wallets);
 
+        System.out.println(">> " + wallets.size() + " adet kullanıcı cüzdanı oluşturuldu.");
+
         wallets.forEach(wallet ->
                 System.out.println("→ Cüzdan oluşturuldu: " +
-                        wallet.getUser().getUserNumber() + " | Bakiye: " + wallet.getBalance()));
-
-        System.out.println(">> " + wallets.size() + " adet kullanıcı cüzdanı oluşturuldu.");
+                        wallet.getUser().getUserNumber() + " | Bakiye: " + wallet.getBalance() + " TL"));
     }
 
-
     private Wallet createWalletForUser(User user) {
-        BigDecimal randomBalance = BigDecimal.valueOf(100 + random.nextInt(901)); // 100 – 1000 arası
-        Wallet wallet = Wallet.builder()
+        BigDecimal randomBalance = BigDecimal.valueOf(100 + random.nextInt(901)); // 100 – 1000 TL arası
+
+        return Wallet.builder()
                 .user(user)
                 .balance(randomBalance)
                 .status(WalletStatus.ACTIVE)
                 .currency("TRY")
                 .build();
-
-        user.setWallet(wallet);
-
-        return wallet;
     }
 }
-
-
-
- */

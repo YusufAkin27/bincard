@@ -3,9 +3,9 @@ package akin.city_card.report.controller;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.news.core.response.PageDTO;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
-import akin.city_card.report.core.request.AddReportRequest;
-import akin.city_card.report.core.response.ReportStatsDTO;
-import akin.city_card.report.core.response.UserReportDTO;
+import akin.city_card.report.core.request.CreateReportRequest;
+import akin.city_card.report.core.request.SendMessageRequest;
+import akin.city_card.report.core.response.*;
 import akin.city_card.report.exceptions.*;
 import akin.city_card.report.model.ReportCategory;
 import akin.city_card.report.model.ReportStatus;
@@ -16,6 +16,7 @@ import akin.city_card.user.exceptions.FileFormatCouldNotException;
 import akin.city_card.user.exceptions.OnlyPhotosAndVideosException;
 import akin.city_card.user.exceptions.PhotoSizeLargerException;
 import akin.city_card.user.exceptions.VideoSizeLargerException;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,7 +31,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.util.List;
@@ -42,8 +42,7 @@ public class ReportController {
 
     private final ReportService reportService;
 
-
-    // ================== USER ENDPOINTS ==================
+    // ================== CHAT SYSTEM ENDPOINTS ==================
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
@@ -51,160 +50,171 @@ public class ReportController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam("category") ReportCategory category,
             @RequestParam("message") String message,
-            @RequestParam(value = "photos", required = false) List<MultipartFile> photos)
-            throws AddReportRequestNullException, UserNotFoundException, PhotoSizeLargerException, IOException, OnlyPhotosAndVideosException, VideoSizeLargerException, FileFormatCouldNotException {
+            @RequestParam(value = "attachments", required = false) List<MultipartFile> attachments)
+            throws UserNotFoundException, IOException, OnlyPhotosAndVideosException, PhotoSizeLargerException, VideoSizeLargerException, FileFormatCouldNotException {
 
         if (message == null || message.trim().length() < 10 || message.length() > 1000) {
-            return ResponseEntity.badRequest().body(new ResponseMessage("Mesaj en az 10, en fazla 1000 karakter olmalıdır.", false));
+            return ResponseEntity.badRequest()
+                    .body(new ResponseMessage("Mesaj en az 10, en fazla 1000 karakter olmalıdır.", false));
         }
 
-        AddReportRequest request = AddReportRequest.builder()
+        CreateReportRequest request = CreateReportRequest.builder()
                 .category(category)
+                .initialMessage(message.trim())
+                .build();
+
+        ResponseMessage response = reportService.createReport(request, attachments, userDetails.getUsername());
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping(value = "/send-message/{reportId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
+    public ResponseEntity<ResponseMessage> sendMessage(
+            @PathVariable Long reportId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam("message") String message,
+            @RequestParam(value = "attachments", required = false) List<MultipartFile> attachments)
+            throws ReportNotFoundException, UserNotFoundException, IOException, UnauthorizedAreaException, OnlyPhotosAndVideosException, AdminNotFoundException, PhotoSizeLargerException, VideoSizeLargerException, FileFormatCouldNotException {
+
+        if (message == null || message.trim().isEmpty() || message.length() > 1000) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseMessage("Mesaj boş olamaz ve 1000 karakteri geçemez.", false));
+        }
+
+        SendMessageRequest request = SendMessageRequest.builder()
+                .reportId(reportId)
                 .message(message.trim())
                 .build();
 
-        ResponseMessage response = reportService.addReport(request, photos, userDetails.getUsername());
-
+        ResponseMessage response = reportService.sendMessage(request, attachments, userDetails.getUsername());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    @PutMapping("/{reportId}")
+    @PutMapping("/edit-message/{messageId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ResponseMessage> updateReport(
-            @PathVariable Long reportId,
+    public ResponseEntity<ResponseMessage> editMessage(
+            @PathVariable Long messageId,
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam("message") String message)
-            throws UserNotFoundException, ReportNotFoundException {
+            @RequestParam("message") String newMessage)
+            throws MessageNotFoundException, UserNotFoundException, UnauthorizedAreaException {
 
-        ResponseMessage response = reportService.updateReport(reportId, userDetails.getUsername(), message);
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/{reportId}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ResponseMessage> deleteReport(
-            @PathVariable Long reportId,
-            @AuthenticationPrincipal UserDetails userDetails)
-            throws ReportNotFoundException, ReportNotActiveException, ReportAlreadyDeletedException, UserNotFoundException {
-
-        ResponseMessage response = reportService.deleteReport(reportId, userDetails.getUsername());
-        return ResponseEntity.ok(response);
-    }
-
-
-    @GetMapping("/my-reports")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<PageDTO<UserReportDTO>> getMyReports(
-            @RequestParam(required = false) ReportCategory category,
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable)
-            throws UserNotFoundException {
-
-        Page<UserReportDTO> reports = reportService.getUserReportsFiltered(userDetails.getUsername(), category, pageable);
-        return ResponseEntity.ok(new PageDTO<>(reports));
-    }
-
-    @GetMapping("/{reportId}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<?> getReportById(
-            @PathVariable Long reportId,
-            @AuthenticationPrincipal UserDetails userDetails)
-            throws ReportNotFoundException, UserNotFoundException, ReportIsDeletedException {
-
-        if (isAdminOrSuperAdmin(userDetails)) {
-            return ResponseEntity.ok(reportService.getReportByIdAsAdmin(reportId));
-        } else {
-            return ResponseEntity.ok(reportService.getReportByIdAsUser(reportId, userDetails.getUsername()));
+        if (newMessage == null || newMessage.trim().isEmpty() || newMessage.length() > 1000) {
+            return ResponseEntity.badRequest()
+                    .body(new ResponseMessage("Mesaj boş olamaz ve 1000 karakteri geçemez.", false));
         }
-    }
-    @PostMapping("/reply-to-response/{responseId}")
-    public ResponseEntity<ResponseMessage> replyToResponse(
-            @PathVariable Long responseId,
-            @RequestParam String message,
-            @AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException, ReportNotFoundException {
 
-        String username = userDetails.getUsername();
-
-        ResponseMessage result = reportService.replyToReportResponse(responseId, username, message);
-        return ResponseEntity.ok(result);
-    }
-
-
-    @PostMapping("/rate-response/{responseId}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ResponseMessage> rateResponse(
-            @PathVariable Long responseId,
-            @RequestParam("rating") int rating,
-            @AuthenticationPrincipal UserDetails userDetails)
-            throws UserNotFoundException, ReportNotFoundException {
-
-        ResponseMessage response = reportService.rateResponse(responseId, userDetails.getUsername(), rating);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @PutMapping("/update-rating/{ratingId}")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ResponseMessage> updateRating(
-            @PathVariable Long ratingId,
-            @RequestParam("rating") int rating,
-            @AuthenticationPrincipal UserDetails userDetails)
-            throws UserNotFoundException {
-
-        ResponseMessage response = reportService.updateRating(ratingId, userDetails.getUsername(), rating);
+        ResponseMessage response = reportService.editMessage(messageId, userDetails.getUsername(), newMessage.trim());
         return ResponseEntity.ok(response);
     }
 
-    @DeleteMapping("/delete-rating/{ratingId}")
+    @DeleteMapping("/delete-message/{messageId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ResponseMessage> deleteRating(
-            @PathVariable Long ratingId,
+    public ResponseEntity<ResponseMessage> deleteMessage(
+            @PathVariable Long messageId,
             @AuthenticationPrincipal UserDetails userDetails)
-            throws UserNotFoundException {
+            throws MessageNotFoundException, UserNotFoundException, UnauthorizedAreaException {
 
-        ResponseMessage response = reportService.deleteRating(ratingId, userDetails.getUsername());
+        ResponseMessage response = reportService.deleteMessage(messageId, userDetails.getUsername());
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/my-responses")
+    @GetMapping("/chat/{reportId}")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<List<?>> getMyResponses(@AuthenticationPrincipal UserDetails userDetails)
+    public ResponseEntity<ReportChatDTO> getReportChat(
+            @PathVariable Long reportId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 50, sort = "sentAt", direction = Sort.Direction.ASC) Pageable pageable)
+            throws ReportNotFoundException, UserNotFoundException, UnauthorizedAreaException {
+
+        ReportChatDTO chat = reportService.getReportChat(reportId, userDetails.getUsername(), pageable);
+        return ResponseEntity.ok(chat);
+    }
+
+    @GetMapping("/chat/{reportId}/messages")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
+    public ResponseEntity<PageDTO<MessageDTO>> getReportMessages(
+            @PathVariable Long reportId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 20, sort = "sentAt", direction = Sort.Direction.DESC) Pageable pageable)
+            throws ReportNotFoundException, UserNotFoundException, UnauthorizedAreaException {
+
+        Page<MessageDTO> messages = reportService.getReportMessages(reportId, userDetails.getUsername(), pageable);
+        return ResponseEntity.ok(new PageDTO<>(messages));
+    }
+
+    @PostMapping("/mark-as-read/{reportId}")
+    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
+    public ResponseEntity<ResponseMessage> markAsRead(
+            @PathVariable Long reportId,
+            @AuthenticationPrincipal UserDetails userDetails)
+            throws ReportNotFoundException, UserNotFoundException, UnauthorizedAreaException {
+
+        ResponseMessage response = reportService.markAsRead(reportId, userDetails.getUsername());
+        return ResponseEntity.ok(response);
+    }
+
+    // ================== USER ENDPOINTS ==================
+
+    @GetMapping("/my-chats")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PageDTO<ReportChatDTO>> getMyChats(
+            @RequestParam(required = false) ReportCategory category,
+            @RequestParam(required = false) ReportStatus status,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 10, sort = "lastMessageAt", direction = Sort.Direction.DESC) Pageable pageable)
             throws UserNotFoundException {
 
-        List<?> responses = reportService.getAllResponsesByUser(userDetails.getUsername());
-        return ResponseEntity.ok(responses);
+        Page<ReportChatDTO> chats = reportService.getUserChats(userDetails.getUsername(), category, status, pageable);
+        return ResponseEntity.ok(new PageDTO<>(chats));
+    }
+
+    @GetMapping("/my-unread-count")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Integer> getMyUnreadCount(@AuthenticationPrincipal UserDetails userDetails)
+            throws UserNotFoundException {
+
+        int unreadCount = reportService.getUserUnreadCount(userDetails.getUsername());
+        return ResponseEntity.ok(unreadCount);
+    }
+
+    @DeleteMapping("/delete-chat/{reportId}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ResponseMessage> deleteChat(
+            @PathVariable Long reportId,
+            @AuthenticationPrincipal UserDetails userDetails)
+            throws ReportNotFoundException, UserNotFoundException, UnauthorizedAreaException {
+
+        ResponseMessage response = reportService.deleteReportChat(reportId, userDetails.getUsername());
+        return ResponseEntity.ok(response);
     }
 
     // ================== ADMIN ENDPOINTS ==================
 
-    @GetMapping("/admin/all")
+    @GetMapping("/admin/chats")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<List<?>> getAllReportsForAdmin(
+    public ResponseEntity<PageDTO<ReportChatDTO>> getAllChats(
+            @RequestParam(required = false) ReportCategory category,
+            @RequestParam(required = false) ReportStatus status,
+            @RequestParam(required = false) Boolean hasUnread,
             @AuthenticationPrincipal UserDetails userDetails,
-            @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) throws AdminNotFoundException {
+            @PageableDefault(size = 20, sort = "lastMessageAt", direction = Sort.Direction.DESC) Pageable pageable)
+            throws AdminNotFoundException {
 
-        List<?> reports = reportService.getAllReportsForAdmin(userDetails.getUsername(), pageable);
-        return ResponseEntity.ok(reports);
-    }
-/*
-
-    @GetMapping("/admin/search/elastic")
-    public ResponseEntity<PageDTO<ReportSearchDocument>> elasticSearch(
-            @RequestParam String keyword,
-            @PageableDefault(size = 10) Pageable pageable) {
-
-        if (!elasticsearchEnabled || reportSearchService == null) {
-            return ResponseEntity.ok(new PageDTO<>(Page.empty()));
-        }
-
-        Page<ReportSearchDocument> result = reportSearchService.search(keyword, pageable);
-        return ResponseEntity.ok(new PageDTO<>(result));
+        Page<ReportChatDTO> chats = reportService.getAdminChats(
+                userDetails.getUsername(), category, status, hasUnread, pageable);
+        return ResponseEntity.ok(new PageDTO<>(chats));
     }
 
- */
+    @GetMapping("/admin/unread-count")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
+    public ResponseEntity<Integer> getAdminUnreadCount(@AuthenticationPrincipal UserDetails userDetails)
+            throws AdminNotFoundException {
 
+        int unreadCount = reportService.getAdminUnreadCount(userDetails.getUsername());
+        return ResponseEntity.ok(unreadCount);
+    }
 
-
-    @PatchMapping("/admin/status/{reportId}")
+    @PatchMapping("/admin/change-status/{reportId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> changeReportStatus(
             @PathVariable Long reportId,
@@ -212,132 +222,155 @@ public class ReportController {
             @AuthenticationPrincipal UserDetails userDetails)
             throws AdminNotFoundException, ReportNotFoundException {
 
-        ResponseMessage response = reportService.changeStatus(reportId, status, userDetails.getUsername());
+        ResponseMessage response = reportService.changeReportStatus(reportId, status, userDetails.getUsername());
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping("/admin/reply/{reportId}")
+    @PatchMapping("/admin/archive-chat/{reportId}")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ResponseMessage> replyToReportAsAdmin(
-            @PathVariable Long reportId,
-            @RequestParam("message") String message,
-            @AuthenticationPrincipal UserDetails userDetails)
-            throws ReportNotFoundException, AdminNotFoundException, UnauthorizedAreaException, ReportNotActiveException, ReportIsDeletedException {
-        if (!isAdminOrSuperAdmin(userDetails)) {
-            throw new UnauthorizedAreaException();
-        }
-        ResponseMessage response = reportService.replyToReportAsAdmin(reportId, userDetails.getUsername(), message);
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
-
-    @PatchMapping("/admin/toggle-delete/{reportId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ResponseMessage> toggleReportDeletion(
+    public ResponseEntity<ResponseMessage> archiveChat(
             @PathVariable Long reportId,
             @AuthenticationPrincipal UserDetails userDetails)
             throws AdminNotFoundException, ReportNotFoundException {
 
-        ResponseMessage response = reportService.toggleDeleteReport(reportId, userDetails.getUsername());
-        return ResponseEntity.ok(response);
-    }
-
-    @PatchMapping("/admin/archive/{reportId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ResponseMessage> archiveReport(
-            @PathVariable Long reportId,
-            @AuthenticationPrincipal UserDetails userDetails)
-            throws AdminNotFoundException, ReportNotFoundException {
-
-        ResponseMessage response = reportService.archiveReport(reportId, userDetails.getUsername());
-        return ResponseEntity.ok(response);
-    }
-
-    @PatchMapping("/admin/batch-toggle")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ResponseMessage> batchToggleReports(
-            @RequestParam List<Long> reportIds,
-            @RequestParam boolean delete,
-            @AuthenticationPrincipal UserDetails userDetails)
-            throws ReportNotFoundException, AdminNotFoundException {
-
-        ResponseMessage response = reportService.batchToggleReports(reportIds, delete, userDetails.getUsername());
-        return ResponseEntity.ok(response);
-    }
-
-    @DeleteMapping("/admin/response/{responseId}")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ResponseMessage> deleteResponseAsAdmin(
-            @PathVariable Long responseId,
-            @AuthenticationPrincipal UserDetails userDetails)
-            throws ReportNotFoundException, AdminNotFoundException, UserNotFoundException {
-
-        ResponseMessage response = reportService.deleteResponse(responseId, userDetails.getUsername());
+        ResponseMessage response = reportService.archiveReportChat(reportId, userDetails.getUsername());
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/admin/stats")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ReportStatsDTO> getAdminReportStats(@AuthenticationPrincipal UserDetails userDetails)
+    public ResponseEntity<ReportStatsDTO> getAdminStats(@AuthenticationPrincipal UserDetails userDetails)
             throws AdminNotFoundException {
 
         ReportStatsDTO stats = reportService.getReportStats(userDetails.getUsername());
         return ResponseEntity.ok(stats);
     }
 
-    // ================== SUPERADMIN ENDPOINTS ==================
+    @PostMapping("/admin/bulk-archive")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
+    public ResponseEntity<ResponseMessage> bulkArchiveChats(
+            @RequestParam List<Long> reportIds,
+            @AuthenticationPrincipal UserDetails userDetails)
+            throws AdminNotFoundException, ReportNotFoundException {
 
-    @GetMapping("/superadmin/all-users-reports")
-    @PreAuthorize("hasRole('SUPERADMIN')")
-    public ResponseEntity<List<?>> getAllUsersReports(
-            @PageableDefault(size = 50, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) throws AdminNotFoundException {
-
-        List<?> reports = reportService.getAllReportsForAdmin("superadmin", pageable);
-        return ResponseEntity.ok(reports);
+        ResponseMessage response = reportService.bulkArchiveReports(reportIds, userDetails.getUsername());
+        return ResponseEntity.ok(response);
     }
 
-    @PatchMapping("/superadmin/bulk-status-change")
-    @PreAuthorize("hasRole('SUPERADMIN')")
+    @PostMapping("/admin/bulk-status-change")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> bulkStatusChange(
             @RequestParam List<Long> reportIds,
             @RequestParam ReportStatus newStatus,
             @AuthenticationPrincipal UserDetails userDetails)
             throws AdminNotFoundException, ReportNotFoundException {
 
-        ResponseMessage response = reportService.batchToggleReports(reportIds, false, userDetails.getUsername());
+        ResponseMessage response = reportService.bulkChangeStatus(reportIds, newStatus, userDetails.getUsername());
         return ResponseEntity.ok(response);
     }
 
     // ================== COMMON ENDPOINTS ==================
 
-    @GetMapping("/{reportId}/responses")
-    @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<List<?>> getReportResponses(@PathVariable Long reportId)
-            throws ReportNotFoundException {
-
-        List<?> responses = reportService.getReportResponses(reportId);
-        return ResponseEntity.ok(responses);
-    }
-
     @GetMapping("/categories")
     @PreAuthorize("hasRole('USER') or hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ReportCategory[]> getReportCategories() {
+    public ResponseEntity<ReportCategory[]> getCategories() {
         return ResponseEntity.ok(ReportCategory.values());
     }
 
     @GetMapping("/statuses")
     @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
-    public ResponseEntity<ReportStatus[]> getReportStatuses() {
+    public ResponseEntity<ReportStatus[]> getStatuses() {
         return ResponseEntity.ok(ReportStatus.values());
     }
 
+    @PostMapping("/search")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
+    public ResponseEntity<PageDTO<ReportChatDTO>> searchReports(
+            @RequestParam String keyword,
+            @RequestParam(required = false) ReportCategory category,
+            @RequestParam(required = false) ReportStatus status,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 20, sort = "lastMessageAt", direction = Sort.Direction.DESC) Pageable pageable)
+            throws AdminNotFoundException {
+
+        Page<ReportChatDTO> results = reportService.searchReports(
+                keyword, category, status, userDetails.getUsername(), pageable);
+        return ResponseEntity.ok(new PageDTO<>(results));
+    }
+
+
+    @PostMapping("/rate-satisfaction/{reportId}")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<ResponseMessage> rateSatisfaction(
+            @PathVariable Long reportId,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestBody @Valid SatisfactionRatingRequest request)
+            throws ReportNotFoundException, UserNotFoundException, UnauthorizedAreaException, SatisfactionAlreadyRatedException {
+
+        ResponseMessage response = reportService.rateSatisfaction(reportId, userDetails.getUsername(), request);
+        return ResponseEntity.ok(response);
+    }
+
+    // Admin için silinmiş sohbetleri görme
+    @GetMapping("/admin/deleted-chats")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
+    public ResponseEntity<PageDTO<ReportChatDTO>> getDeletedChats(
+            @RequestParam(required = false) ReportCategory category,
+            @RequestParam(required = false) ReportStatus status,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 20, sort = "lastMessageAt", direction = Sort.Direction.DESC) Pageable pageable)
+            throws AdminNotFoundException {
+
+        Page<ReportChatDTO> chats = reportService.getDeletedChats(
+                userDetails.getUsername(), category, status, pageable);
+        return ResponseEntity.ok(new PageDTO<>(chats));
+    }
+
+    // Admin için tüm sohbetleri görme (silinmiş dahil)
+    @GetMapping("/admin/all-chats")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
+    public ResponseEntity<PageDTO<ReportChatDTO>> getAllChatsIncludingDeleted(
+            @RequestParam(required = false) ReportCategory category,
+            @RequestParam(required = false) ReportStatus status,
+            @RequestParam(required = false) Boolean hasUnread,
+            @RequestParam(required = false) Boolean includeDeleted,
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PageableDefault(size = 20, sort = "lastMessageAt", direction = Sort.Direction.DESC) Pageable pageable)
+            throws AdminNotFoundException {
+
+        Page<ReportChatDTO> chats = reportService.getAllAdminChats(
+                userDetails.getUsername(), category, status, hasUnread, includeDeleted, pageable);
+        return ResponseEntity.ok(new PageDTO<>(chats));
+    }
+
+    // Memnuniyet istatistikleri
+    @GetMapping("/admin/satisfaction-stats")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
+    public ResponseEntity<SatisfactionStatsDTO> getSatisfactionStats(
+            @AuthenticationPrincipal UserDetails userDetails)
+            throws AdminNotFoundException {
+
+        SatisfactionStatsDTO stats = reportService.getSatisfactionStats(userDetails.getUsername());
+        return ResponseEntity.ok(stats);
+    }
+
+    // Belirli bir raporu geri getir (admin için)
+    @PatchMapping("/admin/restore-report/{reportId}")
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPERADMIN')")
+    public ResponseEntity<ResponseMessage> restoreReport(
+            @PathVariable Long reportId,
+            @AuthenticationPrincipal UserDetails userDetails)
+            throws AdminNotFoundException, ReportNotFoundException {
+
+        ResponseMessage response = reportService.restoreReport(reportId, userDetails.getUsername());
+        return ResponseEntity.ok(response);
+    }
     // ================== HELPER METHODS ==================
 
-    public boolean isAdminOrSuperAdmin(UserDetails userDetails) {
+    private boolean isAdminOrSuperAdmin(UserDetails userDetails) {
         if (userDetails == null) return false;
         return userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(role -> role.equals("ADMIN") || role.equals("SUPERADMIN"));
     }
-
-
 }

@@ -16,7 +16,7 @@ import java.util.*;
 
 @Component
 @RequiredArgsConstructor
-@Order(3)
+@Order(8)
 public class RouteDataInitializer implements ApplicationRunner {
 
     private final StationRepository stationRepository;

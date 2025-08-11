@@ -10,6 +10,7 @@ import akin.city_card.superadmin.repository.SuperAdminRepository;
 import akin.city_card.user.model.UserStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -17,6 +18,7 @@ import java.util.Set;
 
 @Component
 @RequiredArgsConstructor
+@Order(2)
 public class SuperAdminInitializer implements CommandLineRunner {
 
     private final SuperAdminRepository superAdminRepository;
