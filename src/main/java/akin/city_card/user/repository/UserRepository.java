@@ -61,4 +61,6 @@ public interface UserRepository extends JpaRepository<User, Long> , JpaSpecifica
             @Param("status") UserStatus status,
             @Param("role") Role role
     );
+
+
 }

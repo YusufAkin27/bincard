@@ -7,6 +7,7 @@ import akin.city_card.paymentPoint.model.PaymentPoint;
 import akin.city_card.paymentPoint.repository.PaymentPointRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
@@ -14,6 +15,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@Order(11)
 public class PaymentPointInitializer implements CommandLineRunner {
 
     private final PaymentPointRepository paymentPointRepository;

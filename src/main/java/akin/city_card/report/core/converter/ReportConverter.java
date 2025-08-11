@@ -3,6 +3,7 @@ package akin.city_card.report.core.converter;
 import akin.city_card.report.core.request.AddReportRequest;
 import akin.city_card.report.core.response.*;
 import akin.city_card.report.model.*;
+import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.user.model.User;
 
 public interface ReportConverter {
@@ -11,11 +12,16 @@ public interface ReportConverter {
 
     AdminReportDTO convertToAdminReportDTO(Report report);
 
-    UserReportDTO convertToUserReportDTO(Report report);
 
-    AdminReportResponseDTO convertToAdminResponseDTO(ReportResponse response);
+    SimpleUserDTO convertToSimpleUserDTO(User user);
 
-    UserReportResponseDTO convertToUserResponseDTO(ReportResponse response);
+    SimpleAdminDTO convertToSimpleAdminDTO(SecurityUser admin);
 
-    ReportResponseRatingDTO convertToRatingDTO(ReportResponseRating rating);
+    MessageDTO convertToMessageDTO(ReportMessage reportMessage);
+
+    AttachmentDTO convertToAttachmentDTO(MessageAttachment attachment);
+
+    ReportChatDTO convertToUserChatDTO(Report report);
+
+    ReportChatDTO convertToAdminChatDTO(Report report);
 }

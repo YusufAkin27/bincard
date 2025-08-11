@@ -8,6 +8,7 @@ import akin.city_card.news.repository.NewsRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.Random;
 
 @Component
 @RequiredArgsConstructor
+@Order(12)
 public class NewsDataInitializer implements ApplicationRunner {
 
     private final NewsRepository newsRepository;

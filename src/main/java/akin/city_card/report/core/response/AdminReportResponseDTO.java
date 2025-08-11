@@ -19,5 +19,4 @@ public class AdminReportResponseDTO {
     private SimpleAdminDTO admin;
     private List<AdminReportResponseDTO> replies;
     private LocalDateTime respondedAt;
-    private List<ReportResponseRatingDTO> ratings;
 }

@@ -30,17 +30,14 @@ public class Report {
     @Column(length = 50, nullable = false)
     private ReportCategory category;
 
-    // Kullanıcının mesajı
+    // İlk şikayet mesajı (chat başlangıcı)
     @Column(nullable = false, columnDefinition = "TEXT")
-    private String message;
+    private String initialMessage;
 
-    // Fotoğraflar
+    // Chat mesajları
     @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReportPhoto> photos;
-
-    // Yanıtlar (çoklu yanıt desteği)
-    @OneToMany(mappedBy = "report", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<ReportResponse> responses;
+    @OrderBy("sentAt ASC")
+    private List<ReportMessage> messages;
 
     // Raporun durumu
     @Enumerated(EnumType.STRING)
@@ -52,8 +49,20 @@ public class Report {
     @Column(updatable = false)
     private LocalDateTime createdAt;
 
-    // Son güncelleme zamanı (manuel kontrol gerekebilir)
-    private LocalDateTime updatedAt;
+    // Son mesaj zamanı (chat sıralaması için)
+    private LocalDateTime lastMessageAt;
+
+    // Son mesajı gönderen (USER/ADMIN)
+    @Enumerated(EnumType.STRING)
+    private MessageSender lastMessageSender;
+
+    // Okunmamış mesaj sayısı (kullanıcı için)
+    @Column(nullable = false)
+    private int unreadByUser = 0;
+
+    // Okunmamış mesaj sayısı (admin için)
+    @Column(nullable = false)
+    private int unreadByAdmin = 0;
 
     @Column(nullable = false)
     private boolean deleted = false;
@@ -64,10 +73,69 @@ public class Report {
     @Column(nullable = false)
     private boolean archived = false;
 
+    // ===== YENİ EKLENEN ALANLAR =====
 
-    @PreUpdate
-    public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+    // Kullanıcı memnuniyet puanı (1-5 arası)
+    @Column(name = "satisfaction_rating")
+    private Integer satisfactionRating;
+
+    // Memnuniyet puanı verilme zamanı
+    @Column(name = "satisfaction_rated_at")
+    private LocalDateTime satisfactionRatedAt;
+
+    // Memnuniyet yorumu (opsiyonel)
+    @Column(name = "satisfaction_comment", length = 500)
+    private String satisfactionComment;
+
+    // Puanlama yapıldı mı kontrolü
+    @Column(name = "is_rated", nullable = false)
+    private boolean isRated = false;
+
+    @PrePersist
+    public void onCreate() {
+        this.lastMessageAt = this.createdAt;
+        this.lastMessageSender = MessageSender.USER;
     }
 
+    // Son mesaj bilgilerini güncelle
+    public void updateLastMessage(MessageSender sender) {
+        this.lastMessageAt = LocalDateTime.now();
+        this.lastMessageSender = sender;
+
+        // Okunmamış sayaçlarını artır
+        if (sender == MessageSender.ADMIN) {
+            this.unreadByUser++;
+        } else {
+            this.unreadByAdmin++;
+        }
+    }
+
+    // Okunmamış mesajları sıfırla
+    public void markAsReadBy(MessageSender reader) {
+        if (reader == MessageSender.USER) {
+            this.unreadByUser = 0;
+        } else {
+            this.unreadByAdmin = 0;
+        }
+    }
+
+    // ===== YENİ EKLENEN METHODLAR =====
+
+    // Memnuniyet puanı verme
+    public void setSatisfactionRating(Integer rating, String comment) {
+        if (rating != null && rating >= 1 && rating <= 5) {
+            this.satisfactionRating = rating;
+            this.satisfactionComment = comment;
+            this.satisfactionRatedAt = LocalDateTime.now();
+            this.isRated = true;
+        }
+    }
+
+    // Puanlama yapılabilir mi kontrol
+    public boolean canBeRated() {
+        return !this.isRated &&
+                (this.status == ReportStatus.RESOLVED ||
+                        this.status == ReportStatus.REJECTED ||
+                        this.status == ReportStatus.CANCELLED);
+    }
 }

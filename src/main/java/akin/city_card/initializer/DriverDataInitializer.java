@@ -27,7 +27,7 @@ import java.util.stream.IntStream;
 
 @Component
 @RequiredArgsConstructor
-@Order(2)
+@Order(5)
 public class DriverDataInitializer implements ApplicationRunner {
 
     private final DriverRepository driverRepository;

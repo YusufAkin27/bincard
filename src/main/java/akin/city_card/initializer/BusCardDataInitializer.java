@@ -9,6 +9,7 @@ import akin.city_card.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -19,6 +20,7 @@ import java.util.stream.IntStream;
 
 @Component
 @RequiredArgsConstructor
+@Order(10)
 public class BusCardDataInitializer implements ApplicationRunner {
 
     private final BusCardRepository busCardRepository;

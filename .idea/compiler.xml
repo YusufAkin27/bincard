@@ -10,6 +10,13 @@
         <module name="city_card" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="auth-service" target="21" />
+      <module name="common" target="21" />
+      <module name="location-service" target="21" />
+      <module name="user-service" target="21" />
+      <module name="verification-service" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">

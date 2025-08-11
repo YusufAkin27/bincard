@@ -40,4 +40,6 @@ public interface UserContractAcceptanceRepository extends JpaRepository<UserCont
 
     @Query("SELECT uca FROM UserContractAcceptance uca WHERE uca.user = :user AND uca.accepted = true AND uca.contract.mandatory = true")
     List<UserContractAcceptance> findAcceptedMandatoryContractsByUser(@Param("user") SecurityUser user);
+
+    void deleteByUserAndContractAndAccepted(SecurityUser user, Contract contract, boolean b);
 }

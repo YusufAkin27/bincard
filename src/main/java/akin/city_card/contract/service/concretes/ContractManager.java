@@ -9,6 +9,7 @@ import akin.city_card.contract.core.request.UpdateContractRequest;
 import akin.city_card.contract.core.response.AcceptedContractDTO;
 import akin.city_card.contract.core.response.ContractDTO;
 import akin.city_card.contract.core.response.UserContractDTO;
+import akin.city_card.contract.exceptions.ContractNotFoundException;
 import akin.city_card.contract.model.Contract;
 import akin.city_card.contract.model.ContractType;
 import akin.city_card.contract.model.UserContractAcceptance;
@@ -291,19 +292,22 @@ public class ContractManager implements ContractService {
         }
     }
 
-    @Override
     @Transactional
+    @Override
     public ResponseMessage rejectContract(String username, Long contractId, RejectContractRequest request) {
         try {
             SecurityUser user = securityUserRepository.findByUserNumber(username)
                     .orElseThrow(UserNotFoundException::new);
 
             Contract contract = contractRepository.findById(contractId)
-                    .orElseThrow(() -> new RuntimeException("Sözleşme bulunamadı"));
+                    .orElseThrow(ContractNotFoundException::new);
 
             if (!contract.isActive()) {
                 return new ResponseMessage("Bu sözleşme artık aktif değil.", false);
             }
+
+            // Daha önce kabul edilmiş kayıt varsa sil veya pasif et
+            acceptanceRepository.deleteByUserAndContractAndAccepted(user, contract, true);
 
             UserContractAcceptance rejection = UserContractAcceptance.builder()
                     .user(user)

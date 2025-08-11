@@ -6,10 +6,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class ReportStatsDTO {
+    
+    // Mevcut stat'lar
     private long totalReports;
     private long openReports;
     private long inReviewReports;
@@ -19,21 +21,14 @@ public class ReportStatsDTO {
     private long deletedReports;
     private long archivedReports;
     private long activeReports;
-    
-    // Category-based stats
     private long lostItemReports;
     private long driverComplaintReports;
     private long cardIssueReports;
     private long serviceDelayReports;
     private long otherReports;
-    
-    // Time-based stats
-    private long reportsThisMonth;
-    private long reportsThisWeek;
     private long reportsToday;
+    private long reportsThisWeek;
+    private long reportsThisMonth;
     
-    // Response stats
-    private long totalResponses;
-    private long avgResponseTime; // in hours
-    private double avgRating;
+    private SatisfactionStatsDTO satisfactionStats;
 }
