@@ -1,5 +1,6 @@
 package akin.city_card.user.service.concretes;
 
+import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.ActionType;
 import akin.city_card.admin.model.AuditLog;
 import akin.city_card.admin.repository.AuditLogRepository;
@@ -9,7 +10,6 @@ import akin.city_card.mail.EmailAttachment;
 import akin.city_card.mail.EmailMessage;
 import akin.city_card.mail.MailService;
 import akin.city_card.news.core.response.PageDTO;
-import akin.city_card.notification.model.Notification;
 import akin.city_card.notification.model.NotificationPreferences;
 import akin.city_card.notification.model.NotificationType;
 import akin.city_card.notification.repository.NotificationRepository;
@@ -91,8 +91,21 @@ public class AdminUserManager implements AdminUserService {
     private final MailService mailService;
 
     @Override
-    public PageDTO<CacheUserDTO> getAllUsers(Pageable pageable) {
-        Page<User> userPage = userRepository.findAll(pageable); // pageable içeriyor
+    public PageDTO<CacheUserDTO> getAllUsers(Pageable pageable, String username, HttpServletRequest httpServletRequest) throws AdminNotFoundException {
+        Page<User> userPage = userRepository.findAll(pageable);
+
+        // Admin loglama
+        SecurityUser currentAdmin = securityUserRepository.findByUserNumber(username).orElseThrow(AdminNotFoundException::new); // Mevcut admin bilgisi
+        updateDeviceInfoAndCreateAuditLog(
+                currentAdmin,
+                httpServletRequest,
+                geoIpService,
+                ActionType.ADMIN_LIST_USERS,
+                "Tüm kullanıcıların listelenmesi",
+                null,
+                "Toplam kullanıcı sayısı: " + userPage.getTotalElements()
+        );
+
         return new PageDTO<>(userPage.map(userConverter::toCacheUserDTO));
     }
 
@@ -191,7 +204,7 @@ public class AdminUserManager implements AdminUserService {
     }
 
     @Override
-    public PageDTO<CacheUserDTO> searchUsers(String query, Pageable pageable) {
+    public PageDTO<CacheUserDTO> searchUsers(String query, Pageable pageable, String username, HttpServletRequest httpServletRequest) throws AdminNotFoundException {
         Specification<User> spec = (root, cq, cb) -> cb.conjunction();
 
         if (query != null && !query.isBlank()) {
@@ -215,46 +228,100 @@ public class AdminUserManager implements AdminUserService {
         }
 
         Page<User> userPage = userRepository.findAll(spec, pageable);
+
+        SecurityUser currentAdmin = securityUserRepository
+                .findByUserNumber(username)
+                .orElseThrow(AdminNotFoundException::new);
+
+        String metadata = String.format(
+                "Arama sorgusu: %s, Toplam sonuç: %d, Sayfa numarası: %d, Sayfa boyutu: %d",
+                query != null ? query : "",
+                userPage.getTotalElements(),
+                pageable.getPageNumber(),
+                pageable.getPageSize()
+        );
+
+        updateDeviceInfoAndCreateAuditLog(
+                currentAdmin,
+                httpServletRequest,
+                geoIpService,
+                ActionType.ADMIN_SEARCH_USERS,
+                "Kullanıcı arama işlemi",
+                null,
+                metadata
+        );
+
         return new PageDTO<>(userPage.map(userConverter::toCacheUserDTO));
     }
 
+
     @Override
     @Transactional
-    public ResponseMessage bulkUpdateUserStatus(List<Long> userIds, UserStatus newStatus, String username) throws AdminOrSuperAdminNotFoundException {
+    public ResponseMessage bulkUpdateUserStatus(List<Long> userIds, UserStatus newStatus, String username, HttpServletRequest httpServletRequest) throws AdminOrSuperAdminNotFoundException {
         SecurityUser securityUser = securityUserRepository.findByUserNumber(username).orElseThrow(AdminOrSuperAdminNotFoundException::new);
 
         List<User> users = userRepository.findAllById(userIds);
         for (User user : users) {
             user.setStatus(newStatus);
         }
+        updateDeviceInfoAndCreateAuditLog(
+                securityUser,
+                httpServletRequest,
+                geoIpService,
+                ActionType.ADMIN_BULK_UPDATE_USER_STATUS,
+                "Toplu kullanıcı durumu güncelleme",
+                null,
+                "Yeni durum: " + newStatus + ", Etkilenen kullanıcı ID'leri: " + userIds
+        );
+
         return new ResponseMessage("kullanıcıların durumları değiştirildi.", true);
     }
 
     @Override
-    public ResponseMessage bulkDeleteUsers(List<Long> userIds, String username) throws AdminOrSuperAdminNotFoundException {
+    public ResponseMessage bulkDeleteUsers(List<Long> userIds, String username, HttpServletRequest httpServletRequest) throws AdminOrSuperAdminNotFoundException {
         SecurityUser securityUser = securityUserRepository.findByUserNumber(username).orElseThrow(AdminOrSuperAdminNotFoundException::new);
 
         List<User> users = userRepository.findAllById(userIds);
         for (User user : users) {
             user.setStatus(UserStatus.DELETED);
         }
+        updateDeviceInfoAndCreateAuditLog(
+                securityUser,
+                httpServletRequest,
+                geoIpService,
+                ActionType.ADMIN_BULK_DELETE_USERS,
+                "Toplu kullanıcı silme işlemi",
+                null,
+                "Silinen kullanıcı ID'leri: " + userIds
+        );
+
         return new ResponseMessage("Kullanıcılar silindi.", true);
 
     }
 
     @Override
-    public CacheUserDTO getUserById(Long userId, String username) throws UserNotFoundException, AdminOrSuperAdminNotFoundException {
+    public CacheUserDTO getUserById(Long userId, String username, HttpServletRequest httpServletRequest) throws UserNotFoundException, AdminOrSuperAdminNotFoundException {
         SecurityUser securityUser = securityUserRepository.findByUserNumber(username).orElseThrow(AdminOrSuperAdminNotFoundException::new);
 
         User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
+        updateDeviceInfoAndCreateAuditLog(
+                securityUser,
+                httpServletRequest,
+                geoIpService,
+                ActionType.ADMIN_GET_USER_BY_ID,
+                "Kullanıcı bilgisi görüntülendi",
+                null,
+                "Kullanıcı ID: " + userId
+        );
+
         return userConverter.toCacheUserDTO(user);
     }
 
     @Override
-    public Map<String, Object> getUserDeviceInfo(Long userId, String username) throws UserNotFoundException {
+    public Map<String, Object> getUserDeviceInfo(Long userId, String username, HttpServletRequest httpServletRequest) throws UserNotFoundException, AdminNotFoundException {
         User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
         List<DeviceHistory> deviceHistories = user.getDeviceHistory();
-
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(username).orElseThrow(AdminNotFoundException::new);
         Map<String, Object> result = new HashMap<>();
 
         // Aktif cihazlar
@@ -303,28 +370,48 @@ public class AdminUserManager implements AdminUserService {
         result.put("activeDeviceCount", activeDevices.size());
         result.put("bannedDeviceCount", bannedDevices.size());
 
+        updateDeviceInfoAndCreateAuditLog(
+                securityUser,
+                httpServletRequest,
+                geoIpService,
+                ActionType.ADMIN_GET_USER_DEVICE_INFO,
+                "Kullanıcı cihaz bilgileri görüntülendi",
+                null,
+                "Kullanıcı ID: " + userId
+        );
+
         return result;
     }
 
     @Override
     @Transactional
-    public ResponseMessage assignRolesToUser(Long userId, Set<Role> roles, String username)
+    public ResponseMessage assignRolesToUser(Long userId, Set<Role> roles, String username, HttpServletRequest httpServletRequest)
             throws AdminOrSuperAdminNotFoundException {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(AdminOrSuperAdminNotFoundException::new);
-
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
+                .orElseThrow(AdminOrSuperAdminNotFoundException::new);
         user.setRoles(roles);
 
         userRepository.save(user);
 
+        updateDeviceInfoAndCreateAuditLog(
+                securityUser,
+                httpServletRequest,
+                geoIpService,
+                ActionType.ADMIN_ASSIGN_ROLES,
+                "Kullanıcıya roller atandı",
+                null,
+                "Kullanıcı ID: " + userId + ", Roller: " + roles
+        );
         return new ResponseMessage("Rol güncellendi " + userId, true);
     }
 
 
     @Override
     @Transactional
-    public ResponseMessage removeRolesFromUser(Long userId, Set<Role> roles, String username) {
+    public ResponseMessage removeRolesFromUser(Long userId, Set<Role> roles, String username, HttpServletRequest httpServletRequest) throws AdminOrSuperAdminNotFoundException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
 
@@ -345,14 +432,30 @@ public class AdminUserManager implements AdminUserService {
         user.setRoles(currentRoles);
         userRepository.save(user);
 
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
+                .orElseThrow(AdminOrSuperAdminNotFoundException::new);
+        user.setRoles(roles);
+
+        updateDeviceInfoAndCreateAuditLog(
+                securityUser,
+                httpServletRequest,
+                geoIpService,
+                ActionType.ADMIN_REMOVE_ROLES,
+                "Kullanıcıdan roller kaldırıldı",
+                null,
+                "Kullanıcı ID: " + userId + ", Roller: " + roles
+        );
 
         return new ResponseMessage("Removed roles successfully from user " + userId, true);
     }
 
     @Override
     @Transactional
-    public ResponseMessage bulkAssignRoles(List<Long> userIds, Set<Role> roles, String username) throws UserNotFoundException {
+    public ResponseMessage bulkAssignRoles(List<Long> userIds, Set<Role> roles, String username, HttpServletRequest httpServletRequest) throws UserNotFoundException, AdminNotFoundException {
         List<Long> updatedUsers = new ArrayList<>();
+
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
+                .orElseThrow(AdminNotFoundException::new);
 
         for (Long userId : userIds) {
             User user = userRepository.findById(userId)
@@ -374,13 +477,22 @@ public class AdminUserManager implements AdminUserService {
                 updatedUsers.add(userId);
             }
         }
+        updateDeviceInfoAndCreateAuditLog(
+                securityUser,
+                httpServletRequest,
+                geoIpService,
+                ActionType.ADMIN_BULK_ASSIGN_ROLES,
+                "Birden fazla kullanıcıya roller atandı",
+                null,
+                "Kullanıcı ID listesi: " + userIds + ", Roller: " + roles
+        );
 
         return new ResponseMessage("Roles assigned to users: " + updatedUsers, true);
     }
 
     @Override
     @Transactional
-    public ResponseMessage resetUserPassword(Long userId, String newPassword, String username) throws UserNotFoundException {
+    public ResponseMessage resetUserPassword(Long userId, String newPassword, String username, HttpServletRequest httpServletRequest) throws UserNotFoundException, AdminNotFoundException {
         User user = userRepository.findById(userId)
                 .orElseThrow(UserNotFoundException::new);
 
@@ -389,19 +501,77 @@ public class AdminUserManager implements AdminUserService {
 
         userRepository.save(user);
 
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
+                .orElseThrow(AdminNotFoundException::new);
+
+
+        updateDeviceInfoAndCreateAuditLog(
+                securityUser,
+                httpServletRequest,
+                geoIpService,
+                ActionType.ADMIN_RESET_PASSWORD,
+                "Kullanıcı şifresi sıfırlandı",
+                null,
+                "Kullanıcı ID: " + userId
+        );
         return new ResponseMessage("Password reset successfully for user " + userId, true);
     }
 
 
     @Override
-    public ResponseMessage updateEmailVerificationStatus(Long userId, boolean verified, String username) {
-        return null;
+    @Transactional
+    public ResponseMessage updateEmailVerificationStatus(Long userId, boolean verified, String username, HttpServletRequest httpServletRequest)
+            throws AdminOrSuperAdminNotFoundException, UserNotFoundException {
+
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
+                .orElseThrow(AdminOrSuperAdminNotFoundException::new);
+
+        updateDeviceInfoAndCreateAuditLog(
+                securityUser,
+                httpServletRequest,
+                geoIpService,
+                ActionType.ADMIN_UPDATE_EMAIL_VERIFICATION,
+                "Kullanıcı email doğrulama durumu güncellendi",
+                null,
+                "Kullanıcı ID: " + userId + ", Yeni email doğrulama durumu: " + verified
+        );
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.setEmailVerified(verified);
+        userRepository.save(user);
+
+        return new ResponseMessage("Email doğrulama durumu güncellendi: " + verified, true);
     }
 
     @Override
-    public ResponseMessage updatePhoneVerificationStatus(Long userId, boolean verified, String username) {
-        return null;
+    @Transactional
+    public ResponseMessage updatePhoneVerificationStatus(Long userId, boolean verified, String username, HttpServletRequest httpServletRequest)
+            throws AdminOrSuperAdminNotFoundException, UserNotFoundException {
+
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
+                .orElseThrow(AdminOrSuperAdminNotFoundException::new);
+
+        updateDeviceInfoAndCreateAuditLog(
+                securityUser,
+                httpServletRequest,
+                geoIpService,
+                ActionType.ADMIN_UPDATE_PHONE_VERIFICATION,
+                "Kullanıcı telefon doğrulama durumu güncellendi",
+                null,
+                "Kullanıcı ID: " + userId + ", Yeni telefon doğrulama durumu: " + verified
+        );
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(UserNotFoundException::new);
+
+        user.setPhoneVerified(verified);
+        userRepository.save(user);
+
+        return new ResponseMessage("Telefon doğrulama durumu güncellendi: " + verified, true);
     }
+
 
     @Override
     @Transactional
@@ -535,7 +705,7 @@ public class AdminUserManager implements AdminUserService {
     }
 
     @Override
-    public List<Map<String, Object>> getUserActiveSessions(Long userId) {
+    public List<Map<String, Object>> getUserActiveSessions(Long userId, HttpServletRequest httpServletRequest) {
         try {
             User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
 
@@ -578,7 +748,7 @@ public class AdminUserManager implements AdminUserService {
 
     @Override
     @Transactional
-    public ResponseMessage terminateUserSession(Long userId, String sessionId, String username) {
+    public ResponseMessage terminateUserSession(Long userId, String sessionId, String username, HttpServletRequest httpServletRequest) {
         try {
             User user = userRepository.findById(userId).orElseThrow(UserNotFoundException::new);
             SecurityUser admin = securityUserRepository.findByUserNumber(username)
@@ -908,14 +1078,11 @@ public class AdminUserManager implements AdminUserService {
         });
 
         if (failedUsers.isEmpty()) {
-            return new ResponseMessage("Tüm kullanıcılara bildirim gönderildi.",true);
+            return new ResponseMessage("Tüm kullanıcılara bildirim gönderildi.", true);
         } else {
-            return new ResponseMessage("Bazı kullanıcılara bildirim gönderilemedi: " + String.join(", ", failedUsers),false);
+            return new ResponseMessage("Bazı kullanıcılara bildirim gönderilemedi: " + String.join(", ", failedUsers), false);
         }
     }
-
-
-
 
 
     @Override

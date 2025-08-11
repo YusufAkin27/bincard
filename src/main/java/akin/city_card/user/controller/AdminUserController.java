@@ -1,5 +1,6 @@
 package akin.city_card.user.controller;
 
+import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.bus.exceptions.UnauthorizedAccessException;
 import akin.city_card.news.core.response.PageDTO;
 import akin.city_card.news.exceptions.UnauthorizedAreaException;
@@ -21,6 +22,8 @@ import akin.city_card.user.model.*;
 import akin.city_card.user.service.abstracts.AdminUserService;
 import akin.city_card.wallet.exceptions.AdminOrSuperAdminNotFoundException;
 import com.fasterxml.jackson.annotation.JsonView;
+import com.google.api.Http;
+import com.google.api.HttpProto;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -69,9 +72,10 @@ public class AdminUserController {
     @JsonView(Views.Admin.class)
     public PageDTO<CacheUserDTO> getAllUsers(
             @AuthenticationPrincipal UserDetails userDetails,
-            Pageable pageable) throws UnauthorizedAccessException {
+            Pageable pageable,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, AdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
-        return adminUserService.getAllUsers(pageable);
+        return adminUserService.getAllUsers(pageable,userDetails.getUsername(),httpServletRequest);
     }
 
     /**
@@ -82,11 +86,12 @@ public class AdminUserController {
     public PageDTO<CacheUserDTO> searchUsers(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam String query,
-            Pageable pageable) throws UnauthorizedAccessException {
+            Pageable pageable,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, AdminNotFoundException {
 
         isAdminOrSuperAdmin(userDetails);
 
-        return adminUserService.searchUsers(query, pageable);
+        return adminUserService.searchUsers(query, pageable,userDetails.getUsername(),httpServletRequest);
     }
 
 
@@ -96,13 +101,14 @@ public class AdminUserController {
     @PutMapping("/bulk-status-update")
     public ResponseMessage bulkUpdateUserStatus(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody Map<String, Object> request) throws UnauthorizedAccessException, AdminOrSuperAdminNotFoundException {
+            @RequestBody Map<String, Object> request,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, AdminOrSuperAdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
         List<Long> userIds = (List<Long>) request.get("userIds");
         UserStatus newStatus = UserStatus.valueOf((String) request.get("status"));
 
-        return adminUserService.bulkUpdateUserStatus(userIds, newStatus, userDetails.getUsername());
+        return adminUserService.bulkUpdateUserStatus(userIds, newStatus, userDetails.getUsername(),httpServletRequest);
 
     }
 
@@ -112,10 +118,11 @@ public class AdminUserController {
     @DeleteMapping("/bulk-delete")
     public ResponseMessage bulkDeleteUsers(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody List<Long> userIds) throws UnauthorizedAccessException, AdminOrSuperAdminNotFoundException {
+            @RequestBody List<Long> userIds,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, AdminOrSuperAdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
-        return adminUserService.bulkDeleteUsers(userIds, userDetails.getUsername());
+        return adminUserService.bulkDeleteUsers(userIds, userDetails.getUsername(),httpServletRequest);
     }
 
     // =============== 2. KULLANICI DETAYLARI ===============
@@ -126,10 +133,11 @@ public class AdminUserController {
     @GetMapping("/{userId}")
     public CacheUserDTO getUserDetails(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId) throws UnauthorizedAccessException, UserNotFoundException, AdminOrSuperAdminNotFoundException {
+            @PathVariable Long userId,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException, AdminOrSuperAdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
-        return adminUserService.getUserById(userId,userDetails.getUsername());
+        return adminUserService.getUserById(userId,userDetails.getUsername(),httpServletRequest);
     }
 
     /**
@@ -138,10 +146,11 @@ public class AdminUserController {
     @GetMapping("/{userId}/device-info")
     public Map<String, Object> getUserDeviceInfo(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId) throws UnauthorizedAccessException, UserNotFoundException {
+            @PathVariable Long userId,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException, AdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
-        return adminUserService.getUserDeviceInfo(userId,userDetails.getUsername());
+        return adminUserService.getUserDeviceInfo(userId,userDetails.getUsername(),httpServletRequest);
 
     }
 
@@ -154,10 +163,11 @@ public class AdminUserController {
     public ResponseMessage assignRolesToUser(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
-            @RequestBody Set<Role> roles) throws UnauthorizedAccessException, AdminOrSuperAdminNotFoundException {
+            @RequestBody Set<Role> roles,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, AdminOrSuperAdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
-        return adminUserService.assignRolesToUser(userId, roles, userDetails.getUsername());
+        return adminUserService.assignRolesToUser(userId, roles, userDetails.getUsername(),httpServletRequest);
 
     }
 
@@ -168,10 +178,11 @@ public class AdminUserController {
     public ResponseMessage removeRolesFromUser(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
-            @RequestBody Set<Role> roles) throws UnauthorizedAccessException {
+            @RequestBody Set<Role> roles,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException {
         isAdminOrSuperAdmin(userDetails);
 
-       return adminUserService.removeRolesFromUser(userId, roles, userDetails.getUsername());
+       return adminUserService.removeRolesFromUser(userId, roles, userDetails.getUsername(),httpServletRequest);
 
     }
 
@@ -181,13 +192,14 @@ public class AdminUserController {
     @PostMapping("/bulk-role-assignment")
     public ResponseMessage bulkAssignRoles(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestBody Map<String, Object> request) throws UnauthorizedAccessException, UserNotFoundException {
+            @RequestBody Map<String, Object> request,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
         List<Long> userIds = (List<Long>) request.get("userIds");
         Set<Role> roles = Set.of(Role.valueOf((String) request.get("role")));
 
-        return  adminUserService.bulkAssignRoles(userIds, roles, userDetails.getUsername());
+        return  adminUserService.bulkAssignRoles(userIds, roles, userDetails.getUsername(),httpServletRequest);
 
     }
 
@@ -200,14 +212,12 @@ public class AdminUserController {
     public ResponseMessage resetUserPassword(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
-            @RequestParam String newPassword) throws UnauthorizedAccessException, UserNotFoundException {
+            @RequestParam String newPassword,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException {
 
         isAdminOrSuperAdmin(userDetails);
 
-        return adminUserService.resetUserPassword(
-                userId,newPassword,
-                userDetails.getUsername()
-        );
+        return adminUserService.resetUserPassword(userId,newPassword, userDetails.getUsername(),httpServletRequest );
     }
 
 
@@ -219,11 +229,12 @@ public class AdminUserController {
     public ResponseMessage updateEmailVerificationStatus(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
-            @RequestBody Map<String, Boolean> request) throws UnauthorizedAccessException {
+            @RequestBody Map<String, Boolean> request,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException {
         isAdminOrSuperAdmin(userDetails);
 
         boolean verified = request.get("verified");
-        return adminUserService.updateEmailVerificationStatus(userId, verified, userDetails.getUsername());
+        return adminUserService.updateEmailVerificationStatus(userId, verified, userDetails.getUsername(),httpServletRequest);
 
     }
 
@@ -234,11 +245,12 @@ public class AdminUserController {
     public ResponseMessage updatePhoneVerificationStatus(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
-            @RequestBody Map<String, Boolean> request) throws UnauthorizedAccessException {
+            @RequestBody Map<String, Boolean> request,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException {
         isAdminOrSuperAdmin(userDetails);
 
         boolean verified = request.get("verified");
-        return adminUserService.updatePhoneVerificationStatus(userId, verified, userDetails.getUsername());
+        return adminUserService.updatePhoneVerificationStatus(userId, verified, userDetails.getUsername(),httpServletRequest);
 
     }
 
@@ -250,10 +262,11 @@ public class AdminUserController {
     @GetMapping("/{userId}/active-sessions")
     public List<Map<String, Object>> getUserActiveSessions(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId) throws UnauthorizedAccessException {
+            @PathVariable Long userId,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException {
         isAdminOrSuperAdmin(userDetails);
 
-        return adminUserService.getUserActiveSessions(userId);
+        return adminUserService.getUserActiveSessions(userId,httpServletRequest);
     }
 
     /**
@@ -263,10 +276,11 @@ public class AdminUserController {
     public ResponseMessage terminateUserSession(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
-            @PathVariable String sessionId) throws UnauthorizedAccessException {
+            @PathVariable String sessionId,
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException {
         isAdminOrSuperAdmin(userDetails);
 
-        return adminUserService.terminateUserSession(userId, sessionId, userDetails.getUsername());
+        return adminUserService.terminateUserSession(userId, sessionId, userDetails.getUsername(),httpServletRequest);
     }
 
 

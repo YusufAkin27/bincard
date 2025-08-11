@@ -1,5 +1,6 @@
 package akin.city_card.user.service.abstracts;
 
+import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.news.core.response.PageDTO;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.Role;
@@ -15,7 +16,6 @@ import akin.city_card.user.exceptions.InvalidPhoneNumberFormatException;
 import akin.city_card.user.exceptions.PhoneNumberAlreadyExistsException;
 import akin.city_card.user.exceptions.PhoneNumberRequiredException;
 import akin.city_card.user.model.LoginHistory;
-import akin.city_card.user.model.SearchHistory;
 import akin.city_card.user.model.UserStatus;
 import akin.city_card.wallet.exceptions.AdminOrSuperAdminNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -31,34 +31,34 @@ import java.util.Set;
 
 public interface AdminUserService {
 
-    PageDTO<CacheUserDTO> getAllUsers(Pageable pageable);
+    PageDTO<CacheUserDTO> getAllUsers(Pageable pageable, String username, HttpServletRequest httpServletRequest) throws AdminNotFoundException;
 
-    PageDTO<CacheUserDTO> searchUsers(String name, Pageable pageable);
+    PageDTO<CacheUserDTO> searchUsers(String name, Pageable pageable, String username, HttpServletRequest httpServletRequest) throws AdminNotFoundException;
 
-    ResponseMessage bulkUpdateUserStatus(List<Long> userIds, UserStatus newStatus, String username) throws AdminOrSuperAdminNotFoundException;
+    ResponseMessage bulkUpdateUserStatus(List<Long> userIds, UserStatus newStatus, String username, HttpServletRequest httpServletRequest) throws AdminOrSuperAdminNotFoundException;
 
-    ResponseMessage bulkDeleteUsers(List<Long> userIds, String username) throws AdminOrSuperAdminNotFoundException;
+    ResponseMessage bulkDeleteUsers(List<Long> userIds, String username, HttpServletRequest httpServletRequest) throws AdminOrSuperAdminNotFoundException;
 
-    CacheUserDTO getUserById(Long userId, String username) throws UserNotFoundException, AdminOrSuperAdminNotFoundException;
+    CacheUserDTO getUserById(Long userId, String username, HttpServletRequest httpServletRequest) throws UserNotFoundException, AdminOrSuperAdminNotFoundException;
 
-    Map<String, Object> getUserDeviceInfo(Long userId, String username) throws UserNotFoundException;
+    Map<String, Object> getUserDeviceInfo(Long userId, String username, HttpServletRequest httpServletRequest) throws UserNotFoundException, AdminNotFoundException;
 
-    ResponseMessage assignRolesToUser(Long userId, Set<Role> roles, String username) throws AdminOrSuperAdminNotFoundException;
+    ResponseMessage assignRolesToUser(Long userId, Set<Role> roles, String username, HttpServletRequest httpServletRequest) throws AdminOrSuperAdminNotFoundException;
 
-    ResponseMessage removeRolesFromUser(Long userId, Set<Role> roles, String username);
+    ResponseMessage removeRolesFromUser(Long userId, Set<Role> roles, String username, HttpServletRequest httpServletRequest) throws AdminOrSuperAdminNotFoundException;
 
-    ResponseMessage bulkAssignRoles(List<Long> userIds, Set<Role> roles, String username) throws UserNotFoundException;
+    ResponseMessage bulkAssignRoles(List<Long> userIds, Set<Role> roles, String username, HttpServletRequest httpServletRequest) throws UserNotFoundException, AdminNotFoundException;
 
-    ResponseMessage resetUserPassword(Long userId, String newPassword, String username) throws UserNotFoundException;
+    ResponseMessage resetUserPassword(Long userId, String newPassword, String username, HttpServletRequest httpServletRequest) throws UserNotFoundException, AdminNotFoundException;
 
 
-    ResponseMessage updateEmailVerificationStatus(Long userId, boolean verified, String username);
+    ResponseMessage updateEmailVerificationStatus(Long userId, boolean verified, String username, HttpServletRequest httpServletRequest) throws AdminOrSuperAdminNotFoundException, UserNotFoundException;
 
-    ResponseMessage updatePhoneVerificationStatus(Long userId, boolean verified, String username);
+    ResponseMessage updatePhoneVerificationStatus(Long userId, boolean verified, String username, HttpServletRequest httpServletRequest) throws AdminOrSuperAdminNotFoundException, UserNotFoundException;
 
-    List<Map<String, Object>> getUserActiveSessions(Long userId);
+    List<Map<String, Object>> getUserActiveSessions(Long userId, HttpServletRequest httpServletRequest);
 
-    ResponseMessage terminateUserSession(Long userId, String sessionId, String username);
+    ResponseMessage terminateUserSession(Long userId, String sessionId, String username, HttpServletRequest httpServletRequest);
 
 
     ResponseMessage banIpAddress(String ipAddress, String reason, LocalDateTime expiresAt, String username);
