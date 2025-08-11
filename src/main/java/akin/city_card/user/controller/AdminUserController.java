@@ -179,7 +179,7 @@ public class AdminUserController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
             @RequestBody Set<Role> roles,
-            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException {
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, AdminOrSuperAdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
        return adminUserService.removeRolesFromUser(userId, roles, userDetails.getUsername(),httpServletRequest);
@@ -193,7 +193,7 @@ public class AdminUserController {
     public ResponseMessage bulkAssignRoles(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody Map<String, Object> request,
-            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException {
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException, AdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
         List<Long> userIds = (List<Long>) request.get("userIds");
@@ -213,7 +213,7 @@ public class AdminUserController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
             @RequestParam String newPassword,
-            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException {
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException, AdminNotFoundException {
 
         isAdminOrSuperAdmin(userDetails);
 
@@ -230,7 +230,7 @@ public class AdminUserController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
             @RequestBody Map<String, Boolean> request,
-            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException {
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException, AdminOrSuperAdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
         boolean verified = request.get("verified");
@@ -246,7 +246,7 @@ public class AdminUserController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long userId,
             @RequestBody Map<String, Boolean> request,
-            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException {
+            HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException, AdminOrSuperAdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
         boolean verified = request.get("verified");
