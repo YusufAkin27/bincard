@@ -47,7 +47,6 @@ public interface UserRepository extends JpaRepository<User, Long> , JpaSpecifica
 
 
 
-    long countByIsDeleted(boolean b);
 
     long countByWalletActivated(boolean b);
 

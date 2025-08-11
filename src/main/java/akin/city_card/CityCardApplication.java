@@ -14,10 +14,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class CityCardApplication {
 
     public static void main(String[] args) {
-            Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-            dotenv.entries().forEach(entry ->
-                    System.setProperty(entry.getKey(), entry.getValue())
-            );
+        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+        dotenv.entries().forEach(entry ->
+                System.setProperty(entry.getKey(), entry.getValue())
+        );
 
 
 

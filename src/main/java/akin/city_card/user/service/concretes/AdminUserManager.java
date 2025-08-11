@@ -715,7 +715,7 @@ public class AdminUserManager implements AdminUserService {
     public Map<String, Object> getUserStatistics() {
         long totalUsers = userRepository.count();
         long activeUsers = userRepository.countByStatus(UserStatus.ACTIVE);
-        long deletedUsers = userRepository.countByIsDeleted(true);
+        long deletedUsers = userRepository.countByStatus(UserStatus.DELETED);
         long walletActivatedUsers = userRepository.countByWalletActivated(true);
 
         BigDecimal totalWalletBalance = walletRepository.getTotalBalance();

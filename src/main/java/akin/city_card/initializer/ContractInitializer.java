@@ -28,40 +28,17 @@ public class ContractInitializer implements CommandLineRunner {
     private void initializeDefaultContracts() {
         log.info("Varsayılan sözleşmeler kontrol ediliyor...");
 
-        // System admin kullanıcısını bul veya oluştur
         SecurityUser systemAdmin = getOrCreateSystemAdmin();
 
-        // Üyelik Sözleşmesi
         createContractIfNotExists(
-                ContractType.UYELIK_SOZLESMESI,
-                "Üyelik Sözleşmesi",
-                getMembershipContractContent(),
+                ContractType.KULLANIM_KOSULLARI,
+                "Kullanım Koşulları",
+                "Bu kullanım koşulları metnidir...",
                 "1.0",
                 true,
                 systemAdmin
         );
 
-        // KVKK Aydınlatma Metni
-        createContractIfNotExists(
-                ContractType.AYDINLATMA_METNI,
-                "KVKK Aydınlatma Metni",
-                getKvkkIlluminationContent(),
-                "1.0",
-                true,
-                systemAdmin
-        );
-
-        // Kişisel Verilerin İşlenmesine İlişkin Açık Rıza
-        createContractIfNotExists(
-                ContractType.VERI_ISLEME_IZNI,
-                "Kişisel Verilerin İşlenmesine İlişkin Açık Rıza",
-                getDataProcessingConsentContent(),
-                "1.0",
-                true,
-                systemAdmin
-        );
-
-        // Gizlilik Politikası
         createContractIfNotExists(
                 ContractType.GIZLILIK_POLITIKASI,
                 "Gizlilik Politikası",
@@ -71,8 +48,90 @@ public class ContractInitializer implements CommandLineRunner {
                 systemAdmin
         );
 
-        log.info("Varsayılan sözleşmeler başarıyla kontrol edildi ve gerekirse oluşturuldu.");
+        createContractIfNotExists(
+                ContractType.VERI_ISLEME_IZNI,
+                "Kişisel Verilerin İşlenmesine İlişkin Açık Rıza",
+                getDataProcessingConsentContent(),
+                "1.0",
+                true,
+                systemAdmin
+        );
+
+        createContractIfNotExists(
+                ContractType.PAZARLAMA_IZNI,
+                "Pazarlama İzni",
+                "Pazarlama amacıyla ileti gönderilmesine onay veriyorum...",
+                "1.0",
+                false,
+                systemAdmin
+        );
+
+        createContractIfNotExists(
+                ContractType.CEREZ_POLITIKASI,
+                "Çerez Politikası",
+                "Çerezlerin kullanımına ilişkin detaylar burada yer alır...",
+                "1.0",
+                false,
+                systemAdmin
+        );
+
+        createContractIfNotExists(
+                ContractType.HIZMET_SOZLESMESI,
+                "Hizmet Sözleşmesi",
+                "Bu hizmet sözleşmesi, City Card hizmetlerini kapsar...",
+                "1.0",
+                true,
+                systemAdmin
+        );
+
+        createContractIfNotExists(
+                ContractType.LOYALTY_PROGRAMI_KOSULLARI,
+                "Sadakat Programı Koşulları",
+                "Sadakat programına katılım koşulları şunlardır...",
+                "1.0",
+                false,
+                systemAdmin
+        );
+
+        createContractIfNotExists(
+                ContractType.UYELIK_SOZLESMESI,
+                "Üyelik Sözleşmesi",
+                getMembershipContractContent(),
+                "1.0",
+                true,
+                systemAdmin
+        );
+
+        createContractIfNotExists(
+                ContractType.KAMPANYA_KATILIM_KOSULLARI,
+                "Kampanya Katılım Koşulları",
+                "Kampanya katılım koşulları burada açıklanır...",
+                "1.0",
+                false,
+                systemAdmin
+        );
+
+        createContractIfNotExists(
+                ContractType.AYDINLATMA_METNI,
+                "KVKK Aydınlatma Metni",
+                getKvkkIlluminationContent(),
+                "1.0",
+                true,
+                systemAdmin
+        );
+
+        createContractIfNotExists(
+                ContractType.DIGER,
+                "Diğer",
+                "Bu kategoriye özel metinler burada yer alır...",
+                "1.0",
+                false,
+                systemAdmin
+        );
+
+        log.info("Tüm varsayılan sözleşmeler kontrol edildi ve gerekirse oluşturuldu.");
     }
+
 
     private SecurityUser getOrCreateSystemAdmin() {
         Optional<SecurityUser> systemAdmin = securityUserRepository.findByUserNumber("+905333000016");

@@ -85,6 +85,7 @@ public class UserConverterImpl implements UserConverter {
 
     @Override
     public CacheUserDTO toCacheUserDTO(User user) {
+        if (user == null) return null;
         return CacheUserDTO.builder()
                 .id(user.getId())
                 .telephone(user.getUserNumber())
