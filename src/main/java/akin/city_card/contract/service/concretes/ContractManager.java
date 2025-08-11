@@ -347,44 +347,31 @@ public class ContractManager implements ContractService {
     @Override
     @Transactional
     public void autoAcceptMandatoryContracts(SecurityUser user, String ipAddress, String userAgent) {
-        List<ContractType> mandatoryTypes = List.of(
-                ContractType.UYELIK_SOZLESMESI,
-                ContractType.AYDINLATMA_METNI,
-                ContractType.VERI_ISLEME_IZNI,
-                ContractType.GIZLILIK_POLITIKASI
-        );
+        try {
+            // Zorunlu ama henüz kabul edilmemiş sözleşmeleri getir
+            List<Contract> unacceptedMandatoryContracts = getUnacceptedMandatoryContracts(user.getUsername());
 
-        for (ContractType type : mandatoryTypes) {
-            try {
-                Contract contract = contractRepository.findTopByTypeAndActiveOrderByCreatedAtDesc(type, true)
-                        .orElse(null);
+            for (Contract contract : unacceptedMandatoryContracts) {
+                UserContractAcceptance acceptance = UserContractAcceptance.builder()
+                        .user(user)
+                        .contract(contract)
+                        .accepted(true)
+                        .ipAddress(ipAddress)
+                        .userAgent(userAgent)
+                        .contractVersion(contract.getVersion())
+                        .acceptedAt(LocalDateTime.now())
+                        .build();
 
-                if (contract != null) {
-                    // Daha önce kabul edilmiş mi kontrol et
-                    boolean alreadyAccepted = acceptanceRepository.existsByUserAndContractAndAccepted(user, contract, true);
+                acceptanceRepository.save(acceptance);
 
-                    if (!alreadyAccepted) {
-                        UserContractAcceptance acceptance = UserContractAcceptance.builder()
-                                .user(user)
-                                .contract(contract)
-                                .accepted(true)
-                                .ipAddress(ipAddress)
-                                .userAgent(userAgent)
-                                .contractVersion(contract.getVersion())
-                                .acceptedAt(LocalDateTime.now())
-                                .build();
-
-                        acceptanceRepository.save(acceptance);
-
-                        log.info("Otomatik sözleşme kabulü: {} - Kullanıcı: {} - IP: {}",
-                                contract.getTitle(), user.getUserNumber(), ipAddress);
-                    }
-                }
-            } catch (Exception e) {
-                log.error("Otomatik sözleşme kabulü sırasında hata - Tip: {} - Kullanıcı: {}", type, user.getUserNumber(), e);
+                log.info("Otomatik sözleşme kabulü: {} - Kullanıcı: {} - IP: {}",
+                        contract.getTitle(), user.getUserNumber(), ipAddress);
             }
+        } catch (Exception e) {
+            log.error("Otomatik sözleşme kabulü sırasında hata - Kullanıcı: {}", user.getUserNumber(), e);
         }
     }
+
 
     // Kontrol İşlemleri
     @Override
