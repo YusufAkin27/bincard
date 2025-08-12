@@ -9,6 +9,9 @@ import akin.city_card.contract.core.request.UpdateContractRequest;
 import akin.city_card.contract.core.response.AcceptedContractDTO;
 import akin.city_card.contract.core.response.ContractDTO;
 import akin.city_card.contract.core.response.UserContractDTO;
+import akin.city_card.contract.exceptions.AlreadyContractAcceptedException;
+import akin.city_card.contract.exceptions.AlreadyContractRejectedException;
+import akin.city_card.contract.exceptions.ContractNotActiveException;
 import akin.city_card.contract.exceptions.ContractNotFoundException;
 import akin.city_card.contract.model.Contract;
 import akin.city_card.contract.model.ContractType;
@@ -20,8 +23,6 @@ import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.security.repository.SecurityUserRepository;
-import akin.city_card.user.model.User;
-import akin.city_card.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -258,39 +259,44 @@ public class ContractManager implements ContractService {
                     .orElseThrow(UserNotFoundException::new);
 
             Contract contract = contractRepository.findById(contractId)
-                    .orElseThrow(() -> new RuntimeException("Sözleşme bulunamadı"));
+                    .orElseThrow(ContractNotFoundException::new);
 
             if (!contract.isActive()) {
-                return new ResponseMessage("Bu sözleşme artık aktif değil.", false);
+                throw new ContractNotActiveException();
             }
 
-            // Daha önce onaylanmış mı kontrol et
-            boolean alreadyAccepted = acceptanceRepository.existsByUserAndContractAndAccepted(user, contract, true);
-            if (alreadyAccepted) {
-                return new ResponseMessage("Bu sözleşme zaten onaylanmış.", false);
+            if (acceptanceRepository.existsByUserAndContractAndAccepted(user, contract, true)) {
+                throw new AlreadyContractAcceptedException();
             }
 
-            UserContractAcceptance acceptance = UserContractAcceptance.builder()
-                    .user(user)
-                    .contract(contract)
-                    .accepted(true)
-                    .ipAddress(request.getIpAddress())
-                    .userAgent(request.getUserAgent())
-                    .contractVersion(contract.getVersion())
-                    .acceptedAt(LocalDateTime.now())
-                    .build();
-
+            UserContractAcceptance acceptance = buildAcceptance(user, contract, request);
             acceptanceRepository.save(acceptance);
 
             log.info("Sözleşme onaylandı: {} - Kullanıcı: {} - IP: {}",
                     contract.getTitle(), username, request.getIpAddress());
-            return new ResponseMessage("Sözleşme başarıyla onaylandı.", true);
 
+            return new ResponseMessage("Sözleşme başarıyla onaylandı.", true);
         } catch (Exception e) {
             log.error("Sözleşme onaylanırken hata: ", e);
             return new ResponseMessage("Sözleşme onaylanamadı: " + e.getMessage(), false);
         }
     }
+
+    /**
+     * Sözleşme kabul kaydını oluşturur.
+     */
+    private UserContractAcceptance buildAcceptance(SecurityUser user, Contract contract, AcceptContractRequest request) {
+        return UserContractAcceptance.builder()
+                .user(user)
+                .contract(contract)
+                .accepted(true)
+                .ipAddress(request.getIpAddress())
+                .userAgent(request.getUserAgent())
+                .contractVersion(contract.getVersion())
+                .acceptedAt(LocalDateTime.now())
+                .build();
+    }
+
 
     @Transactional
     @Override
@@ -303,34 +309,42 @@ public class ContractManager implements ContractService {
                     .orElseThrow(ContractNotFoundException::new);
 
             if (!contract.isActive()) {
-                return new ResponseMessage("Bu sözleşme artık aktif değil.", false);
+                throw new ContractNotActiveException();
             }
 
-            // Daha önce kabul edilmiş kayıt varsa sil veya pasif et
+            if (acceptanceRepository.existsByUserAndContractAndAccepted(user, contract, false)) {
+                throw new AlreadyContractRejectedException();
+            }
+
             acceptanceRepository.deleteByUserAndContractAndAccepted(user, contract, true);
 
-            UserContractAcceptance rejection = UserContractAcceptance.builder()
-                    .user(user)
-                    .contract(contract)
-                    .accepted(false)
-                    .rejectionReason(request.getRejectionReason())
-                    .contractVersion(contract.getVersion())
-                    .acceptedAt(LocalDateTime.now())
-                    .build();
-
+            UserContractAcceptance rejection = buildRejection(user, contract, request);
             acceptanceRepository.save(rejection);
 
             log.info("Sözleşme reddedildi: {} - Kullanıcı: {} - Sebep: {}",
                     contract.getTitle(), username, request.getRejectionReason());
-            return new ResponseMessage("Sözleşme reddetme kaydı oluşturuldu.", true);
 
+            return new ResponseMessage("Sözleşme reddetme kaydı oluşturuldu.", true);
         } catch (Exception e) {
             log.error("Sözleşme reddedilirken hata: ", e);
             return new ResponseMessage("Sözleşme reddetme işlemi başarısız: " + e.getMessage(), false);
         }
     }
 
+    private UserContractAcceptance buildRejection(SecurityUser user, Contract contract, RejectContractRequest request) {
+        return UserContractAcceptance.builder()
+                .user(user)
+                .contract(contract)
+                .accepted(false)
+                .rejectionReason(request.getRejectionReason())
+                .contractVersion(contract.getVersion())
+                .acceptedAt(LocalDateTime.now())
+                .build();
+    }
+
+
     @Override
+    //admin için
     public List<AcceptedContractDTO> getAcceptedContracts(String username) throws UserNotFoundException {
         SecurityUser user = securityUserRepository.findByUserNumber(username)
                 .orElseThrow(UserNotFoundException::new);
@@ -379,12 +393,12 @@ public class ContractManager implements ContractService {
 
     // Kontrol İşlemleri
     @Override
-    public boolean hasUserAcceptedContract(String username, Long contractId) throws UserNotFoundException {
+    public boolean hasUserAcceptedContract(String username, Long contractId) throws UserNotFoundException, ContractNotFoundException {
         SecurityUser user = securityUserRepository.findByUserNumber(username)
                 .orElseThrow(UserNotFoundException::new);
 
         Contract contract = contractRepository.findById(contractId)
-                .orElseThrow(() -> new RuntimeException("Sözleşme bulunamadı"));
+                .orElseThrow(ContractNotFoundException::new);
 
         return acceptanceRepository.existsByUserAndContractAndAccepted(user, contract, true);
     }

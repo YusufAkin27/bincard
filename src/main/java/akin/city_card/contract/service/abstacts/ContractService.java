@@ -7,6 +7,7 @@ import akin.city_card.contract.core.request.UpdateContractRequest;
 import akin.city_card.contract.core.response.AcceptedContractDTO;
 import akin.city_card.contract.core.response.ContractDTO;
 import akin.city_card.contract.core.response.UserContractDTO;
+import akin.city_card.contract.exceptions.ContractNotFoundException;
 import akin.city_card.contract.model.Contract;
 import akin.city_card.contract.model.ContractType;
 import akin.city_card.response.ResponseMessage;
@@ -49,7 +50,7 @@ public interface ContractService {
     void autoAcceptMandatoryContracts(SecurityUser user, String ipAddress, String userAgent);
 
     // Kontrol İşlemleri
-    boolean hasUserAcceptedContract(String username, Long contractId) throws UserNotFoundException;
+    boolean hasUserAcceptedContract(String username, Long contractId) throws UserNotFoundException, ContractNotFoundException;
     boolean hasUserAcceptedAllMandatoryContracts(String username) throws UserNotFoundException;
     List<Contract> getUnacceptedMandatoryContracts(String username) throws UserNotFoundException;
 }
