@@ -124,7 +124,7 @@ public class ContractController {
     public ResponseEntity<Boolean> checkContractAcceptanceStatus(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long contractId
-    ) throws UserNotFoundException {
+    ) throws UserNotFoundException, ContractNotFoundException {
         boolean isAccepted = contractService.hasUserAcceptedContract(
                 userDetails.getUsername(),
                 contractId

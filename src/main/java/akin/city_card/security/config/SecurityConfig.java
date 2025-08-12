@@ -67,6 +67,7 @@ public class SecurityConfig {
             "/v1/api/news/**",
             "/v1/api/tracking/**",
             "/v1/api/simulation/**",
+           "/v1/api/feedback/**",
             "/v1/api/bus/**",
             "/v1/api/station/**",
             "/v1/api/route/**"
@@ -79,6 +80,7 @@ public class SecurityConfig {
             "/v1/api/payment-point", // POST yeni ekleme
             "/v1/api/payment-point/*/status", // PATCH: Tek seviye (id/status)
             "/v1/api/payment-point/*/photos", // POST: Fotoğraf ekleme
+            "/v1/api/feedback/statistics/**",
             "/v1/api/payment-point/*/photos/*", // DELETE: Fotoğraf silme
             "/v1/api/payment-point/*", // PUT & DELETE: Güncelleme ve silme
     };

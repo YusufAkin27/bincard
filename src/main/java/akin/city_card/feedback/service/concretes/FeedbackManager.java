@@ -3,8 +3,10 @@ package akin.city_card.feedback.service.concretes;
 import akin.city_card.cloudinary.MediaUploadService;
 import akin.city_card.feedback.core.converter.FeedbackConverter;
 import akin.city_card.feedback.core.request.FeedbackRequest;
+import akin.city_card.feedback.core.request.AnonymousFeedbackRequest;
 import akin.city_card.feedback.core.response.FeedbackDTO;
 import akin.city_card.feedback.model.Feedback;
+import akin.city_card.feedback.model.FeedbackType;
 import akin.city_card.feedback.repository.FeedbackRepository;
 import akin.city_card.feedback.service.abstracts.FeedbackService;
 import akin.city_card.mail.EmailMessage;
@@ -40,14 +42,14 @@ public class FeedbackManager implements FeedbackService {
     private final FeedbackConverter feedbackConverter;
 
     @Override
-    public ResponseMessage sendFeedback(UserDetails userDetails, FeedbackRequest request) throws OnlyPhotosAndVideosException, PhotoSizeLargerException, IOException, VideoSizeLargerException, FileFormatCouldNotException, UserNotFoundException {
-        User user = userRepository.findByUserNumber(userDetails.getUsername()).orElseThrow(UserNotFoundException::new);;
+    public ResponseMessage sendFeedback(UserDetails userDetails, FeedbackRequest request)
+            throws OnlyPhotosAndVideosException, PhotoSizeLargerException, IOException,
+            VideoSizeLargerException, FileFormatCouldNotException, UserNotFoundException {
 
-        String photoUrl = null;
-        MultipartFile photo = request.getPhoto();
-        if (photo != null && !photo.isEmpty()) {
-            photoUrl = mediaUploadService.uploadAndOptimizeMedia(photo);
-        }
+        User user = userRepository.findByUserNumber(userDetails.getUsername())
+                .orElseThrow(UserNotFoundException::new);
+
+        String photoUrl = uploadPhotoIfExists(request.getPhoto());
 
         Feedback feedback = Feedback.builder()
                 .user(user)
@@ -57,21 +59,80 @@ public class FeedbackManager implements FeedbackService {
                 .source(request.getSource())
                 .submittedAt(LocalDateTime.now())
                 .photoUrl(photoUrl)
+                .isAnonymous(false) // Kayıtlı kullanıcı
                 .build();
 
         feedbackRepository.save(feedback);
 
         // Email gönder (eğer e-posta varsa)
-        if (user.getProfileInfo().getEmail() != null && !user.getProfileInfo().getEmail().isBlank()) {
+        sendConfirmationEmail(feedback);
+
+        return new ResponseMessage("Geri bildiriminiz başarıyla alındı.", true);
+    }
+
+    @Override
+    public ResponseMessage sendAnonymousFeedback(AnonymousFeedbackRequest request)
+            throws OnlyPhotosAndVideosException, PhotoSizeLargerException, IOException,
+            VideoSizeLargerException, FileFormatCouldNotException {
+
+        String photoUrl = uploadPhotoIfExists(request.getPhoto());
+
+        Feedback feedback = Feedback.builder()
+                .user(null) // Anonim kullanıcı
+                .subject(request.getSubject())
+                .message(request.getMessage())
+                .type(request.getType())
+                .source(request.getSource())
+                .submittedAt(LocalDateTime.now())
+                .photoUrl(photoUrl)
+                .contactEmail(request.getContactEmail())
+                .contactName(request.getContactName())
+                .contactPhone(request.getContactPhone())
+                .isAnonymous(true)
+                .build();
+
+        feedbackRepository.save(feedback);
+
+        // Email gönder (eğer contact email varsa)
+        sendConfirmationEmail(feedback);
+
+        return new ResponseMessage("Geri bildiriminiz başarıyla alındı.", true);
+    }
+
+    private String uploadPhotoIfExists(MultipartFile photo)
+            throws OnlyPhotosAndVideosException, PhotoSizeLargerException, IOException,
+            VideoSizeLargerException, FileFormatCouldNotException {
+
+        if (photo != null && !photo.isEmpty()) {
+            return mediaUploadService.uploadAndOptimizeMedia(photo);
+        }
+        return null;
+    }
+
+    private void sendConfirmationEmail(Feedback feedback) {
+        String effectiveEmail = feedback.getEffectiveContactEmail();
+        String effectiveName = feedback.getEffectiveContactName();
+
+        if (effectiveEmail != null && !effectiveEmail.isBlank()) {
             EmailMessage email = new EmailMessage();
-            email.setToEmail(user.getProfileInfo().getEmail());
+            email.setToEmail(effectiveEmail);
             email.setSubject("Geri Bildiriminiz Alındı");
-            email.setBody("Sayın kullanıcı,\n\nGeri bildiriminiz başarıyla alınmıştır. İlginiz için teşekkür ederiz.\n\nCity Card Ekibi");
+
+            String greeting = effectiveName != null && !effectiveName.isBlank()
+                    ? "Sayın " + effectiveName + ","
+                    : "Sayın kullanıcı,";
+
+            String body = greeting + "\n\n" +
+                    "Geri bildiriminiz başarıyla alınmıştır. " +
+                    "İlginiz için teşekkür ederiz.\n\n" +
+                    "Konu: " + feedback.getSubject() + "\n" +
+                    "Tarih: " + feedback.getSubmittedAt().toLocalDate() + "\n\n" +
+                    "City Card Ekibi";
+
+            email.setBody(body);
             email.setHtml(false);
             mailService.queueEmail(email);
         }
-
-        return new ResponseMessage("Geri bildiriminiz başarıyla alındı.", true);
     }
 
     @Override
@@ -87,8 +148,22 @@ public class FeedbackManager implements FeedbackService {
         LocalDateTime startDateTime = (start != null) ? start.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0);
         LocalDateTime endDateTime = (end != null) ? end.atTime(23, 59, 59) : LocalDateTime.now();
 
+        // String type'ı FeedbackType enum'ına dönüştür
+        FeedbackType feedbackType = null;
+        if (type != null && !type.trim().isEmpty()) {
+            try {
+                feedbackType = FeedbackType.valueOf(type.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return new DataResponseMessage<>(
+                        "Geçersiz feedback türü: " + type,
+                        false,
+                        Page.empty()
+                );
+            }
+        }
+
         Page<Feedback> feedbackPage = feedbackRepository.findFiltered(
-                type,
+                feedbackType,
                 source,
                 startDateTime,
                 endDateTime,
@@ -102,6 +177,49 @@ public class FeedbackManager implements FeedbackService {
         );
     }
 
+    @Override
+    public DataResponseMessage<Page<FeedbackDTO>> getAllFeedbacksWithAnonymousFilter(
+            String username,
+            String type,
+            String source,
+            Boolean isAnonymous,
+            LocalDate start,
+            LocalDate end,
+            Pageable pageable) {
+
+        // Tarih aralığı ayarlamaları
+        LocalDateTime startDateTime = (start != null) ? start.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0);
+        LocalDateTime endDateTime = (end != null) ? end.atTime(23, 59, 59) : LocalDateTime.now();
+
+        // String type'ı FeedbackType enum'ına dönüştür
+        FeedbackType feedbackType = null;
+        if (type != null && !type.trim().isEmpty()) {
+            try {
+                feedbackType = FeedbackType.valueOf(type.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return new DataResponseMessage<>(
+                        "Geçersiz feedback türü: " + type,
+                        false,
+                        Page.empty()
+                );
+            }
+        }
+
+        Page<Feedback> feedbackPage = feedbackRepository.findFilteredWithAnonymous(
+                feedbackType,
+                source,
+                isAnonymous,
+                startDateTime,
+                endDateTime,
+                pageable
+        );
+
+        return new DataResponseMessage<>(
+                "Geri bildirimler başarıyla getirildi.",
+                true,
+                feedbackPage.map(feedbackConverter::toDTO)
+        );
+    }
 
     @Override
     public DataResponseMessage<FeedbackDTO> getFeedbackById(String username, Long id) {
