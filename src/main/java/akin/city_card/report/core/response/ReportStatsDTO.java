@@ -1,34 +1,37 @@
 package akin.city_card.report.core.response;
 
+import akin.city_card.report.model.ReportCategory;
+import akin.city_card.report.model.ReportPriority;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+import java.util.Map;
+
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ReportStatsDTO {
-    
-    // Mevcut stat'lar
     private long totalReports;
     private long openReports;
     private long inReviewReports;
     private long resolvedReports;
     private long rejectedReports;
     private long cancelledReports;
-    private long deletedReports;
-    private long archivedReports;
-    private long activeReports;
-    private long lostItemReports;
-    private long driverComplaintReports;
-    private long cardIssueReports;
-    private long serviceDelayReports;
-    private long otherReports;
-    private long reportsToday;
-    private long reportsThisWeek;
-    private long reportsThisMonth;
+    private long unassignedReports;
+    private long totalRatedReports;
+    private double averageSatisfactionRating;
+    private double averageResolutionTimeMinutes;
     
-    private SatisfactionStatsDTO satisfactionStats;
+    // Category breakdown
+    private Map<ReportCategory, Long> reportsByCategory;
+    
+    // Priority breakdown
+    private Map<ReportPriority, Long> reportsByPriority;
+    
+    // Monthly trends
+    private List<MonthlyReportCount> monthlyTrends;
 }

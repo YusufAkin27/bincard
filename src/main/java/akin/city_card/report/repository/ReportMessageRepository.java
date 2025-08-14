@@ -35,4 +35,6 @@ public interface ReportMessageRepository extends JpaRepository<ReportMessage, Lo
     int countUnreadByAdmin(@Param("report") Report report);
 
     List<ReportMessage> findTop3ByReportAndDeletedFalseOrderBySentAtDesc(Report report);
+
+    List<ReportMessage> findTop3ByReportOrderBySentAtDesc(Report report);
 }

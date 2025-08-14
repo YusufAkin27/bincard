@@ -6,41 +6,36 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SatisfactionStatsDTO {
-    
-    // Toplam puanlanan şikayet sayısı
     private long totalRatedReports;
-    
-    // Toplam puanlanabilir şikayet sayısı
-    private long totalRateableReports;
-    
-    // Ortalama memnuniyet puanı
     private double averageRating;
+    private long rating1Count;
+    private long rating2Count;
+    private long rating3Count;
+    private long rating4Count;
+    private long rating5Count;
     
-    // Puan dağılımı
-    private long rating1Count; // 1 puan
-    private long rating2Count; // 2 puan
-    private long rating3Count; // 3 puan
-    private long rating4Count; // 4 puan
-    private long rating5Count; // 5 puan
+    // Percentage calculations
+    public double getRating1Percentage() {
+        return totalRatedReports > 0 ? (double) rating1Count / totalRatedReports * 100 : 0.0;
+    }
     
-    // Yüzdelik dağılım
-    private double rating1Percentage;
-    private double rating2Percentage;
-    private double rating3Percentage;
-    private double rating4Percentage;
-    private double rating5Percentage;
+    public double getRating2Percentage() {
+        return totalRatedReports > 0 ? (double) rating2Count / totalRatedReports * 100 : 0.0;
+    }
     
-    // Memnuniyet oranı (4-5 puan alanların oranı)
-    private double satisfactionRate;
+    public double getRating3Percentage() {
+        return totalRatedReports > 0 ? (double) rating3Count / totalRatedReports * 100 : 0.0;
+    }
     
-    // Kategori bazlı ortalama puanlar
-    private double lostItemAverage;
-    private double driverComplaintAverage;
-    private double cardIssueAverage;
-    private double serviceDelayAverage;
-    private double otherAverage;
+    public double getRating4Percentage() {
+        return totalRatedReports > 0 ? (double) rating4Count / totalRatedReports * 100 : 0.0;
+    }
+    
+    public double getRating5Percentage() {
+        return totalRatedReports > 0 ? (double) rating5Count / totalRatedReports * 100 : 0.0;
+    }
 }

@@ -1582,7 +1582,7 @@
 						"auth": {
 							"type": "bearer",
 							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTc3MjEzLCJleHAiOjE3NTIxNzgxMTMsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.6Ab-TGdK-RVImug4wsK3Uv_NSC2E_Lv75sgMOe8iXldELpyWhWWfaGABxJVhk-0w"
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
 							}
 						},
 						"method": "POST",
@@ -1610,7 +1610,8 @@
 								{
 									"key": "photos",
 									"type": "file",
-									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg"
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg",
+									"disabled": true
 								}
 							]
 						},
@@ -1619,12 +1620,56 @@
 					"response": []
 				},
 				{
-					"name": "şikayet güncelle",
+					"name": "mesaj gönder",
 					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA0IiwiaWF0IjoxNzUyNDA1OTE4LCJleHAiOjE3NTI0MDY4MTgsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA0Iiwicm9sZSI6WyJVU0VSIl19.xq__kXWyzsCEpPl8FcmZALlz0u13WNJCku_WzsdwAD0YlXOgUnCkousYNaqc8gyx"
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "category",
+									"value": "OTHER",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "message",
+									"value": "fsdfsdfas",
+									"type": "text"
+								},
+								{
+									"key": "photos",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg",
+									"disabled": true
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/report/send-message/1"
+					},
+					"response": []
+				},
+				{
+					"name": "mesaj düzenle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
 							}
 						},
 						"method": "PUT",
@@ -1640,14 +1685,26 @@
 							"mode": "formdata",
 							"formdata": [
 								{
+									"key": "category",
+									"value": "OTHER",
+									"type": "text",
+									"disabled": true
+								},
+								{
 									"key": "message",
-									"value": "yanlış anlaşılma olmuş",
+									"value": "fsdfsdfas",
 									"type": "text"
+								},
+								{
+									"key": "photos",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg",
+									"disabled": true
 								}
 							]
 						},
 						"url": {
-							"raw": "http://localhost:8080/v1/api/report/9?message=selam",
+							"raw": "http://localhost:8080/v1/api/report/edit-message/33?newMessage=yeni mesaj güncellendi",
 							"protocol": "http",
 							"host": [
 								"localhost"
@@ -1657,11 +1714,337 @@
 								"v1",
 								"api",
 								"report",
-								"9"
+								"edit-message",
+								"33"
 							],
 							"query": [
 								{
+									"key": "newMessage",
+									"value": "yeni mesaj güncellendi"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "measaj sil",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "category",
+									"value": "OTHER",
+									"type": "text",
+									"disabled": true
+								},
+								{
 									"key": "message",
+									"value": "fsdfsdfas",
+									"type": "text"
+								},
+								{
+									"key": "photos",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg",
+									"disabled": true
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/report/delete-message/33"
+					},
+					"response": []
+				},
+				{
+					"name": "sohbeti getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "category",
+									"value": "OTHER",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "message",
+									"value": "fsdfsdfas",
+									"type": "text"
+								},
+								{
+									"key": "photos",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg",
+									"disabled": true
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/report/chat/11"
+					},
+					"response": []
+				},
+				{
+					"name": "sohbet mesajları",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/report/chat/11/messages"
+					},
+					"response": []
+				},
+				{
+					"name": "okundu olarak işaretle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/report/mark-as-read/11"
+					},
+					"response": []
+				},
+				{
+					"name": "sohbetlerim",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/report/my-chats"
+					},
+					"response": []
+				},
+				{
+					"name": "okunmamış sohbet sayısı",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/report/my-unread-count"
+					},
+					"response": []
+				},
+				{
+					"name": "sohbeti sil",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/report/delete-chat/11"
+					},
+					"response": []
+				},
+				{
+					"name": "sohbetler admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/report/admin/chats"
+					},
+					"response": []
+				},
+				{
+					"name": "okunmamış sohbet sayısı-admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/report/admin/unread-count"
+					},
+					"response": []
+				},
+				{
+					"name": "şikayet durumunu düzenle admin",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "arşive taşı sohbeti -admin",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/report/admin/archive-chat/11"
+					},
+					"response": []
+				},
+				{
+					"name": "istatistikler",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/report/admin/stats"
+					},
+					"response": []
+				},
+				{
+					"name": "toplu arşive taşı",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/admin/bulk/archive?reportIds=1,2,3,4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"admin",
+								"bulk",
+								"archive"
+							],
+							"query": [
+								{
+									"key": "reportIds",
+									"value": "1,2,3,4"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "toplu durum değiştirme",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/report/admin/bulk-status-change"
+					},
+					"response": []
+				},
+				{
+					"name": "kategoriler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/report/categories"
+					},
+					"response": []
+				},
+				{
+					"name": "durumlar",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/report/statuses"
+					},
+					"response": []
+				},
+				{
+					"name": "arama",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/search?keyword=selam",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"search"
+							],
+							"query": [
+								{
+									"key": "keyword",
 									"value": "selam"
 								}
 							]
@@ -1670,439 +2053,31 @@
 					"response": []
 				},
 				{
-					"name": "şikayet sil",
+					"name": "puan verme",
 					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTc3MjEzLCJleHAiOjE3NTIxNzgxMTMsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.6Ab-TGdK-RVImug4wsK3Uv_NSC2E_Lv75sgMOe8iXldELpyWhWWfaGABxJVhk-0w"
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
 							}
 						},
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text",
-								"disabled": true
-							}
-						],
-						"url": "http://localhost:8080/v1/api/report/1"
-					},
-					"response": []
-				},
-				{
-					"name": "admin şikayet durum güncelle",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUxNDkzMzM4LCJleHAiOjE3NTE0OTQyMzgsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.RsyxhW729jry3cjqFuuPF0ld0r4Xeg8gDUthzAaf5o_32jreCLhiphoxjSZ8RNjg"
-							}
-						},
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text",
-								"disabled": true
-							}
-						],
+						"method": "POST",
+						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n    \"status\":\"OPEN\"\r\n}",
+							"raw": "{\r\n    \"rating\":5,\r\n    \"comment\":\"sevdim\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
 								}
 							}
 						},
-						"url": "http://localhost:8080/v1/api/report/admin/status/1"
+						"url": "http://localhost:8080/v1/api/report/rate-satisfaction/11"
 					},
 					"response": []
 				},
 				{
-					"name": "admin şikayet ToggleDelete",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUxNDkzMzM4LCJleHAiOjE3NTE0OTQyMzgsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.RsyxhW729jry3cjqFuuPF0ld0r4Xeg8gDUthzAaf5o_32jreCLhiphoxjSZ8RNjg"
-							}
-						},
-						"method": "PATCH",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text",
-								"disabled": true
-							}
-						],
-						"url": "http://localhost:8080/v1/api/report/admin/toggleDelete/1"
-					},
-					"response": []
-				},
-				{
-					"name": "tüm şikayetler -admin",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUyNTY1NDMyLCJleHAiOjE3NTI1NjYzMzIsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.cz2LsBvbK1Km34UJStYZAagzQYSVKCXbRIDpxpYHyld3mpWJIpuAzSOvqPhBgmcu"
-							}
-						},
-						"method": "GET",
-						"header": [],
-						"url": "http://localhost:8080/v1/api/report/admin/all"
-					},
-					"response": []
-				},
-				{
-					"name": "admin şikayet arama",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyNDE0OTc4LCJleHAiOjE3NTI0MTU4NzgsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJVU0VSIiwiRFJJVkVSIiwiU1VQRVJBRE1JTiIsIkFETUlOIl19.lJW7LcpdmsVaJyC6QgaTVtZ79zvvyeNmRRRdqFfBPuIJr2us0kSdbhmOMqWhJa2B"
-							}
-						},
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/v1/api/report/admin/search/elastic?keyword=ne",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"v1",
-								"api",
-								"report",
-								"admin",
-								"search",
-								"elastic"
-							],
-							"query": [
-								{
-									"key": "keyword",
-									"value": "ne"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Rapor Cevapla - admin",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDE3IiwiaWF0IjoxNzUyMTc4NDk1LCJleHAiOjE3NTIxNzkzOTUsInVzZXJOdW1iZXIiOiIrOTA1MzMzMDAwMDE3Iiwicm9sZSI6WyJBRE1JTiJdfQ.k9if2txd1uLzTlRp0Z-RSlcXgEiOb0jVYNGiw5F_7VraFkaxNrh2gSZUh1khk5nY"
-							}
-						},
-						"method": "POST",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/v1/api/report/admin/reply/1?message=ne diyo bu amk",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"v1",
-								"api",
-								"report",
-								"admin",
-								"reply",
-								"1"
-							],
-							"query": [
-								{
-									"key": "message",
-									"value": "ne diyo bu amk"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "cevap'a yanıt -user",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0MzY1IiwiaWF0IjoxNzUyNTYxNzQxLCJleHAiOjE3NTI1NjI2NDEsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0MzY1Iiwicm9sZSI6WyJVU0VSIl19.JqSgM4ExXvSJvSm_-vQjXnpY3ZcZ_tQImH-HGua7uIoT2dfXWGLrZxsO3kFURPxg"
-							}
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "message",
-									"value": "test",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "http://localhost:8080/v1/api/report/reply-to-response/9?message=naber",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"v1",
-								"api",
-								"report",
-								"reply-to-response",
-								"9"
-							],
-							"query": [
-								{
-									"key": "message",
-									"value": "naber"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Cevap sil Copy",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUxNDkzMzM4LCJleHAiOjE3NTE0OTQyMzgsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.RsyxhW729jry3cjqFuuPF0ld0r4Xeg8gDUthzAaf5o_32jreCLhiphoxjSZ8RNjg"
-							}
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": "http://localhost:8080/v1/api/report/response/{responseId}"
-					},
-					"response": []
-				},
-				{
-					"name": "Cevap sil",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUxNDkzMzM4LCJleHAiOjE3NTE0OTQyMzgsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.RsyxhW729jry3cjqFuuPF0ld0r4Xeg8gDUthzAaf5o_32jreCLhiphoxjSZ8RNjg"
-							}
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": "http://localhost:8080/v1/api/report/response/{responseId}"
-					},
-					"response": []
-				},
-				{
-					"name": "Cevap puanla",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTc3OTkyLCJleHAiOjE3NTIxNzg4OTIsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.nLee8g4Fv7bfi0K-g544P2bUYbqxuHJiJRiRU2NpkfYbqg4Y9iWbFAL_s9_8-RLJ"
-							}
-						},
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "taring",
-									"value": "5",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "http://localhost:8080/v1/api/report/rate-response/1?rating=4",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"v1",
-								"api",
-								"report",
-								"rate-response",
-								"1"
-							],
-							"query": [
-								{
-									"key": "rating",
-									"value": "4"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Cevap puanı Güncelle",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTc3OTkyLCJleHAiOjE3NTIxNzg4OTIsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.nLee8g4Fv7bfi0K-g544P2bUYbqxuHJiJRiRU2NpkfYbqg4Y9iWbFAL_s9_8-RLJ"
-							}
-						},
-						"method": "PUT",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "taring",
-									"value": "5",
-									"type": "text"
-								}
-							]
-						},
-						"url": {
-							"raw": "http://localhost:8080/v1/api/report/update-rating/1?rating=5",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"v1",
-								"api",
-								"report",
-								"update-rating",
-								"1"
-							],
-							"query": [
-								{
-									"key": "rating",
-									"value": "5"
-								}
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Cevap puanı sil",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUxNDkzMzM4LCJleHAiOjE3NTE0OTQyMzgsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.RsyxhW729jry3cjqFuuPF0ld0r4Xeg8gDUthzAaf5o_32jreCLhiphoxjSZ8RNjg"
-							}
-						},
-						"method": "DELETE",
-						"header": [],
-						"url": "http://localhost:8080/v1/api/report/delete-rating/1"
-					},
-					"response": []
-				},
-				{
-					"name": "Kullanıcının cevaplarını getir",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0MzY1IiwiaWF0IjoxNzUyNTYzMDU5LCJleHAiOjE3NTI1NjM5NTksInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0MzY1Iiwicm9sZSI6WyJVU0VSIl19.h9HVXrIUlmtc6iGzHDw2AEo0P6kZH2fsMlN0vBNEbfIc-aKIrqh_uB8GtT6P5PX7"
-							}
-						},
-						"method": "GET",
-						"header": [],
-						"url": "http://localhost:8080/v1/api/report/my-responses"
-					},
-					"response": []
-				},
-				{
-					"name": "Raporun cevaplarını getir",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0MzY1IiwiaWF0IjoxNzUyNTYzMDU5LCJleHAiOjE3NTI1NjM5NTksInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0MzY1Iiwicm9sZSI6WyJVU0VSIl19.h9HVXrIUlmtc6iGzHDw2AEo0P6kZH2fsMlN0vBNEbfIc-aKIrqh_uB8GtT6P5PX7"
-							}
-						},
-						"method": "GET",
-						"header": [],
-						"url": "http://localhost:8080/v1/api/report/1/responses"
-					},
-					"response": []
-				},
-				{
-					"name": "Batch Toggle Report",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUxNDkzMzM4LCJleHAiOjE3NTE0OTQyMzgsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.RsyxhW729jry3cjqFuuPF0ld0r4Xeg8gDUthzAaf5o_32jreCLhiphoxjSZ8RNjg"
-							}
-						},
-						"method": "DELETE",
-						"header": [],
-						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "repoIds",
-									"value": "",
-									"type": "text"
-								},
-								{
-									"key": "delete",
-									"value": "true",
-									"type": "text"
-								}
-							]
-						},
-						"url": "http://localhost:8080/v1/api/report/admin/batchToggle"
-					},
-					"response": []
-				},
-				{
-					"name": "Rapor Arşivle",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUxNDkzMzM4LCJleHAiOjE3NTE0OTQyMzgsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.RsyxhW729jry3cjqFuuPF0ld0r4Xeg8gDUthzAaf5o_32jreCLhiphoxjSZ8RNjg"
-							}
-						},
-						"method": "PATCH",
-						"header": [],
-						"url": "http://localhost:8080/v1/api/report/admin/archive/{reportId}"
-					},
-					"response": []
-				},
-				{
-					"name": "admin raport istatistik",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUxNDkzMzM4LCJleHAiOjE3NTE0OTQyMzgsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.RsyxhW729jry3cjqFuuPF0ld0r4Xeg8gDUthzAaf5o_32jreCLhiphoxjSZ8RNjg"
-							}
-						},
-						"method": "GET",
-						"header": [],
-						"url": "http://localhost:8080/v1/api/report/admin/stats"
-					},
-					"response": []
-				},
-				{
-					"name": "raporlarım -user",
+					"name": "silinmiş sohbetleri getir",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -2110,44 +2085,21 @@
 						"auth": {
 							"type": "bearer",
 							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0MzY1IiwiaWF0IjoxNzUyNTYxNzQxLCJleHAiOjE3NTI1NjI2NDEsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0MzY1Iiwicm9sZSI6WyJVU0VSIl19.JqSgM4ExXvSJvSm_-vQjXnpY3ZcZ_tQImH-HGua7uIoT2dfXWGLrZxsO3kFURPxg"
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
 							}
 						},
 						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text",
-								"disabled": true
-							}
-						],
+						"header": [],
 						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "category",
-									"value": "OTHER",
-									"type": "text"
-								},
-								{
-									"key": "message",
-									"value": "dsadassdsdsadasdas",
-									"type": "text"
-								},
-								{
-									"key": "photos",
-									"type": "file",
-									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg"
-								}
-							]
+							"mode": "raw",
+							"raw": "{\r\n    \"rating\":5,\r\n    \"comment\":\"sevdim\"\r\n}"
 						},
-						"url": "http://localhost:8080/v1/api/report/my-reports"
+						"url": "http://localhost:8080/v1/api/report/admin/deleted-chats"
 					},
 					"response": []
 				},
 				{
-					"name": "şikayet detaylarım",
+					"name": "tüm sohbetler admin",
 					"protocolProfileBehavior": {
 						"disableBodyPruning": true
 					},
@@ -2155,105 +2107,60 @@
 						"auth": {
 							"type": "bearer",
 							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA0IiwiaWF0IjoxNzUyNDA1OTE4LCJleHAiOjE3NTI0MDY4MTgsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA0Iiwicm9sZSI6WyJVU0VSIl19.xq__kXWyzsCEpPl8FcmZALlz0u13WNJCku_WzsdwAD0YlXOgUnCkousYNaqc8gyx"
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
 							}
 						},
 						"method": "GET",
-						"header": [
-							{
-								"key": "Content-Type",
-								"value": "application/json",
-								"type": "text",
-								"disabled": true
-							}
-						],
+						"header": [],
 						"body": {
-							"mode": "formdata",
-							"formdata": [
-								{
-									"key": "category",
-									"value": "OTHER",
-									"type": "text"
-								},
-								{
-									"key": "message",
-									"value": "dsadassdsdsadasdas",
-									"type": "text"
-								},
-								{
-									"key": "photos",
-									"type": "file",
-									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg"
-								}
-							]
+							"mode": "raw",
+							"raw": "{\r\n    \"rating\":5,\r\n    \"comment\":\"sevdim\"\r\n}"
 						},
-						"url": "http://localhost:8080/v1/api/report/9"
+						"url": "http://localhost:8080/v1/api/report/admin/all-chats"
 					},
 					"response": []
 				},
 				{
-					"name": "kategoriye göre getir",
+					"name": "memnuniyet istatistikleri",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUyNTY3MzA4LCJleHAiOjE3NTI1NjgyMDgsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.i4lFkUgk3_trwJWjhHUlzz4LwKDO4b6iQasbcIIwW9Lt4J8xSdS39GvfKKb3lDnk"
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
 							}
 						},
 						"method": "GET",
 						"header": [],
-						"url": "http://localhost:8080/v1/api/report/category/OTHER"
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"rating\":5,\r\n    \"comment\":\"sevdim\"\r\n}"
+						},
+						"url": "http://localhost:8080/v1/api/report/admin/satisfaction-stats"
 					},
 					"response": []
 				},
 				{
-					"name": "rapor durumuna göre filtrele admin",
+					"name": "belirli bir raporu getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
 					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUyNTY3NDQzLCJleHAiOjE3NTI1NjgzNDMsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.PY6dokcbBwa8k-uPptwviu4QShDDlBDeuQKPFEleZQLv6NVRnsAym74UKSnUGVe-"
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w"
 							}
 						},
 						"method": "GET",
 						"header": [],
-						"url": "http://localhost:8080/v1/api/report/admin/status/OPEN"
-					},
-					"response": []
-				},
-				{
-					"name": "rapor durumu güncelle admin",
-					"request": {
-						"auth": {
-							"type": "bearer",
-							"bearer": {
-								"token": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDE3IiwiaWF0IjoxNzUyMTc4NDk1LCJleHAiOjE3NTIxNzkzOTUsInVzZXJOdW1iZXIiOiIrOTA1MzMzMDAwMDE3Iiwicm9sZSI6WyJBRE1JTiJdfQ.k9if2txd1uLzTlRp0Z-RSlcXgEiOb0jVYNGiw5F_7VraFkaxNrh2gSZUh1khk5nY"
-							}
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"rating\":5,\r\n    \"comment\":\"sevdim\"\r\n}"
 						},
-						"method": "PATCH",
-						"header": [],
-						"url": {
-							"raw": "http://localhost:8080/v1/api/report/admin/status/1?status=REJECTED",
-							"protocol": "http",
-							"host": [
-								"localhost"
-							],
-							"port": "8080",
-							"path": [
-								"v1",
-								"api",
-								"report",
-								"admin",
-								"status",
-								"1"
-							],
-							"query": [
-								{
-									"key": "status",
-									"value": "REJECTED"
-								}
-							]
-						}
+						"url": "http://localhost:8080/v1/api/report/admin/restore-report/11"
 					},
 					"response": []
 				}
@@ -3334,7 +3241,7 @@
 								{
 									"key": "photo",
 									"type": "file",
-									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-07-04 saat 17.51.43_92ebac3a.jpg"
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
 								}
 							]
 						},
@@ -3407,6 +3314,382 @@
 							"raw": "{\r\n  \"code\": \"881610\",\r\n  \"ipAddress\": \"192.168.1.45\",\r\n  \"deviceInfo\": \"Xiaomi Redmi Note 11 - Android 13\",\r\n  \"appVersion\": \"1.4.2\",\r\n  \"platform\": \"ANDROID\"\r\n}\r\n"
 						},
 						"url": "http://localhost:8080/v1/api/feedback/admin/1"
+					},
+					"response": []
+				},
+				{
+					"name": "anonim olarak gönder",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/feedback/send-anonymous"
+					},
+					"response": []
+				},
+				{
+					"name": "feedback gönder",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU1MDI5NTgwLCJleHAiOjE3NTUwMzA0ODAsImp0aSI6IjFhNDQ5ZmM2LThlOTMtNGE2Zi05ZWM5LTUwY2E2M2ZkNDk0NiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzEwMDAwMDEiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.15LNUNW3MonyR2qbA9qd3PfvOiIxxBIml5EuKWtfXj24M_-7RqLIC83n6jJ673osl46jB1AJTw9Salt2_enGxw"
+							}
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/feedback/send-general"
+					},
+					"response": []
+				},
+				{
+					"name": "tipler",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU1MDI5NTgwLCJleHAiOjE3NTUwMzA0ODAsImp0aSI6IjFhNDQ5ZmM2LThlOTMtNGE2Zi05ZWM5LTUwY2E2M2ZkNDk0NiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzEwMDAwMDEiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.15LNUNW3MonyR2qbA9qd3PfvOiIxxBIml5EuKWtfXj24M_-7RqLIC83n6jJ673osl46jB1AJTw9Salt2_enGxw"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/feedback/types"
+					},
+					"response": []
+				},
+				{
+					"name": "tüm feedbackler",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU1MDI5NTgwLCJleHAiOjE3NTUwMzA0ODAsImp0aSI6IjFhNDQ5ZmM2LThlOTMtNGE2Zi05ZWM5LTUwY2E2M2ZkNDk0NiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzEwMDAwMDEiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.15LNUNW3MonyR2qbA9qd3PfvOiIxxBIml5EuKWtfXj24M_-7RqLIC83n6jJ673osl46jB1AJTw9Salt2_enGxw"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/feedback/admin/all"
+					},
+					"response": []
+				},
+				{
+					"name": "id li feedback",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU1MDI5NTgwLCJleHAiOjE3NTUwMzA0ODAsImp0aSI6IjFhNDQ5ZmM2LThlOTMtNGE2Zi05ZWM5LTUwY2E2M2ZkNDk0NiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzEwMDAwMDEiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.15LNUNW3MonyR2qbA9qd3PfvOiIxxBIml5EuKWtfXj24M_-7RqLIC83n6jJ673osl46jB1AJTw9Salt2_enGxw"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/feedback/admin/1"
+					},
+					"response": []
+				},
+				{
+					"name": "istatistikler",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU1MDI5NTgwLCJleHAiOjE3NTUwMzA0ODAsImp0aSI6IjFhNDQ5ZmM2LThlOTMtNGE2Zi05ZWM5LTUwY2E2M2ZkNDk0NiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzEwMDAwMDEiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.15LNUNW3MonyR2qbA9qd3PfvOiIxxBIml5EuKWtfXj24M_-7RqLIC83n6jJ673osl46jB1AJTw9Salt2_enGxw"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/feedback/statistics/admin/general"
+					},
+					"response": []
+				},
+				{
+					"name": "toplam geri bildirim istatistikleri",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU1MDI5NTgwLCJleHAiOjE3NTUwMzA0ODAsImp0aSI6IjFhNDQ5ZmM2LThlOTMtNGE2Zi05ZWM5LTUwY2E2M2ZkNDk0NiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzEwMDAwMDEiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.15LNUNW3MonyR2qbA9qd3PfvOiIxxBIml5EuKWtfXj24M_-7RqLIC83n6jJ673osl46jB1AJTw9Salt2_enGxw"
+							}
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": "http://localhost:8080/v1/api/feedback/statistics/admin/anonymous-vs-user"
 					},
 					"response": []
 				}
@@ -4290,6 +4573,144 @@
 						"method": "PATCH",
 						"header": [],
 						"url": "http://localhost:8080/v1/api/admin/contract/contracts/1/deactivate"
+					},
+					"response": []
+				},
+				{
+					"name": "kabul edilen sözleşmeler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/contract/contracts"
+					},
+					"response": []
+				},
+				{
+					"name": "kullanıcı için zorunlu sözleşmeler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/contract/contracts/mandatory"
+					},
+					"response": []
+				},
+				{
+					"name": "bekleyen sözleşmeler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/contract/contracts/pending"
+					},
+					"response": []
+				},
+				{
+					"name": "sözleşme onaylama",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"accepted\":\"true\",\r\n    \"contractVersion\":\"1.0\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/contract/contracts/1/accept"
+					},
+					"response": []
+				},
+				{
+					"name": "sözleşme reddetme",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"rejectionReason\":\"sevmedim\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "http://localhost:8080/v1/api/contract/contracts/7/reject"
+					},
+					"response": []
+				},
+				{
+					"name": "onayladığım sözleşmeler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/contract/contracts/accepted"
+					},
+					"response": []
+				},
+				{
+					"name": "bir sözleşmeyi kabul etmiş mi kullanıcı",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/contract/contracts/1/acceptance-status"
+					},
+					"response": []
+				},
+				{
+					"name": "zorunlu sözleşmeleri kullanıcı kabul etmiş mi",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "http://localhost:8080/v1/api/contract/contracts/mandatory/acceptance-status"
 					},
 					"response": []
 				}

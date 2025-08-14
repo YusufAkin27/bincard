@@ -31,6 +31,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -51,6 +52,7 @@ public class DriverManager implements DriverService {
     private final DriverDocumentRepository driverDocumentRepository;
     private final DriverPenaltyRepository driverPenaltyRepository;
     private final SecurityUserRepository securityUserRepository;
+    private final PasswordEncoder passwordEncoder;
     private final DriverConverter driverConverter;
     private final ContractService contractService;
 
@@ -84,10 +86,11 @@ public class DriverManager implements DriverService {
             log.warn("Driver already exists with email: {}", request.getEmail());
             throw new DriverAlreadyExistsException("email adresi", request.getEmail());
         }
-        ProfileInfo profileInfo=new ProfileInfo();
+        ProfileInfo profileInfo = new ProfileInfo();
         profileInfo.setName(request.getFirstName());
         profileInfo.setSurname(request.getLastName());
         profileInfo.setEmail(request.getEmail());
+        String password = "123456";
         Driver driver = Driver.builder()
                 .profileInfo(profileInfo)
                 .nationalId(request.getNationalId())
@@ -98,6 +101,7 @@ public class DriverManager implements DriverService {
                 .licenseIssueDate(request.getLicenseIssueDate())
                 .address(request.getAddress())
                 .shift(request.getShift())
+                .password(passwordEncoder.encode(password))
                 .active(true)
                 .totalDrivingHours(0L)
                 .totalDistanceDriven(0.0)
@@ -264,7 +268,6 @@ public class DriverManager implements DriverService {
 
         return new DataResponseMessage<>("Sürücü belgeleri başarıyla getirildi", true, pageDTO);
     }
-
 
 
     @Override

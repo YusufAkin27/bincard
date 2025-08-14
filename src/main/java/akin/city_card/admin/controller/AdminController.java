@@ -30,7 +30,6 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    // 1. Kullanıcı kayıt
     @PostMapping("/sign-up")
     public ResponseMessage signUp(@Valid @RequestBody CreateAdminRequest adminRequest,
                                   HttpServletRequest httpServletRequest)
@@ -39,7 +38,6 @@ public class AdminController {
         return adminService.signUp(adminRequest,httpServletRequest);
     }
 
-    // 3. Güvenlik & Hesap Ayarları
     @PutMapping("/change-password")
     public ResponseMessage changePassword(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody ChangePasswordRequest request) throws IncorrectCurrentPasswordException, PasswordSameAsOldException, AdminNotFoundException, PasswordTooShortException {
         return adminService.changePassword(request, userDetails.getUsername());

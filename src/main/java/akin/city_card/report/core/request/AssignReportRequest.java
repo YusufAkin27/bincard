@@ -1,8 +1,7 @@
 package akin.city_card.report.core.request;
 
-import jakarta.validation.constraints.NotBlank;
+import akin.city_card.report.model.ReportPriority;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -12,11 +11,11 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SendMessageRequest {
+public class AssignReportRequest {
     @NotNull(message = "Report ID boş olamaz")
     private Long reportId;
     
-    @NotBlank(message = "Mesaj boş olamaz")
-    @Size(min = 1, max = 1000, message = "Mesaj 1-1000 karakter arasında olmalıdır")
-    private String message;
+    private ReportPriority priority;
+    
+    private String adminNotes;
 }
