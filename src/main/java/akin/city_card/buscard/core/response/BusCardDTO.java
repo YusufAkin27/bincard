@@ -17,10 +17,12 @@ public class BusCardDTO {
     private String cardNumber;
     private String fullName;
     private CardType type;
-    private BigDecimal balance;
     private CardStatus status;
+    private BigDecimal balance;
     private boolean active;
     private LocalDate issueDate;
     private LocalDate expiryDate;
-    private Long userId;
+    private boolean visaCompleted;
+    private BigDecimal lastTransactionAmount;
+    private LocalDate lastTransactionDate;
 }

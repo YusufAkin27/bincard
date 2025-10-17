@@ -1,5 +1,6 @@
 package akin.city_card.driver.controller;
 
+import akin.city_card.bus.exceptions.BusNotFoundException;
 import akin.city_card.bus.exceptions.DriverNotFoundException;
 import akin.city_card.driver.core.request.CreateDriverRequest;
 import akin.city_card.driver.core.request.UpdateDriverRequest;
@@ -11,6 +12,7 @@ import akin.city_card.driver.exceptions.*;
 import akin.city_card.driver.service.absracts.DriverService;
 import akin.city_card.news.core.response.PageDTO;
 import akin.city_card.response.DataResponseMessage;
+import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +64,15 @@ public class DriverController {
         return driverService.getDriverById(id, userDetails.getUsername());
     }
 
+    @PostMapping("/assign-bus")
+    public ResponseMessage assignDriverToBus(@AuthenticationPrincipal UserDetails userDetails, @RequestParam Long busId) throws DriverNotFoundException, BusNotFoundException {
+        return driverService.assignDriverToBus(busId, userDetails.getUsername());
+    }
+
+    @DeleteMapping("/assign-bus")
+    public ResponseMessage unassignDriverFromBus(@AuthenticationPrincipal UserDetails userDetails) throws DriverNotFoundException, BusNotFoundException {
+        return driverService.unassignDriverFromBus( userDetails.getUsername());
+    }
     @GetMapping
     public DataResponseMessage<PageDTO<DriverDto>> getAllDrivers(@RequestParam(required = false) int page,
                                                                  @RequestParam(required = false) int size,

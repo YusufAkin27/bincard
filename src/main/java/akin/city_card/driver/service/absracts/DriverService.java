@@ -1,5 +1,6 @@
 package akin.city_card.driver.service.absracts;
 
+import akin.city_card.bus.exceptions.BusNotFoundException;
 import akin.city_card.bus.exceptions.DriverNotFoundException;
 import akin.city_card.driver.core.request.CreateDriverRequest;
 import akin.city_card.driver.core.request.UpdateDriverRequest;
@@ -10,6 +11,7 @@ import akin.city_card.driver.core.response.DriverPerformanceDto;
 import akin.city_card.driver.exceptions.*;
 import akin.city_card.news.core.response.PageDTO;
 import akin.city_card.response.DataResponseMessage;
+import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.data.domain.Pageable;
@@ -67,4 +69,8 @@ public interface DriverService {
     DataResponseMessage<PageDTO<DriverDto>> getDriversWithPenalties(int page, int size, String username);
 
     DriverDto getDriverProfile(String username);
+
+    ResponseMessage assignDriverToBus(Long busId, String username) throws BusNotFoundException;
+
+    ResponseMessage unassignDriverFromBus(String username);
 }

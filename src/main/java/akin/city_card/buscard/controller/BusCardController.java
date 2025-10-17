@@ -2,10 +2,9 @@ package akin.city_card.buscard.controller;
 
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.bus.exceptions.InsufficientBalanceException;
-import akin.city_card.buscard.core.request.CreateCardPricingRequest;
-import akin.city_card.buscard.core.request.QrScanRequest;
-import akin.city_card.buscard.core.request.RegisterCardRequest;
-import akin.city_card.buscard.core.request.UpdateCardPricingRequest;
+import akin.city_card.bus.exceptions.UnauthorizedAccessException;
+import akin.city_card.buscard.core.request.*;
+import akin.city_card.buscard.core.response.BusCardDTO;
 import akin.city_card.buscard.core.response.CardPricingDTO;
 import akin.city_card.buscard.exceptions.CardPricingNotFoundException;
 import akin.city_card.buscard.exceptions.ExpiredQrCodeException;
@@ -17,11 +16,11 @@ import akin.city_card.wallet.exceptions.WalletNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -31,67 +30,61 @@ import java.util.Map;
 public class BusCardController {
     private final BusCardService busCardService;
 
+
+    private void isAdminOrSuperAdmin(UserDetails userDetails) throws UnauthorizedAccessException {
+        if (userDetails == null || userDetails.getAuthorities() == null) {
+            throw new UnauthorizedAccessException();
+        }
+
+        boolean authorized = userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(role -> role.equals("ADMIN") || role.equals("SUPERADMIN"));
+
+        if (!authorized) {
+            throw new UnauthorizedAccessException();
+        }
+    }
+
     @PostMapping("/register")
-    public ResponseEntity<?> registerCard(@RequestBody RegisterCardRequest req) {
-        return busCardService.registerCard(req);
+    public BusCardDTO registerCard(@RequestBody RegisterCardRequest req, @AuthenticationPrincipal UserDetails userDetails) throws UnauthorizedAccessException {
+        isAdminOrSuperAdmin(userDetails);
+        return busCardService.registerCard(req, userDetails.getUsername());
     }
 
     @PostMapping("/read")
-    public ResponseEntity<?> readCard(@RequestBody Map<String, String> request) {
-        try {
-            String uid = request.get("uid");
-            if (uid == null || uid.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "UID zorunlu"));
-            }
-
-            return busCardService.readCard(uid);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
-        }
+    public BusCardDTO readCard(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ReadCardRequest req) throws UnauthorizedAccessException {
+        isAdminOrSuperAdmin(userDetails);
+        return busCardService.readCard(req.getUid(), userDetails.getUsername());
     }
 
 
     //bakiye yükleme
     @PostMapping("/top-up")
-    public ResponseEntity<?> topUpBalance(@RequestBody Map<String, Object> request) {
-
-        String uid = (String) request.get("uid");
-        Number amount = (Number) request.get("amount");
-        return busCardService.topUpBalance(uid, BigDecimal.valueOf(amount.doubleValue()));
+    public BusCardDTO topUpBalance(@AuthenticationPrincipal UserDetails userDetails, @RequestBody TopUpBalanceCardRequest request) throws UnauthorizedAccessException {
+        isAdminOrSuperAdmin(userDetails);
+        return busCardService.topUpBalance(userDetails.getUsername(), request.getUid(), request.getAmount());
 
     }
 
     @PostMapping("/card-visa")
-    public ResponseEntity<?> cardVisa(@RequestBody Map<String, Object> request) {
-        return busCardService.cardVisa(request);
+    public BusCardDTO cardVisa(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ReadCardRequest request) throws UnauthorizedAccessException {
+        isAdminOrSuperAdmin(userDetails);
+        return busCardService.cardVisa(request, userDetails.getUsername());
     }
 
     @PostMapping("/card-blocked")
-    public ResponseEntity<?> cardBlocked(@RequestBody Map<String, Object> request) {
+    public BusCardDTO cardBlocked(@RequestBody Map<String, Object> request) {
         return busCardService.cardBlocked(request);
     }
 
     @DeleteMapping("/card-blocked")
-    public ResponseEntity<?> deleteCardBlocked(@RequestBody Map<String, String> request) {
+    public BusCardDTO deleteCardBlocked(@RequestBody Map<String, String> request) {
         return busCardService.deleteCardBlocked(request);
     }
 
     @PostMapping("/get-on")
-    public ResponseEntity<?> getOn(@RequestBody Map<String, String> request) {
-        try {
-            String uid = request.get("uid");
-
-            if (uid == null || uid.isEmpty()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "UID zorunlu"));
-            }
-
-            return busCardService.getOn(uid);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
-        }
+    public BusCardDTO getOn(@RequestBody ReadCardRequest request) {
+        return busCardService.getOn(request.getUid());
     }
 
     //CRUD create -update delete temel işlemler

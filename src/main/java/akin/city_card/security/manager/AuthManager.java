@@ -1,5 +1,6 @@
 package akin.city_card.security.manager;
 
+import akin.city_card.QRCodeDecryptAES;
 import akin.city_card.admin.exceptions.AdminNotApprovedException;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.ActionType;
@@ -45,6 +46,8 @@ import akin.city_card.verification.model.VerificationChannel;
 import akin.city_card.verification.model.VerificationCode;
 import akin.city_card.verification.model.VerificationPurpose;
 import akin.city_card.verification.repository.VerificationCodeRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -57,6 +60,8 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import static akin.city_card.QRCodeGenerateAES.SECRET_PASSPHRASE;
 
 @Service
 @RequiredArgsConstructor
@@ -699,15 +704,50 @@ public class AuthManager implements AuthService {
         return new ResponseMessage("Hesabınız yeniden aktifleştirildi.", true);
     }
 
+
     @Override
     @Transactional
-    public TokenResponseDTO driverLogin(HttpServletRequest request, LoginRequestDTO loginRequestDTO)
+    public TokenResponseDTO driverLogin(HttpServletRequest request, QRLoginRequestDTO loginRequestDTO)
             throws DriverNotFoundException, IncorrectPasswordException, AccountFrozenException,
             PhoneNotVerifiedException, UnrecognizedDeviceException {
+        System.out.printf(loginRequestDTO.getData());
+        String normalizedPhone = null;
+        String clientIp = extractClientIp(request); // proje içinde zaten varsa kullan
 
-        // Telefonu normalize et (senin util'ına göre)
-        String normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
-        String clientIp = extractClientIp(request); // projende zaten varsa kullan
+        try {
+            String qrData = loginRequestDTO.getData();
+            if (qrData == null || qrData.isEmpty()) {
+                throw new IncorrectPasswordException();
+            }
+
+            QRCodeDecryptAES    qrCodeDecryptAES=new QRCodeDecryptAES();
+            // 1. ADIM: HEX kodlamasını çöz (Log'da görülen formattaki veriyi Base64 stringine çevirir)
+            String decodedQRData = qrCodeDecryptAES.fromHex(qrData);
+
+            // 2. ADIM: HMAC Kontrolü ve Base64 çözme (HMAC.DATA formatındaki Base64 verisini çözer)
+            // HMAC anahtarı olarak STATIC IMPORT edilmiş SECRET_PASSPHRASE kullanılır.
+            String jsonString = QRCodeDecryptAES.decryptBase64(decodedQRData, SECRET_PASSPHRASE);
+
+            // JSON parse et
+            ObjectMapper om = new ObjectMapper();
+            Map<String, String> map = om.readValue(jsonString, new TypeReference<Map<String, String>>() {});
+
+            if (!map.containsKey("phone") || !map.containsKey("password")) {
+                throw new IncorrectPasswordException();
+            }
+
+            // DTO'ya set et (QR içindeki değerler)
+            loginRequestDTO.setTelephone(map.get("phone"));
+            loginRequestDTO.setPassword(map.get("password"));
+
+        } catch (Exception e) {
+            // Hata detayını logla, özellikle geçersiz format hatasını (HMAC.DATA ayracı)
+            logger.warn("QR çözme veya parse hatası: {}", e.getMessage());
+            throw new IncorrectPasswordException();
+        }
+
+        // ... (Kalan login mantığı değişmedi)
+        normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
 
         try {
             // 1) Brute force kontrolü / hesap kilidi
@@ -737,15 +777,14 @@ public class AuthManager implements AuthService {
 
             if (driver.isDeleted()) {
                 auditService.logLoginFailure(normalizedPhone, request, "Driver account deleted");
-                throw new DriverNotFoundException(); // veya ayrı DriverDeletedException var ise onu fırlat
+                throw new DriverNotFoundException();
             }
 
             if (!driver.getStatus().equals(UserStatus.ACTIVE)) {
                 auditService.logLoginFailure(normalizedPhone, request, "Driver not active");
-                throw new DriverNotFoundException(); // veya uygun bir exception
+                throw new DriverNotFoundException();
             }
 
-            // 4) Şifre doğrulama
             if (!passwordEncoder.matches(loginRequestDTO.getPassword(), driver.getPassword())) {
                 bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
                 auditService.logLoginFailure(normalizedPhone, request, "Incorrect password for driver");
@@ -755,40 +794,17 @@ public class AuthManager implements AuthService {
             // 5) Rol / yetki kontrolü (eğer sürücü için gerekli ise)
             if (driver.getRoles() == null || driver.getRoles().isEmpty()) {
                 auditService.logLoginFailure(normalizedPhone, request, "Driver has no roles assigned");
-                throw new DriverNotFoundException(); // veya UserRoleNotAssignedException
+                throw new DriverNotFoundException();
             }
 
-            // 6) Eğer Driver tipinde ekstra kontroller varsa (ör. phoneVerified, enabled)
+            // 6) Eğer Driver tipinde ekstra kontroller varsa (ör. enabled)
             if (!driver.isEnabled()) {
                 auditService.logLoginFailure(normalizedPhone, request, "Driver not enabled");
-                throw new AccountFrozenException(); // uygun exception'a göre değiştir
+                throw new AccountFrozenException();
             }
 
             // Metadata çıkar
             LoginMetadataDTO metadata = extractClientMetadata(request);
-
-            if (!driver.isPhoneVerified()) {
-                // telefon doğrulama kodu gönder
-                sendLoginVerificationCode(driver.getUserNumber(), metadata.getIpAddress(), metadata.getDeviceInfo(), request);
-                auditService.logSecurityEvent(SecurityEventType.LOGIN_FAILED, normalizedPhone, request,
-                        "Driver phone not verified - verification code sent");
-                throw new PhoneNotVerifiedException();
-            }
-
-            // 7) Cihaz/IP kontrolü
-            boolean isNewDevice = isNewDevice(driver, metadata.getDeviceInfo());
-            boolean isNewIp = isNewIp(driver, metadata.getIpAddress());
-
-            if (isNewDevice || isNewIp) {
-                sendLoginVerificationCode(driver.getUserNumber(), metadata.getIpAddress(), metadata.getDeviceInfo(), request);
-                String logMessage = String.format("New device/IP detected for driver - New Device: %s, New IP: %s",
-                        isNewDevice, isNewIp);
-                auditService.logSecurityEvent(SecurityEventType.NEW_DEVICE_LOGIN, normalizedPhone, request, logMessage);
-                logger.info("New device/IP login attempt for driver: {} - New Device: {}, New IP: {} - SMS sent",
-                        normalizedPhone, isNewDevice, isNewIp);
-                throw new UnrecognizedDeviceException();
-            }
-
 
             // 9) Token üret
             TokenResponseDTO tokenResponseDTO = generateTokenResponse(
@@ -797,27 +813,23 @@ public class AuthManager implements AuthService {
                     metadata.getDeviceInfo()
             );
 
-
-            driverRepository.save(driver); // update
+            driverRepository.save(driver); // gerekliyse driver üzerinde update varsa kaydet
 
             // 11) Başarılı giriş - brute force ve audit
             bruteForceService.recordSuccessfulLogin(normalizedPhone);
             auditService.logLoginSuccess(normalizedPhone, request);
 
             logger.info("Driver login successful: {} from IP: {}", normalizedPhone, clientIp);
+            System.out.println(tokenResponseDTO.getRefreshToken()+" " +tokenResponseDTO.getAccessToken());
             return tokenResponseDTO;
 
         } catch (RuntimeException e) {
+            // Hata loglamasında normalizedPhone ve clientIp kullan
             logger.error("Driver login failed for user: {} from IP: {}", normalizedPhone, clientIp, e);
             throw e;
-        } catch (UserNotFoundException e) {
-            throw new RuntimeException(e);
-        } catch (VerificationCodeStillValidException e) {
-            throw new RuntimeException(e);
-        } catch (VerificationCooldownException e) {
-            throw new RuntimeException(e);
         }
     }
+
 
 
     private String extractClientIp(HttpServletRequest request) {

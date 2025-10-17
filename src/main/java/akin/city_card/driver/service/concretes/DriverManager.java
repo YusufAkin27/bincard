@@ -1,6 +1,9 @@
 package akin.city_card.driver.service.concretes;
 
+import akin.city_card.bus.exceptions.BusNotFoundException;
 import akin.city_card.bus.exceptions.DriverNotFoundException;
+import akin.city_card.bus.model.Bus;
+import akin.city_card.bus.repository.BusRepository;
 import akin.city_card.contract.service.abstacts.ContractService;
 import akin.city_card.driver.core.converter.DriverConverter;
 import akin.city_card.driver.core.request.CreateDriverRequest;
@@ -20,6 +23,7 @@ import akin.city_card.driver.repository.DriverRepository;
 import akin.city_card.driver.service.absracts.DriverService;
 import akin.city_card.news.core.response.PageDTO;
 import akin.city_card.response.DataResponseMessage;
+import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.ProfileInfo;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotFoundException;
@@ -55,6 +59,7 @@ public class DriverManager implements DriverService {
     private final PasswordEncoder passwordEncoder;
     private final DriverConverter driverConverter;
     private final ContractService contractService;
+    private final BusRepository busRepository;
 
     // Helper method to find user by username
     private SecurityUser findUserByUsername(String username) throws UserNotFoundException {
@@ -684,5 +689,33 @@ public class DriverManager implements DriverService {
     public DriverDto getDriverProfile(String username) {
         Driver driver = driverRepository.findByUserNumber(username);
         return driverConverter.toDto(driver);
+    }
+
+    @Override
+    @Transactional
+    public ResponseMessage assignDriverToBus(Long busId, String username) throws BusNotFoundException {
+
+        Driver driver = driverRepository.findByUserNumber(username);
+        Bus bus = busRepository.findById(busId).orElseThrow(() -> new BusNotFoundException(busId));
+        if (bus.getDriver() == null) {
+            driver.setAssignedBus(bus);
+            driver.setUpdateDate(LocalDateTime.now());
+            driverRepository.save(driver);
+            return new ResponseMessage("Süreniz başarıyla başlatıldı", true);
+
+        }
+        return new ResponseMessage("otobüs başka şöfore tanımlı", true);
+
+
+    }
+
+    @Override
+    @Transactional
+    public ResponseMessage unassignDriverFromBus(String username) {
+        Driver driver = driverRepository.findByUserNumber(username);
+        Bus bus = driver.getAssignedBus();
+        driver.setAssignedBus(null);
+        bus.setDriver(null);
+        return new ResponseMessage("başarılı",true);
     }
 }

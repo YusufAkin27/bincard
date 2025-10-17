@@ -46,23 +46,13 @@ public class BusCard {
     @Embedded
     private SubscriptionInfo subscriptionInfo;// abonman kart için
 
-
     @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<UserFavoriteCard> favoredByUsers;
 
     @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Activity> activities;
 
-
-    @Lob
-    @Column(name = "encrypted_data_key")
-    private byte[] encryptedDataKey;
-
-    // Kart için stored transaction counter (replay protection)
     @Column(name = "tx_counter")
     private Integer txCounter = 0;
 
-    @Lob
-    @Column(name = "package_base64", columnDefinition = "TEXT")
-    private String packageBase64;
 }
