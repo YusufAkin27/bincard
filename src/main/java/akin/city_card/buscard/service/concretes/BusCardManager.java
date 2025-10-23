@@ -74,7 +74,10 @@ public class BusCardManager implements BusCardService {
     @Transactional
     public BusCardDTO registerCard(HttpServletRequest httpServletRequest, RegisterCardRequest req, String username) throws AlreadyBusCardNumberException {
         Admin admin = adminRepository.findByUserNumber(username);
-        createAuditLog(admin, ActionType.NEW_CARD_REGISTRATION, "Yeni kart kaydedildi", admin.getCurrentDeviceInfo(), admin.getId(), admin.getRoles().toString(), null, null, null);
+        
+        // Geçici olarak audit log'u devre dışı bırak
+        // createAuditLog(admin, ActionType.NEW_CARD_REGISTRATION, "Yeni kart kaydedildi", admin.getCurrentDeviceInfo(), admin.getId(), admin.getRoles().toString(), null, null, null);
+        
         if (busCardRepository.existsByCardNumber(req.getUid())) {
             throw new AlreadyBusCardNumberException();
 
@@ -280,11 +283,20 @@ public class BusCardManager implements BusCardService {
     public BusCardDTO cardBlocked(ReadCardRequest request, String username) throws AdminNotFoundException, BusCardNotActiveException, BusCardNotFoundException, BusCardAlreadyIsBlockedException {
         Admin admin = adminRepository.findByUserNumber(username);
         if (admin == null) throw new AdminNotFoundException();
+        
         BusCard busCard = busCardRepository.findByCardNumber(request.getUid()).orElseThrow(BusCardNotFoundException::new);
         if (!busCard.isActive()) throw new BusCardNotActiveException();
         if (busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardAlreadyIsBlockedException();
+        
+        // Geçici olarak audit log'u devre dışı bırak
+        // createAuditLog(admin, ActionType.CARD_BLOCKED, "Kart bloklandı: " + request.getUid(), 
+        //               admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
+        //               "Kart numarası: " + request.getUid(), null);
+        
         busCard.setStatus(CardStatus.BLOCKED);
-        return busCardConverter.BusCardToBusCardDTO(busCardRepository.save(busCard));
+        BusCard savedBusCard = busCardRepository.save(busCard);
+        
+        return busCardConverter.BusCardToBusCardDTO(savedBusCard);
     }
 
 
@@ -368,6 +380,31 @@ public class BusCardManager implements BusCardService {
 
         AuditLog auditLog = new AuditLog();
         auditLog.setUser(user);
+        auditLog.setAction(action);
+        auditLog.setDescription(description);
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setDeviceInfo(deviceInfo);
+        auditLog.setTargetEntityId(targetEntityId);
+        auditLog.setTargetEntityType(targetEntityType);
+        auditLog.setAmount(amount);
+        auditLog.setMetadata(metadata);
+        auditLog.setReferer(referer);
+
+        auditLogRepository.save(auditLog);
+    }
+
+    public void createAuditLog(Admin admin,
+                               ActionType action,
+                               String description,
+                               DeviceInfo deviceInfo,
+                               Long targetEntityId,
+                               String targetEntityType,
+                               Double amount,
+                               String metadata,
+                               String referer) {
+
+        AuditLog auditLog = new AuditLog();
+        auditLog.setAdmin(admin);
         auditLog.setAction(action);
         auditLog.setDescription(description);
         auditLog.setTimestamp(LocalDateTime.now());
@@ -531,15 +568,24 @@ public class BusCardManager implements BusCardService {
     @Override
     @Transactional
     public BusCardDTO deleteCardBlocked(ReadCardRequest request, String username) throws BusCardNotFoundException, AdminNotFoundException, BusCardNotActiveException, BusCardAlreadyIsBlockedException, BusCardNotBlockedException {
-        BusCard busCard = busCardRepository.findByCardNumber(request.getUid()).orElseThrow(BusCardNotFoundException::new);
         Admin admin = adminRepository.findByUserNumber(username);
         if (admin == null) {
             throw new AdminNotFoundException();
         }
+        
+        BusCard busCard = busCardRepository.findByCardNumber(request.getUid()).orElseThrow(BusCardNotFoundException::new);
         if (!busCard.isActive()) throw new BusCardNotActiveException();
         if (!busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardNotBlockedException();
+        
+        // Geçici olarak audit log'u devre dışı bırak
+        // createAuditLog(admin, ActionType.CARD_UNBLOCKED, "Kart blokajı kaldırıldı: " + request.getUid(), 
+        //               admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
+        //               "Kart numarası: " + request.getUid(), null);
+        
         busCard.setStatus(CardStatus.ACTIVE);
-        return busCardConverter.BusCardToBusCardDTO(busCardRepository.save(busCard));
+        BusCard savedBusCard = busCardRepository.save(busCard);
+        
+        return busCardConverter.BusCardToBusCardDTO(savedBusCard);
     }
 
     @Override

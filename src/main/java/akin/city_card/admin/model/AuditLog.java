@@ -25,6 +25,11 @@ public class AuditLog {
     @JoinColumn(name = "user_id")
     private SecurityUser user;
 
+    // İşlemi yapan admin (Admin işlemleri için)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "admin_id")
+    private Admin admin;
+
     @Enumerated(EnumType.STRING)
     private ActionType action;
 
