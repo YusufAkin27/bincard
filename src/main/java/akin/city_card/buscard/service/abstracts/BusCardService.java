@@ -10,6 +10,8 @@ import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.wallet.exceptions.WalletNotActiveException;
 import akin.city_card.wallet.exceptions.WalletNotFoundException;
+import com.iyzipay.request.DeleteCardRequest;
+import io.craftgate.request.UpdateCardRequest;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.math.BigDecimal;
@@ -44,4 +46,10 @@ public interface BusCardService {
     List<BusCardDTO> getBlockedCards(String username);
 
     BusCardDTO topUpBalance(String username, TopUpBalanceCardRequest request) throws TransactionCounterException, BusCardNotFoundException, BusCardNotActiveException;
+
+    BusCardDTO editCard(String username, UpdateCardRequest updateCardRequest);
+
+    ResponseMessage deleteCard(String username, DeleteCardRequest deleteCardRequest);
+
+    BusCardDTO abonmanOluştur(CreateSubscriptionRequest createSubscriptionRequest, String username);
 }

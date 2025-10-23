@@ -11,6 +11,8 @@ import akin.city_card.buscard.service.abstracts.BusCardService;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.wallet.exceptions.WalletNotFoundException;
+import com.iyzipay.request.DeleteCardRequest;
+import io.craftgate.request.UpdateCardRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -21,7 +23,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/v1/api/buscard")
@@ -46,7 +47,7 @@ public class BusCardController {
     @PostMapping("/register")
     public BusCardDTO registerCard(HttpServletRequest httpServletRequest, @RequestBody RegisterCardRequest req, @AuthenticationPrincipal UserDetails userDetails) throws UnauthorizedAccessException, AlreadyBusCardNumberException {
         isAdminOrSuperAdmin(userDetails);
-        return busCardService.registerCard(httpServletRequest,req, userDetails.getUsername());
+        return busCardService.registerCard(httpServletRequest, req, userDetails.getUsername());
     }
 
     @PostMapping("/read")
@@ -71,18 +72,25 @@ public class BusCardController {
     }
 
     @PostMapping("/card-blocked")
-    public BusCardDTO cardBlocked(@RequestBody ReadCardRequest request,@AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, BusCardAlreadyIsBlockedException, AdminNotFoundException {
-        return busCardService.cardBlocked(request,userDetails.getUsername());
+    public BusCardDTO cardBlocked(@RequestBody ReadCardRequest request, @AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, BusCardAlreadyIsBlockedException, AdminNotFoundException {
+        return busCardService.cardBlocked(request, userDetails.getUsername());
     }
 
     @GetMapping("/card-blocked")
-    public List<BusCardDTO>getBlockedCards(@AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, AdminNotFoundException {
+    public List<BusCardDTO> getBlockedCards(@AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, AdminNotFoundException {
         return busCardService.getBlockedCards(userDetails.getUsername());
     }
+
     @DeleteMapping("/card-blocked")
-    public BusCardDTO deleteCardBlocked(@RequestBody ReadCardRequest request,@AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, BusCardAlreadyIsBlockedException, AdminNotFoundException, BusCardNotBlockedException {
-        return busCardService.deleteCardBlocked(request,userDetails.getUsername());
+    public BusCardDTO deleteCardBlocked(@RequestBody ReadCardRequest request, @AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, BusCardAlreadyIsBlockedException, AdminNotFoundException, BusCardNotBlockedException {
+        return busCardService.deleteCardBlocked(request, userDetails.getUsername());
     }
+
+    @PostMapping("/abonman")
+    public BusCardDTO abonmanOluştur(@RequestBody CreateSubscriptionRequest createSubscriptionRequest, @AuthenticationPrincipal UserDetails userDetails) {
+        return busCardService.abonmanOluştur(createSubscriptionRequest, userDetails.getUsername());
+    }
+
 
     @PostMapping("/get-on")
     public BusCardDTO getOn(@RequestBody GetOnBusRequest request) throws BusCardNotFoundException, InsufficientBalanceException, CorruptedDataException, CardInactiveException, CardPricingNotFoundException, SubscriptionNotFoundException, SubscriptionExpiredException {
@@ -106,6 +114,16 @@ public class BusCardController {
         return busCardService.getAllCardPricing();
     }
 
+
+    @PutMapping("/edit-card")
+    public BusCardDTO editCard(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdateCardRequest updateCardRequest) {
+        return busCardService.editCard(userDetails.getUsername(), updateCardRequest);
+    }
+
+    @DeleteMapping("/delete-card")
+    public ResponseMessage deleteCard(@AuthenticationPrincipal UserDetails userDetails, @RequestBody DeleteCardRequest deleteCardRequest) {
+        return busCardService.deleteCard(userDetails.getUsername(), deleteCardRequest);
+    }
 
     @PostMapping("/generate-qr")
     public ResponseEntity<byte[]> generateQrCode(@AuthenticationPrincipal UserDetails userDetails)

@@ -38,6 +38,8 @@ import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.iyzipay.request.DeleteCardRequest;
+import io.craftgate.request.UpdateCardRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -580,6 +582,20 @@ public class BusCardManager implements BusCardService {
         return busCardConverter.BusCardToBusCardDTO(busCard);
     }
 
+    @Override
+    public BusCardDTO editCard(String username, UpdateCardRequest updateCardRequest) {
+        return null;
+    }
+
+    @Override
+    public ResponseMessage deleteCard(String username, DeleteCardRequest deleteCardRequest) {
+        return null;
+    }
+
+    @Override
+    public BusCardDTO abonmanOluştur(CreateSubscriptionRequest createSubscriptionRequest, String username) {
+        return null;
+    }
 
 
     // helper: QR PNG byte[]
