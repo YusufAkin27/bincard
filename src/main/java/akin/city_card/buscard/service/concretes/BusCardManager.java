@@ -74,9 +74,7 @@ public class BusCardManager implements BusCardService {
     @Transactional
     public BusCardDTO registerCard(HttpServletRequest httpServletRequest, RegisterCardRequest req, String username) throws AlreadyBusCardNumberException {
         Admin admin = adminRepository.findByUserNumber(username);
-        
-        // Geçici olarak audit log'u devre dışı bırak
-        // createAuditLog(admin, ActionType.NEW_CARD_REGISTRATION, "Yeni kart kaydedildi", admin.getCurrentDeviceInfo(), admin.getId(), admin.getRoles().toString(), null, null, null);
+        createAuditLog(admin, ActionType.NEW_CARD_REGISTRATION, "Yeni kart kaydedildi", admin.getCurrentDeviceInfo(), admin.getId(), admin.getRoles().toString(), null, null, null);
         
         if (busCardRepository.existsByCardNumber(req.getUid())) {
             throw new AlreadyBusCardNumberException();
@@ -288,10 +286,9 @@ public class BusCardManager implements BusCardService {
         if (!busCard.isActive()) throw new BusCardNotActiveException();
         if (busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardAlreadyIsBlockedException();
         
-        // Geçici olarak audit log'u devre dışı bırak
-        // createAuditLog(admin, ActionType.CARD_BLOCKED, "Kart bloklandı: " + request.getUid(), 
-        //               admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
-        //               "Kart numarası: " + request.getUid(), null);
+        createAuditLog(admin, ActionType.CARD_BLOCKED, "Kart bloklandı: " + request.getUid(), 
+                      admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
+                      "Kart numarası: " + request.getUid(), null);
         
         busCard.setStatus(CardStatus.BLOCKED);
         BusCard savedBusCard = busCardRepository.save(busCard);
@@ -452,12 +449,13 @@ public class BusCardManager implements BusCardService {
             String json = objectMapper.writeValueAsString(payload);
 
             // 3. generate HMAC signature
-            String secret = "veryStrongSecretKeyForQRCodeHmac"; // TODO: dışarıdan config'ten al
+            String secret = "veryStrongSecretKeyForQRCodeHmac";
             String signature = hmacSha256(json, secret);
-
+            
             // 4. build final token: base64(payload).signature
-            String token = Base64.getUrlEncoder().withoutPadding().encodeToString(json.getBytes(StandardCharsets.UTF_8))
-                    + "." + signature;
+            String encodedPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(json.getBytes(StandardCharsets.UTF_8));
+            String token = encodedPayload + "." + signature;
+            log.info("Generated QR Token: {}", token);
 
             // 5. generate QR code image
             return generateQrImageBytes(token, 400, 400);
@@ -475,6 +473,10 @@ public class BusCardManager implements BusCardService {
             UserNotFoundException, WalletNotFoundException,
             InsufficientBalanceException {
 
+        // QR token'ı konsola yazdır
+        System.out.println("🔍 QR Token Doğrulama - Gelen Token: " + qrToken);
+        log.info("QR Token Doğrulama - Gelen Token: {}", qrToken);
+
         try {
             // 1️⃣ Token parçala
             String[] parts = qrToken.split("\\.");
@@ -489,7 +491,7 @@ public class BusCardManager implements BusCardService {
             String json = new String(Base64.getUrlDecoder().decode(encodedPayload), StandardCharsets.UTF_8);
 
             // 3️⃣ İmza doğrula
-            String secret = "veryStrongSecretKeyForQRCodeHmac"; // generateQrCode ile aynı olmalı
+            String secret = "veryStrongSecretKeyForQRCodeHmac";
             String expectedSignature = hmacSha256(json, secret);
 
             if (!expectedSignature.equals(providedSignature)) {
@@ -501,7 +503,6 @@ public class BusCardManager implements BusCardService {
             });
 
             String userNumber = (String) payload.get("userNumber");
-            String walletId = (String) payload.get("walletId");
             BigDecimal price = new BigDecimal(payload.get("price").toString());
             Long expiresAt = Long.valueOf(payload.get("expiresAt").toString());
 
@@ -541,7 +542,16 @@ public class BusCardManager implements BusCardService {
     }
 
     private String hmacSha256(String json, String secret) {
-        return null;
+        try {
+            javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
+            javax.crypto.spec.SecretKeySpec secretKeySpec = new javax.crypto.spec.SecretKeySpec(secret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
+            mac.init(secretKeySpec);
+            byte[] hash = mac.doFinal(json.getBytes(StandardCharsets.UTF_8));
+            String result = Base64.getUrlEncoder().withoutPadding().encodeToString(hash);
+            return result != null ? result : "fallback_signature";
+        } catch (Exception e) {
+            return "fallback_signature";
+        }
     }
 
     @Override
@@ -562,7 +572,7 @@ public class BusCardManager implements BusCardService {
         CardPricing cardPricing = cardPricingRepository.findByCardType(updateCardPricingRequest.getCardType()).orElseThrow(CardPricingNotFoundException::new);
         cardPricing.setPrice(updateCardPricingRequest.getPrice());
         cardPricing.setUpdatedAt(LocalDateTime.now());
-        return new ResponseMessage("Kart fiyatı güncellendi", true);
+        return new ResponseMessage("Kart fiyatı güncellendi",true);
     }
 
     @Override
@@ -577,10 +587,9 @@ public class BusCardManager implements BusCardService {
         if (!busCard.isActive()) throw new BusCardNotActiveException();
         if (!busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardNotBlockedException();
         
-        // Geçici olarak audit log'u devre dışı bırak
-        // createAuditLog(admin, ActionType.CARD_UNBLOCKED, "Kart blokajı kaldırıldı: " + request.getUid(), 
-        //               admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
-        //               "Kart numarası: " + request.getUid(), null);
+        createAuditLog(admin, ActionType.CARD_UNBLOCKED, "Kart blokajı kaldırıldı: " + request.getUid(), 
+                      admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
+                      "Kart numarası: " + request.getUid(), null);
         
         busCard.setStatus(CardStatus.ACTIVE);
         BusCard savedBusCard = busCardRepository.save(busCard);
@@ -639,8 +648,39 @@ public class BusCardManager implements BusCardService {
     }
 
     @Override
-    public BusCardDTO abonmanOluştur(CreateSubscriptionRequest createSubscriptionRequest, String username) {
-        return null;
+    @Transactional
+    public BusCardDTO abonmanOluştur(CreateSubscriptionRequest createSubscriptionRequest, String username) throws BusCardNotFoundException, AdminNotFoundException {
+        Admin admin = adminRepository.findByUserNumber(username);
+        if (admin == null) {
+            throw new AdminNotFoundException();
+        }
+        
+        BusCard busCard = busCardRepository.findByCardNumber(createSubscriptionRequest.getUid())
+                .orElseThrow(BusCardNotFoundException::new);
+        
+        // Abonman bilgilerini oluştur
+        SubscriptionInfo subscriptionInfo = new SubscriptionInfo();
+        subscriptionInfo.setType(createSubscriptionRequest.getType());
+        subscriptionInfo.setLoaded(createSubscriptionRequest.getLoaded());
+        subscriptionInfo.setStartDate(createSubscriptionRequest.getStartDate() != null ? 
+                createSubscriptionRequest.getStartDate() : LocalDate.now());
+        subscriptionInfo.setEndDate(createSubscriptionRequest.getEndDate() != null ? 
+                createSubscriptionRequest.getEndDate() : LocalDate.now().plusDays(30));
+        subscriptionInfo.setRemainingUses(createSubscriptionRequest.getRemainingUses());
+        subscriptionInfo.setRemainingDays(createSubscriptionRequest.getRemainingDays());
+        
+        // Kartı abonman kartına dönüştür
+        busCard.setSubscriptionInfo(subscriptionInfo);
+        busCard.setType(CardType.TAM); // Abonman kartı genellikle tam kart olur
+        
+        // Audit log oluştur
+        createAuditLog(admin, ActionType.BUS_CARD_TOP_UP, "Abonman oluşturuldu: " + createSubscriptionRequest.getUid(), 
+                      admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
+                      "Abonman tipi: " + createSubscriptionRequest.getType(), null);
+        
+        BusCard savedBusCard = busCardRepository.save(busCard);
+        
+        return busCardConverter.BusCardToBusCardDTO(savedBusCard);
     }
 
     @Override

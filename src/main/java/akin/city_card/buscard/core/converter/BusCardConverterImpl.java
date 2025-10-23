@@ -32,6 +32,11 @@ public class BusCardConverterImpl implements BusCardConverter {
         dto.setActive(busCard.isActive());
         dto.setIssueDate(busCard.getIssueDate());
         dto.setExpiryDate(busCard.getExpiryDate());
+        dto.setVisaCompleted(busCard.isVisaCompleted());
+        dto.setLastTransactionAmount(busCard.getLastTransactionAmount());
+        dto.setLastTransactionDate(busCard.getLastTransactionDate());
+        dto.setSubscriptionInfo(busCard.getSubscriptionInfo());
+        dto.setTxCounter(busCard.getTxCounter());
 
         return dto;
     }

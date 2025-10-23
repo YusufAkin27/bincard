@@ -7,6 +7,9 @@ import java.time.LocalDate;
 
 @Data
 public class CreateSubscriptionRequest {
+    @NotBlank(message = "Card UID is required")
+    private String uid;
+    
     @NotBlank(message = "Subscription type is required")
     private String type;
 
