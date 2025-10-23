@@ -74,9 +74,7 @@ public class BusCardManager implements BusCardService {
     @Transactional
     public BusCardDTO registerCard(HttpServletRequest httpServletRequest, RegisterCardRequest req, String username) throws AlreadyBusCardNumberException {
         Admin admin = adminRepository.findByUserNumber(username);
-        
-        // Geçici olarak audit log'u devre dışı bırak
-        // createAuditLog(admin, ActionType.NEW_CARD_REGISTRATION, "Yeni kart kaydedildi", admin.getCurrentDeviceInfo(), admin.getId(), admin.getRoles().toString(), null, null, null);
+        createAuditLog(admin, ActionType.NEW_CARD_REGISTRATION, "Yeni kart kaydedildi", admin.getCurrentDeviceInfo(), admin.getId(), admin.getRoles().toString(), null, null, null);
         
         if (busCardRepository.existsByCardNumber(req.getUid())) {
             throw new AlreadyBusCardNumberException();
@@ -288,10 +286,9 @@ public class BusCardManager implements BusCardService {
         if (!busCard.isActive()) throw new BusCardNotActiveException();
         if (busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardAlreadyIsBlockedException();
         
-        // Geçici olarak audit log'u devre dışı bırak
-        // createAuditLog(admin, ActionType.CARD_BLOCKED, "Kart bloklandı: " + request.getUid(), 
-        //               admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
-        //               "Kart numarası: " + request.getUid(), null);
+        createAuditLog(admin, ActionType.CARD_BLOCKED, "Kart bloklandı: " + request.getUid(), 
+                      admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
+                      "Kart numarası: " + request.getUid(), null);
         
         busCard.setStatus(CardStatus.BLOCKED);
         BusCard savedBusCard = busCardRepository.save(busCard);
@@ -577,10 +574,9 @@ public class BusCardManager implements BusCardService {
         if (!busCard.isActive()) throw new BusCardNotActiveException();
         if (!busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardNotBlockedException();
         
-        // Geçici olarak audit log'u devre dışı bırak
-        // createAuditLog(admin, ActionType.CARD_UNBLOCKED, "Kart blokajı kaldırıldı: " + request.getUid(), 
-        //               admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
-        //               "Kart numarası: " + request.getUid(), null);
+        createAuditLog(admin, ActionType.CARD_UNBLOCKED, "Kart blokajı kaldırıldı: " + request.getUid(), 
+                      admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
+                      "Kart numarası: " + request.getUid(), null);
         
         busCard.setStatus(CardStatus.ACTIVE);
         BusCard savedBusCard = busCardRepository.save(busCard);
