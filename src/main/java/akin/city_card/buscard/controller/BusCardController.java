@@ -30,6 +30,10 @@ import java.util.List;
 public class BusCardController {
     private final BusCardService busCardService;
 
+    public BusCardController(BusCardService busCardService) {
+        this.busCardService = busCardService;
+    }
+
     private void isAdminOrSuperAdmin(UserDetails userDetails) throws UnauthorizedAccessException {
         if (userDetails == null || userDetails.getAuthorities() == null) {
             throw new UnauthorizedAccessException();
