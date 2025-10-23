@@ -1,0 +1,7422 @@
+{
+	"info": {
+		"_postman_id": "5e3af167-b51e-483e-802c-8a455480f32d",
+		"name": "city_card Copy",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "27281663"
+	},
+	"item": [
+		{
+			"name": "auth",
+			"item": [
+				{
+					"name": "user login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"telephone\":\"5053764374\",\r\n    \"password\":\"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auth/login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"telephone\":\"5437328687\",\r\n    \"password\":\"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auth/admin-login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auth",
+								"admin-login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "superadmin login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"telephone\":\"5550000000\",\r\n    \"password\":\"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auth/superadmin-login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auth",
+								"superadmin-login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "token yenileme",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0MzY1IiwiaWF0IjoxNzUyNTYxNzEzLCJleHAiOjE3NTMxNjY1MTN9.MVptsYF0b421WJCVr-a3lRHywijkyblbHJ_5SzNvbEWywHpGCX3MnQrAkCTDt3sQ\"\r\n    \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auth/refresh",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auth",
+								"refresh"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "çıkış yap",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYwMDc5IiwiaWF0IjoxNzUxMzE1MDMwLCJleHAiOjE3NTEzMTUzMzAsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYwMDc5Iiwicm9sZSI6WyJVU0VSIl19.Txwmg_jWlz61KNL_JJnu-oOATwRm4mJOR483Htjx-sOFmk9ahBmy_0Dq4dCJM3bX",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auth/logout",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auth",
+								"logout"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "login sms doğrulama",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"code\": \"353575\"\r\n\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auth/phone-verify",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auth",
+								"phone-verify"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ara login",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"refreshToken\":\"eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUxNDcxNjYxLCJleHAiOjE3NTIwNzY0NjF9.oABa1xViK7ELqVRELmktjepWtMViBTozPcTJhcUfoTGCyXL9y7Tmdr61AWJlp5Cx\",\r\n    \"password\":\"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auth/refresh-login",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auth",
+								"refresh-login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "resend code",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auth/resend-verify-code?telephone=5053764374",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auth",
+								"resend-verify-code"
+							],
+							"query": [
+								{
+									"key": "telephone",
+									"value": "5053764374"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "SuperAdmin",
+			"item": [
+				{
+					"name": "Admin onay istekleri",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMTc5OTU2LCJleHAiOjE3NTIxODA4NTYsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.A1ukNpxwc3OO_1BSOqH5X_jI4rzCaZjUw3lY8kyVFY7VyUpfGaYkPEXktJUsjBkS",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/superadmin/admin-requests/pending",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"superadmin",
+								"admin-requests",
+								"pending"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Onayla",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMjUwODcyLCJleHAiOjE3NTIyNTE3NzIsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJBRE1JTiIsIlVTRVIiLCJTVVBFUkFETUlOIiwiRFJWSUVSIl19.B0h3GzT2YSXasprNML2kovIChuyAQICDtk5wxzH_DWgXwc2nfTgonoP_vTCNyhTj",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/superadmin/admin-requests/32/approve",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"superadmin",
+								"admin-requests",
+								"32",
+								"approve"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin Reddet",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMDkyNTM5LCJleHAiOjE3NTIwOTM0MzksInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJTVVBFUkFETUlOIiwiQURNSU4iLCJEUlZJRVIiLCJVU0VSIl19.NrbVihgKJc3bFd5KMTRpUS0ur26qf5-Q4kltu5xzBqLSqBywPrhEJ059vc07CHPV",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/superadmin/admin-requests/13/reject",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"superadmin",
+								"admin-requests",
+								"13",
+								"reject"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüs Günlük Gelir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMDkyNTM5LCJleHAiOjE3NTIwOTM0MzksInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJTVVBFUkFETUlOIiwiQURNSU4iLCJEUlZJRVIiLCJVU0VSIl19.NrbVihgKJc3bFd5KMTRpUS0ur26qf5-Q4kltu5xzBqLSqBywPrhEJ059vc07CHPV",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/superadmin/bus-income/daily?date=2025-06-20",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"superadmin",
+								"bus-income",
+								"daily"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": "2025-06-20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüs Haftalık Gelir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMDkyNTM5LCJleHAiOjE3NTIwOTM0MzksInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJTVVBFUkFETUlOIiwiQURNSU4iLCJEUlZJRVIiLCJVU0VSIl19.NrbVihgKJc3bFd5KMTRpUS0ur26qf5-Q4kltu5xzBqLSqBywPrhEJ059vc07CHPV",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/superadmin/bus-income/weekly?startDate=2025-06-20&endDate=2025-07-20",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"superadmin",
+								"bus-income",
+								"weekly"
+							],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2025-06-20"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-07-20"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüs Aylık Gelir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTIwNDgxLCJleHAiOjE3NTE5MjEzODEsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJVU0VSIiwiQURNSU4iLCJTVVBFUkFETUlOIl19.eDl4BXtQXhgFy24njzJn_ZwW1FSQGmGsyCeS2qxBat0giVpJg4WU3VBpNI2TgwEY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/superadmin/bus-income/monthly?year=2025&month=07",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"superadmin",
+								"bus-income",
+								"monthly"
+							],
+							"query": [
+								{
+									"key": "year",
+									"value": "2025"
+								},
+								{
+									"key": "month",
+									"value": "07"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "denetim günlükleri",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMDkyODMyLCJleHAiOjE3NTIwOTM3MzIsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJVU0VSIiwiQURNSU4iLCJEUlZJRVIiLCJTVVBFUkFETUlOIl19.9JNIPBWc73yFfG1gScDNjAnzgOPZk4ottso_MVrw4rav1ylPXu_quS08R8WHOZ4v",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/superadmin/audit-logs?fromDate&toDate&action",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"superadmin",
+								"audit-logs"
+							],
+							"query": [
+								{
+									"key": "fromDate",
+									"value": null
+								},
+								{
+									"key": "toDate",
+									"value": null
+								},
+								{
+									"key": "action",
+									"value": null
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "admin",
+			"item": [
+				{
+					"name": "admin kayıt ol",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"Sadık\",\r\n    \"surname\":\"admin\",\r\n    \"telephone\":\"5437328687\",\r\n    \"password\":\"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/admin/sign-up",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"admin",
+								"sign-up"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin şifre değiştir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUxMzA4NzY2LCJleHAiOjE3NTEzMDkwNjYsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.5b1wTjy4Q2hKIVpnZbQLjnK2VtoDjZMOpq0taVzIiYxhd_gNAhpLzLeGH9o3bo4y",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"currentPassword\":\"123456\",\r\n    \"newPassword\":\"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/admin/change-password",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"admin",
+								"change-password"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin profil güncelle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUxMzA4NzY2LCJleHAiOjE3NTEzMDkwNjYsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.5b1wTjy4Q2hKIVpnZbQLjnK2VtoDjZMOpq0taVzIiYxhd_gNAhpLzLeGH9o3bo4y",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"Sadık\",\r\n    \"surname\":\"admin\",\r\n    \"telephone\":\"5437328687\",\r\n    \"password\":\"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/admin/update-profile",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"admin",
+								"update-profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin cihaz bilgisi güncelleme",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUxMzA4NzY2LCJleHAiOjE3NTEzMDkwNjYsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.5b1wTjy4Q2hKIVpnZbQLjnK2VtoDjZMOpq0taVzIiYxhd_gNAhpLzLeGH9o3bo4y",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/admin/update-device-info",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"admin",
+								"update-device-info"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin konum getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUxMzA4NzY2LCJleHAiOjE3NTEzMDkwNjYsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.5b1wTjy4Q2hKIVpnZbQLjnK2VtoDjZMOpq0taVzIiYxhd_gNAhpLzLeGH9o3bo4y",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"Sadık\",\r\n    \"surname\":\"admin\",\r\n    \"telephone\":\"5437328687\",\r\n    \"password\":\"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/admin/location",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"admin",
+								"location"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin konum güncelle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUxMzA4NzY2LCJleHAiOjE3NTEzMDkwNjYsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.5b1wTjy4Q2hKIVpnZbQLjnK2VtoDjZMOpq0taVzIiYxhd_gNAhpLzLeGH9o3bo4y",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/admin/location",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"admin",
+								"location"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "admin giriş geçmişi getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUxMzA4NzY2LCJleHAiOjE3NTEzMDkwNjYsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.5b1wTjy4Q2hKIVpnZbQLjnK2VtoDjZMOpq0taVzIiYxhd_gNAhpLzLeGH9o3bo4y",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"Sadık\",\r\n    \"surname\":\"admin\",\r\n    \"telephone\":\"5437328687\",\r\n    \"password\":\"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/admin/login-history",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"admin",
+								"login-history"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "kullanıcı",
+			"item": [
+				{
+					"name": "kayıt ol",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"firstName\": \"abdusselam\",\r\n  \"lastName\": \"albayrak\",\r\n  \"telephone\": \"+905053764364\",\r\n  \"password\": \"123456\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/sign-up",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"sign-up"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "toplu kullanıcı ekleme",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\t\"users\":[\r\n\t\t{\r\n\t\t\t\"firstName\": \"Elif\",\r\n\t\t\t\"lastName\": \"Yıldız\",\r\n\t\t\t\"telephone\": \"+905555555555\",\r\n\t\t\t\"password\": \"890558\",\r\n\t\t\t\"birthDate\": \"1984-01-26\"\r\n\t\t},\r\n        {\r\n\t\t\t\"firstName\": \"asda\",\r\n\t\t\t\"lastName\": \"Yıladadsdız\",\r\n\t\t\t\"telephone\": \"+905444455555\",\r\n\t\t\t\"password\": \"890558\",\r\n\t\t\t\"birthDate\": \"1984-01-26\"\r\n\t\t}\r\n\t]\r\n}\r\n\r\n\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/collective-sign-up",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"collective-sign-up"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "telefon doğrula",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\":\"665666\"\r\n  \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/verify/phone",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"verify",
+								"phone"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "yeniden telefona kod al",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\":\"665666\"\r\n  \r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/verify/phone/resend",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"verify",
+								"phone",
+								"resend"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "profilim",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzYxMzE3IiwiaWF0IjoxNzUxODk2MDQzLCJleHAiOjE3NTE4OTY5NDMsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzYxMzE3Iiwicm9sZSI6WyJVU0VSIl19.Ki4JvJIfEZ485fvFOqaFGlWnXcuNQ0FQ1jyjJDiqtbupK9M7eHjiWoearvI-6T9h",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/profile",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "şifremi unuttum",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"telephone\":\"5366543798\",\r\n    \"password\":\"123456\"\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/password/forgot?phone=5336360079",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"password",
+								"forgot"
+							],
+							"query": [
+								{
+									"key": "phone",
+									"value": "5336360079"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "şifremi unuttum doğrulama",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"code\":\"665666\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/password/verify-code",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"password",
+								"verify-code"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "şifre sıfırlama",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"resetToken\":\" \",\r\n    \"newPassword\":\"123456\"\r\n  \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/password/reset",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"password",
+								"reset"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "şifre değiştir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDc0NTA5OTAxIiwiaWF0IjoxNzUwNzgzNzg5LCJleHAiOjE3ODIzMTk3ODksInVzZXJOdW1iZXIiOiIrOTA1MDc0NTA5OTAxIiwicm9sZSI6WyJVU0VSIl19.36zgatzQNTpO0PZAk4Ln5IioBwoqoXCAkTLgriLiFWhGWRMz6cYTir6bnzLK2zEi",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"currentPassword\":\"654211\",\r\n    \"newPassword\":\"123456\"\r\n  \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/password/change",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"password",
+								"change"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "profil güncelleme",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTAxMDIwMzA0MDUwIiwiaWF0IjoxNzUyMDU1MjYyLCJleHAiOjE3NTIwNTYxNjIsInVzZXJOdW1iZXIiOiIrOTAxMDIwMzA0MDUwIiwicm9sZSI6WyJVU0VSIl19.TiEbGN5n6UaWaKeVhDrUXIDFh1sdenzHyMSoKJruZ72Ktepz7smkYwDYax3jEtLt",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\":\"ad\",\r\n    \"surname\":\"soyadımiki\"\r\n   \r\n    \r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/profile",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"profile"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "profil fotoğrafı koy",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTk5IiwiaWF0IjoxNzUwNzY2MzYyLCJleHAiOjE3ODIzMDIzNjIsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTk5Iiwicm9sZSI6WyJBRE1JTiJdfQ.ie6u5YKe348amRfhvPYcfSDl6Fd4PBI9boulE42IkrCMTPHMi0GT0vJ9ATY6kz3n",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/profile/photo",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"profile",
+								"photo"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "hesabımı sil",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzM2MzYxOTk5IiwiaWF0IjoxNzUwNzY2MzYyLCJleHAiOjE3ODIzMDIzNjIsInVzZXJOdW1iZXIiOiIrOTA1MzM2MzYxOTk5Iiwicm9sZSI6WyJBRE1JTiJdfQ.ie6u5YKe348amRfhvPYcfSDl6Fd4PBI9boulE42IkrCMTPHMi0GT0vJ9ATY6kz3n",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"telephone\":\"5366543798\",\r\n    \"password\":\"123456\"\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/deactivate",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"deactivate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm kullanıcılar",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "fcm token güncelleme",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzYxMzQ3IiwiaWF0IjoxNzUxOTg1NTc0LCJleHAiOjE3NTE5ODY0NzQsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzYxMzQ3Iiwicm9sZSI6WyJVU0VSIl19.AWoNlFn7qyMoYnJEzZKDz0biwK1h-VSHLV-PPlmtDKcdm162XTFGcrHvOxYGIw7_",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/update-fcm-token?fcmToken=dsajşdaslkdkasşöxşa",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"update-fcm-token"
+							],
+							"query": [
+								{
+									"key": "fcmToken",
+									"value": "dsajşdaslkdkasşöxşa"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "konum bilgisi gönder",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA0IiwiaWF0IjoxNzUyNDM3MzkxLCJleHAiOjE3NTI0MzgyOTEsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA0Iiwicm9sZSI6WyJVU0VSIl19.EEvbItCqQ2s2aaYAz_gqAaTOvLSN8Fti8VBBvx1Zgh-aCLCN9BiExjSi1Imbt41i",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"latitude\":\"20.123\",\r\n    \"longitude\":\"20.123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/user/location",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"user",
+								"location"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "bildirim gönder",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "hesap dondur",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "unfreeze account",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "haberler",
+			"item": [
+				{
+					"name": "haber oluştur-admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMjM5MjYzLCJleHAiOjE3NTIyNDAxNjMsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.Gm3LKmgMzB-MnNqZ6VXz-f1jG7FOS91DKm7DJcBXrcy4WnvHUL9ixfcPeId03VVM",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "title",
+									"value": "Test",
+									"type": "text"
+								},
+								{
+									"key": "content",
+									"value": "Yeni alınan kararlarla birlikte otobüs sefer saatlerinde değişiklik yapılacaktır. Detaylar için lütfen web sitemizi ziyaret ediniz.",
+									"type": "text"
+								},
+								{
+									"key": "startDate",
+									"value": "2025-06-30T09:00:00",
+									"type": "text"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-07-01T23:59:59",
+									"type": "text"
+								},
+								{
+									"key": "platform",
+									"value": "DESKTOP",
+									"type": "text"
+								},
+								{
+									"key": "priority",
+									"value": "YUKSEK",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "DUYURU",
+									"type": "text"
+								},
+								{
+									"key": "allowFeedback",
+									"value": "true",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/mehme/OneDrive/Desktop/images.jpg",
+									"disabled": true
+								},
+								{
+									"key": "thumbnail",
+									"type": "file",
+									"src": "/C:/Users/mehme/OneDrive/Desktop/images.jpg",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm haberler admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMjY1MDIwLCJleHAiOjE3NTIyNjU5MjAsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJTVVBFUkFETUlOIiwiRFJJVkVSIiwiVVNFUiIsIkFETUlOIl19.VJOh3Uti50yCBXaZ6ndbj-E5REhb3qP1HG7nwKQ0WlN3F3IQ9tFZnKWy8-Gk5cM4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								""
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "soft delete admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUyMjUwOTIyLCJleHAiOjE3NTIyNTE4MjIsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.QnT_Ouqnj0eUREVhGYXf1bMOP6JgyUtWM2iDGFh0jIK2fUUngm2Mrx9onRAmcGKe",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/1/soft-delete",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"1",
+								"soft-delete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "haber güncelle admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUyMjUwOTIyLCJleHAiOjE3NTIyNTE4MjIsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.QnT_Ouqnj0eUREVhGYXf1bMOP6JgyUtWM2iDGFh0jIK2fUUngm2Mrx9onRAmcGKe",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "id",
+									"value": "1",
+									"type": "text"
+								},
+								{
+									"key": "title",
+									"value": "başlık",
+									"type": "text"
+								},
+								{
+									"key": "content",
+									"value": "Test",
+									"type": "text"
+								},
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/289638FD-C6DA-47EF-AC65-0559F67F3359.jpg",
+									"disabled": true
+								},
+								{
+									"key": "startDate",
+									"value": "2025-06-30T09:00:00",
+									"type": "text"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-07-30T09:00:00",
+									"type": "text"
+								},
+								{
+									"key": "platform",
+									"value": "WEB",
+									"type": "text"
+								},
+								{
+									"key": "priority",
+									"value": "YUKSEK",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "",
+									"type": "text"
+								},
+								{
+									"key": "allowFeedback",
+									"value": "true",
+									"type": "text"
+								},
+								{
+									"key": "active",
+									"value": "true",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/update",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"update"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin id li haber getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUyMTMxODI0LCJleHAiOjE3NTIxMzI3MjQsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.OOJ7s8id9G10zUPNbRAYteDDT6lz2NzlXmiPRwzM7dnMteh1e_2LgNAhMm9LKc92",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/admin/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"admin",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "id li haber getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/6?platform=WEB",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"6"
+							],
+							"query": [
+								{
+									"key": "platform",
+									"value": "WEB"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "User aktif haberler",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0MzY1IiwiaWF0IjoxNzUyMjUyMzQ0LCJleHAiOjE3NTIyNTMyNDQsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0MzY1Iiwicm9sZSI6WyJVU0VSIl19.EX2DC_Dm4pTSIPFuU0wMorkOQXO29vQeU6OcWO9nZYaj6GzVBQHcyOmx00UXBKf7",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/active?platform=WEB",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"active"
+							],
+							"query": [
+								{
+									"key": "platform",
+									"value": "WEB"
+								},
+								{
+									"key": "news",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin aktif haberler",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUyMjUxMjY1LCJleHAiOjE3NTIyNTIxNjUsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.Dwt32qrNHQTdvnmhsRokWWb9yJoxFDWy_Yqh1TsE_C1C3QiOg3Cl9Otj-9ozvlLM",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": []
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/active-admin",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"active-admin"
+							],
+							"query": [
+								{
+									"key": "platform",
+									"value": "WEB",
+									"disabled": true
+								},
+								{
+									"key": "news",
+									"value": "",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "haberi aktif yap",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUyMDAwNTgzLCJleHAiOjE3NTIwMDE0ODMsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.ucYSduQzYWf1GEWz5AIIk0C80bhoXTHdalsQcclIRP_mQ5HHG124CMeGqLFpD3ud",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "image",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/289638FD-C6DA-47EF-AC65-0559F67F3359.jpg"
+								},
+								{
+									"key": "id",
+									"value": "1",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/1/activate",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"1",
+								"activate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tarihleri  arasındaki haberler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMjY2NzY4LCJleHAiOjE3NTIyNjc2NjgsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJVU0VSIiwiRFJJVkVSIiwiU1VQRVJBRE1JTiIsIkFETUlOIl19.FjohPqWk1NqanODU25f5VKtsQ7vq3QPeHEGhB877SEe5CsBBxg7WlsYK3P8SRqCO",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "",
+								"value": "",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/between-dates?start=2025-06-20&end=2025-07-25",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"between-dates"
+							],
+							"query": [
+								{
+									"key": "start",
+									"value": "2025-06-20"
+								},
+								{
+									"key": "end",
+									"value": "2025-07-25"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "beğendiğim haberler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUyMDAwNTgzLCJleHAiOjE3NTIwMDE0ODMsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.ucYSduQzYWf1GEWz5AIIk0C80bhoXTHdalsQcclIRP_mQ5HHG124CMeGqLFpD3ud",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/liked",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"liked"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "haber beğen",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUyMDAwNTgzLCJleHAiOjE3NTIwMDE0ODMsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.ucYSduQzYWf1GEWz5AIIk0C80bhoXTHdalsQcclIRP_mQ5HHG124CMeGqLFpD3ud",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/1/like",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"1",
+								"like"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "haber istatistikleri",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDE3IiwiaWF0IjoxNzUyMTAzNTA3LCJleHAiOjE3NTIxMDQ0MDcsInVzZXJOdW1iZXIiOiIrOTA1MzMzMDAwMDE3Iiwicm9sZSI6WyJBRE1JTiJdfQ.8n1-wG7R5oWb9RGQkaEbp-Y_AGqcLWwTsLbM_mhTv57ASt0_jtFtct8C8rSkzmH5",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/statistics",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"statistics"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Admin kategoriye göre getir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NDM3MzI4Njg3IiwiaWF0IjoxNzUyMTMxODI0LCJleHAiOjE3NTIxMzI3MjQsInVzZXJOdW1iZXIiOiIrOTA1NDM3MzI4Njg3Iiwicm9sZSI6WyJBRE1JTiJdfQ.OOJ7s8id9G10zUPNbRAYteDDT6lz2NzlXmiPRwzM7dnMteh1e_2LgNAhMm9LKc92",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/by-category?category=KAMPANYA",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"by-category"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "KAMPANYA"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kategoriye göre getir",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/by-category?category=BAKIM",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"by-category"
+							],
+							"query": [
+								{
+									"key": "category",
+									"value": "BAKIM"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Platforma göre haberler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUyMDAyMTQ4LCJleHAiOjE3NTIwMDMwNDgsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.cnGfZCzvin7I-GlckDvTJUNBDJVXnMpbqP48mTM4svahmhuaYKoC4EPx2sXe5WP9",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/suggested",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"suggested"
+							],
+							"query": [
+								{
+									"key": "platform",
+									"value": "MOBILE",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "beğeni kaldır",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTAwMzI4LCJleHAiOjE3NTIxMDEyMjgsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.GsvOOjN7trWjRMCmuYj86wqeUAzy1ndYw7QRkIvkCxPk1gUuDW_AqpyJ0vYDdDTx",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/news/1/unlike",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"news",
+								"1",
+								"unlike"
+							],
+							"query": [
+								{
+									"key": "platform",
+									"value": "MOBILE",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "şikayetler",
+			"item": [
+				{
+					"name": "şikayet ekle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "category",
+									"value": "OTHER",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "dsadassdsdsadasdas",
+									"type": "text"
+								},
+								{
+									"key": "photos",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "mesaj gönder",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "category",
+									"value": "OTHER",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "message",
+									"value": "fsdfsdfas",
+									"type": "text"
+								},
+								{
+									"key": "photos",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/send-message/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"send-message",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "mesaj düzenle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "category",
+									"value": "OTHER",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "message",
+									"value": "fsdfsdfas",
+									"type": "text"
+								},
+								{
+									"key": "photos",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/edit-message/33?newMessage=yeni mesaj güncellendi",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"edit-message",
+								"33"
+							],
+							"query": [
+								{
+									"key": "newMessage",
+									"value": "yeni mesaj güncellendi"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "measaj sil",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "category",
+									"value": "OTHER",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "message",
+									"value": "fsdfsdfas",
+									"type": "text"
+								},
+								{
+									"key": "photos",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/delete-message/33",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"delete-message",
+								"33"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sohbeti getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "category",
+									"value": "OTHER",
+									"type": "text",
+									"disabled": true
+								},
+								{
+									"key": "message",
+									"value": "fsdfsdfas",
+									"type": "text"
+								},
+								{
+									"key": "photos",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-06-14 saat 23.37.52_e43086c8.jpg",
+									"disabled": true
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/chat/11",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"chat",
+								"11"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sohbet mesajları",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/chat/11/messages",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"chat",
+								"11",
+								"messages"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "okundu olarak işaretle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/mark-as-read/11",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"mark-as-read",
+								"11"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sohbetlerim",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/my-chats",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"my-chats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "okunmamış sohbet sayısı",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/my-unread-count",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"my-unread-count"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sohbeti sil",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/delete-chat/11",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"delete-chat",
+								"11"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sohbetler admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/admin/chats",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"admin",
+								"chats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "okunmamış sohbet sayısı-admin",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/admin/unread-count",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"admin",
+								"unread-count"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "şikayet durumunu düzenle admin",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "arşive taşı sohbeti -admin",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/admin/archive-chat/11",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"admin",
+								"archive-chat",
+								"11"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "istatistikler",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/admin/stats",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"admin",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "toplu arşive taşı",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/admin/bulk/archive?reportIds=1,2,3,4",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"admin",
+								"bulk",
+								"archive"
+							],
+							"query": [
+								{
+									"key": "reportIds",
+									"value": "1,2,3,4"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "toplu durum değiştirme",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/admin/bulk-status-change",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"admin",
+								"bulk-status-change"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kategoriler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/categories",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"categories"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "durumlar",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/statuses",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"statuses"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "arama",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/search?keyword=selam",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"search"
+							],
+							"query": [
+								{
+									"key": "keyword",
+									"value": "selam"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "puan verme",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"rating\":5,\r\n    \"comment\":\"sevdim\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/rate-satisfaction/11",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"rate-satisfaction",
+								"11"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "silinmiş sohbetleri getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"rating\":5,\r\n    \"comment\":\"sevdim\"\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/admin/deleted-chats",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"admin",
+								"deleted-chats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm sohbetler admin",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"rating\":5,\r\n    \"comment\":\"sevdim\"\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/admin/all-chats",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"admin",
+								"all-chats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "memnuniyet istatistikleri",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"rating\":5,\r\n    \"comment\":\"sevdim\"\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/admin/satisfaction-stats",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"admin",
+								"satisfaction-stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "belirli bir raporu getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU0OTk2MjcwLCJleHAiOjE3NTQ5OTcxNzAsImp0aSI6IjA3ZGNhNDA5LTU5N2QtNDJhYi1iMzI5LWNmYjFmMGRkYTc0MCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.gB469gvdvdOLHsxVhqpWLL9BQwpOSsV8jD82XBXKHKL1-ITzHGWp4DHLgNCMhwwJnICeLEb-2-T1NN-YgLXZ_w",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"rating\":5,\r\n    \"comment\":\"sevdim\"\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/report/admin/restore-report/11",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"report",
+								"admin",
+								"restore-report",
+								"11"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Otobüs",
+			"item": [
+				{
+					"name": "Tüm Otobüsleri getir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMDkyODMyLCJleHAiOjE3NTIwOTM3MzIsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJVU0VSIiwiQURNSU4iLCJEUlZJRVIiLCJTVVBFUkFETUlOIl19.9JNIPBWc73yFfG1gScDNjAnzgOPZk4ottso_MVrw4rav1ylPXu_quS08R8WHOZ4v",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/getAllBus",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"getAllBus"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ID ile Otobüs getir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMDkyODMyLCJleHAiOjE3NTIwOTM3MzIsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJVU0VSIiwiQURNSU4iLCJEUlZJRVIiLCJTVVBFUkFETUlOIl19.9JNIPBWc73yFfG1gScDNjAnzgOPZk4ottso_MVrw4rav1ylPXu_quS08R8WHOZ4v",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Aktif Otobüsleri Getir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMDkyODMyLCJleHAiOjE3NTIwOTM3MzIsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJVU0VSIiwiQURNSU4iLCJEUlZJRVIiLCJTVVBFUkFETUlOIl19.9JNIPBWc73yFfG1gScDNjAnzgOPZk4ottso_MVrw4rav1ylPXu_quS08R8WHOZ4v",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/active",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"active"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüs Oluştur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMDkyODMyLCJleHAiOjE3NTIwOTM3MzIsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJVU0VSIiwiQURNSU4iLCJEUlZJRVIiLCJTVVBFUkFETUlOIl19.9JNIPBWc73yFfG1gScDNjAnzgOPZk4ottso_MVrw4rav1ylPXu_quS08R8WHOZ4v",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"numberPlate\": \"12AAA678\",\r\n  \"routeId\": 1,\r\n  \"driverId\": null,\r\n  \"fare\": 0.0\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüs güncelle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTIzNzg1LCJleHAiOjE3NTE5MjQ2ODUsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.91GQ7EFsMgUm7pXeCV0dg8roGhfooSOCbdXPo7G0xTGQ9TQD9MV6QmRf4l5tYRK4",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/update/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"update",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüs Sil",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTI0MjI0LCJleHAiOjE3NTE5MjUxMjQsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.S2h3v7YHkTX5rRzZZOh7W-AwDfBSdfqIXmalrlSIlwbthk_4SNZNnOq9kTY13sp-",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/delete/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"delete",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüs aktifleştir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTI0MjI0LCJleHAiOjE3NTE5MjUxMjQsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.S2h3v7YHkTX5rRzZZOh7W-AwDfBSdfqIXmalrlSIlwbthk_4SNZNnOq9kTY13sp-",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/1/toggle-active",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"1",
+								"toggle-active"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüse şoför ata",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTI0MjI0LCJleHAiOjE3NTE5MjUxMjQsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.S2h3v7YHkTX5rRzZZOh7W-AwDfBSdfqIXmalrlSIlwbthk_4SNZNnOq9kTY13sp-",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"driverId\": 1\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/1/assign-driver",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"1",
+								"assign-driver"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüs konum getir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTI0MjI0LCJleHAiOjE3NTE5MjUxMjQsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.S2h3v7YHkTX5rRzZZOh7W-AwDfBSdfqIXmalrlSIlwbthk_4SNZNnOq9kTY13sp-",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/1/location",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"1",
+								"location"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüs konum güncelle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTI0MjI0LCJleHAiOjE3NTE5MjUxMjQsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.S2h3v7YHkTX5rRzZZOh7W-AwDfBSdfqIXmalrlSIlwbthk_4SNZNnOq9kTY13sp-",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"driverId\": 1\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/1/location",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"1",
+								"location"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüs konum geçmişi",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTI0ODQ3LCJleHAiOjE3NTE5MjU3NDcsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.086y3Jkvi11oDrM1p9qIxsc5hzVBeoyqzf__5MzY873tDLxFktm730l6pIw27ao2",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/1/location-history",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"1",
+								"location-history"
+							],
+							"query": [
+								{
+									"key": "date",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ride With Card?",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTI0ODQ3LCJleHAiOjE3NTE5MjU3NDcsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.086y3Jkvi11oDrM1p9qIxsc5hzVBeoyqzf__5MzY873tDLxFktm730l6pIw27ao2",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"cardId\": 123456,\r\n  \"cardType\": \"TAM\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/1/ride",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"1",
+								"ride"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Bus Rides Getir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTI0ODQ3LCJleHAiOjE3NTE5MjU3NDcsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.086y3Jkvi11oDrM1p9qIxsc5hzVBeoyqzf__5MzY873tDLxFktm730l6pIw27ao2",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/1/rides",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"1",
+								"rides"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüse Rota Ekle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTI1MjE0LCJleHAiOjE3NTE5MjYxMTQsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.2FkogSKffYgjvqB92cyusSmQANNAFXbrUkLmQSshZ3dpyPLZaEmFvBvyF20uWs9N",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"routeId\":1\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/1/route",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"1",
+								"route"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüsün rotasının duraklarını getir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTI1MjE0LCJleHAiOjE3NTE5MjYxMTQsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.2FkogSKffYgjvqB92cyusSmQANNAFXbrUkLmQSshZ3dpyPLZaEmFvBvyF20uWs9N",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/1/route/stations",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"1",
+								"route",
+								"stations"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Otobüsün durağa Tahmini varış süresi",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTI1MjE0LCJleHAiOjE3NTE5MjYxMTQsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJEUlZJRVIiLCJTVVBFUkFETUlOIiwiVVNFUiIsIkFETUlOIl19.2FkogSKffYgjvqB92cyusSmQANNAFXbrUkLmQSshZ3dpyPLZaEmFvBvyF20uWs9N",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"routeId\":1\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/bus/1/eta",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"bus",
+								"1",
+								"eta"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "cüzdan",
+			"item": [
+				{
+					"name": "cüzdana para yükle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzYxMzQ3IiwiaWF0IjoxNzUxOTg1NTc0LCJleHAiOjE3NTE5ODY0NzQsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzYxMzQ3Iiwicm9sZSI6WyJVU0VSIl19.AWoNlFn7qyMoYnJEzZKDz0biwK1h-VSHLV-PPlmtDKcdm162XTFGcrHvOxYGIw7_",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"amount\": 10000.00,\r\n  \"cardNumber\": \"5526080000000006\",\r\n  \"cardExpiry\": \"12/26\",\r\n  \"cardCvc\": \"123\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/wallet/top-up",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"wallet",
+								"top-up"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "cüzdan oluştur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzYxMzQ3IiwiaWF0IjoxNzUxOTg1NTc0LCJleHAiOjE3NTE5ODY0NzQsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzYxMzQ3Iiwicm9sZSI6WyJVU0VSIl19.AWoNlFn7qyMoYnJEzZKDz0biwK1h-VSHLV-PPlmtDKcdm162XTFGcrHvOxYGIw7_",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "nationalId",
+									"value": "10445296630",
+									"type": "text"
+								},
+								{
+									"key": "birthDate",
+									"value": "1995-08-25",
+									"type": "text"
+								},
+								{
+									"key": "motherName",
+									"value": "Fatma",
+									"type": "text"
+								},
+								{
+									"key": "gender",
+									"value": "Erkek",
+									"type": "text"
+								},
+								{
+									"key": "fatherName",
+									"value": "Mehmet",
+									"type": "text"
+								},
+								{
+									"key": "serialNumber",
+									"value": "A12345678",
+									"type": "text"
+								},
+								{
+									"key": "frontCardPhoto",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-07-04 saat 17.51.43_92ebac3a.jpg"
+								},
+								{
+									"key": "backCardPhoto",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-07-04 saat 17.51.43_92ebac3a.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/wallet/create",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"wallet",
+								"create"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kimlik doğrulama onayı",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUxOTg1ODI4LCJleHAiOjE3NTE5ODY3MjgsInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJVU0VSIiwiRFJWSUVSIiwiQURNSU4iLCJTVVBFUkFETUlOIl19.1kNdzc554rl7GL-lXzeiALt1neckRDN-aSm38rcnCrOTog-sxSWA37JcOb6ffijB",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"requestId\":1,\r\n    \"approved\":\"true\",\r\n    \"adminNote\":\"bu ne amk\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/wallet/process",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"wallet",
+								"process"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "cüzdan bakiyem",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzYxMzA3IiwiaWF0IjoxNzUxOTYzOTQ3LCJleHAiOjE3NTE5NjQ4NDcsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzYxMzA3Iiwicm9sZSI6WyJVU0VSIl19.mgNLeN10hvWDZsyAbXzi0MtvPxLwM7-QgHswBopiQ0cNqXZ0zPwuqnOMJXk6yi2k",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"amount\": 100.00,\r\n  \"cardNumber\": \"5526080000000006\",\r\n  \"cardExpiry\": \"12/26\",\r\n  \"cardCvc\": \"123\"\r\n}\r\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/wallet/balance",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"wallet",
+								"balance"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm kimlik doğrulama istekleri",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDE3IiwiaWF0IjoxNzUyMTU4NDA3LCJleHAiOjE3NTIxNTkzMDcsInVzZXJOdW1iZXIiOiIrOTA1MzMzMDAwMDE3Iiwicm9sZSI6WyJBRE1JTiJdfQ.IWPOrAc2V41mcaQuUIs4eIA8q5SgYkFCqcauyBUSSpL5cl9UvU92aw3FaUvwa_fk",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"requestId\":2,\r\n    \"approved\":\"true\",\r\n    \"adminNote\":\"bu ne amk\"\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/wallet/identity-requests",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"wallet",
+								"identity-requests"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "cüzdan bilgilerim",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTQyMTI0LCJleHAiOjE3NTIxNDMwMjQsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.cnkFqlUnvnpGJWenPoHl8AFkxpo3OxBzv44iWNU07Aj4eEHJDgh4YWJ8G21CBnTY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "Şuanlık body yok"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/wallet/my-wallet",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"wallet",
+								"my-wallet"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "transfer",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTQzMTU5LCJleHAiOjE3NTIxNDQwNTksInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.gLK7_9HuSVWBVBEHPUco30UhUpJacb1IlLkF-FRgFXPbIYJMitxeq513P8lZlXCA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"receiverIdentifier\":\"905331000002\",\r\n    \"amount\":100.00,\r\n    \"description\":\"bu gece iyidi\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/wallet/transfer",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"wallet",
+								"transfer"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "cüzdan durumu güncelle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTQzMTU5LCJleHAiOjE3NTIxNDQwNTksInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.gLK7_9HuSVWBVBEHPUco30UhUpJacb1IlLkF-FRgFXPbIYJMitxeq513P8lZlXCA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/wallet/toggleWalletStatus?isActive=false",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"wallet",
+								"toggleWalletStatus"
+							],
+							"query": [
+								{
+									"key": "isActive",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "cüzdan aktivitelerim",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTQ1MTA4LCJleHAiOjE3NTIxNDYwMDgsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.NToQbk3M4bPW0kwt927cXWrl-vWFdzvl9EdAZQDkynvtE6JuusxMnyND790KmsJd",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/wallet/activities?type=TRANSFER_SENT&start=2024-01-01&end=2024-12-31&page=0&size=20&sort=activityDate,desc",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"wallet",
+								"activities"
+							],
+							"query": [
+								{
+									"key": "type",
+									"value": "TRANSFER_SENT"
+								},
+								{
+									"key": "start",
+									"value": "2024-01-01"
+								},
+								{
+									"key": "end",
+									"value": "2024-12-31"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								},
+								{
+									"key": "sort",
+									"value": "activityDate,desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "transfer detayı",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTQ1MTA4LCJleHAiOjE3NTIxNDYwMDgsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.NToQbk3M4bPW0kwt927cXWrl-vWFdzvl9EdAZQDkynvtE6JuusxMnyND790KmsJd",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"telephone\":\"5053764374\",\r\n    \"password\":\"123456\"\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/wallet/transfer/2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"wallet",
+								"transfer",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm cüzdanlar",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDE3IiwiaWF0IjoxNzUyMTQ1NTE1LCJleHAiOjE3NTIxNDY0MTUsInVzZXJOdW1iZXIiOiIrOTA1MzMzMDAwMDE3Iiwicm9sZSI6WyJBRE1JTiJdfQ.QlIepD7kyBQty33LjC0xQgD526WDpHtGchgmeAhTTTn6vOFx3PTrwJWEDA_pGlVF",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/wallet/admin/all?page=0&size=10&sort=createdAt,desc",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"wallet",
+								"admin",
+								"all"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "sort",
+									"value": "createdAt,desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm transferleri excel olarak indir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDE3IiwiaWF0IjoxNzUyMTQ2MzAzLCJleHAiOjE3NTIxNDcyMDMsInVzZXJOdW1iZXIiOiIrOTA1MzMzMDAwMDE3Iiwicm9sZSI6WyJBRE1JTiJdfQ.XRd9tec8IxVhquMjPNnzbACegPyZ6Kmr_cgohhiVswwtWmuFSyV9z3sUHTIeuwwV",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/wallet/admin/export/transactions/excel",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"wallet",
+								"admin",
+								"export",
+								"transactions",
+								"excel"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Hatlar",
+			"item": [
+				{
+					"name": "Tüm hatları getir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1NTUwMDAwMDAwIiwiaWF0IjoxNzUyMDkyNTM5LCJleHAiOjE3NTIwOTM0MzksInVzZXJOdW1iZXIiOiIrOTA1NTUwMDAwMDAwIiwicm9sZSI6WyJTVVBFUkFETUlOIiwiQURNSU4iLCJEUlZJRVIiLCJVU0VSIl19.NrbVihgKJc3bFd5KMTRpUS0ur26qf5-Q4kltu5xzBqLSqBywPrhEJ059vc07CHPV",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/route/getAllRoutes",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"route",
+								"getAllRoutes"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "İsme göre hat getir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUyMDAyMTQ4LCJleHAiOjE3NTIwMDMwNDgsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.cnGfZCzvin7I-GlckDvTJUNBDJVXnMpbqP48mTM4svahmhuaYKoC4EPx2sXe5WP9",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/route/search-by-name?name=Rotaİsmi",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"route",
+								"search-by-name"
+							],
+							"query": [
+								{
+									"key": "name",
+									"value": "Rotaİsmi"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Durak Id sine göre hat getir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUyMDAyMTQ4LCJleHAiOjE3NTIwMDMwNDgsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.cnGfZCzvin7I-GlckDvTJUNBDJVXnMpbqP48mTM4svahmhuaYKoC4EPx2sXe5WP9",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/route/search-by-name?stationId=1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"route",
+								"search-by-name"
+							],
+							"query": [
+								{
+									"key": "stationId",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Hat oluştur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUyMDAyMTQ4LCJleHAiOjE3NTIwMDMwNDgsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.cnGfZCzvin7I-GlckDvTJUNBDJVXnMpbqP48mTM4svahmhuaYKoC4EPx2sXe5WP9",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "Şuanlık body yok",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/route/creat-route",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"route",
+								"creat-route"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Hat Güncelle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUyMDAyMTQ4LCJleHAiOjE3NTIwMDMwNDgsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.cnGfZCzvin7I-GlckDvTJUNBDJVXnMpbqP48mTM4svahmhuaYKoC4EPx2sXe5WP9",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "Şuanlık body yok",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/route/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"route",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Hat Sil",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUyMDAyMTQ4LCJleHAiOjE3NTIwMDMwNDgsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.cnGfZCzvin7I-GlckDvTJUNBDJVXnMpbqP48mTM4svahmhuaYKoC4EPx2sXe5WP9",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/route/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"route",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Hatta Durak Ekle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUyMDAyMTQ4LCJleHAiOjE3NTIwMDMwNDgsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.cnGfZCzvin7I-GlckDvTJUNBDJVXnMpbqP48mTM4svahmhuaYKoC4EPx2sXe5WP9",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/route/1/add-station",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"route",
+								"1",
+								"add-station"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Hatta Durak Ekle Copy",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MDUzNzY0Mzc0IiwiaWF0IjoxNzUyMDAyMTQ4LCJleHAiOjE3NTIwMDMwNDgsInVzZXJOdW1iZXIiOiIrOTA1MDUzNzY0Mzc0Iiwicm9sZSI6WyJVU0VSIl19.cnGfZCzvin7I-GlckDvTJUNBDJVXnMpbqP48mTM4svahmhuaYKoC4EPx2sXe5WP9",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/route/1/remove-station",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"route",
+								"1",
+								"remove-station"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "geri bildirim",
+			"item": [
+				{
+					"name": "feedback gönder",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTY2Mzg5LCJleHAiOjE3NTIxNjcyODksInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.naC50FT4tfLfjjOjoHrobJ2Wxx4MlKcV_6zyeB6NFK0Baza_fsxurRRocVjnOZWn",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/feedback/send",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"feedback",
+								"send"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm geri bildirimler admin",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDE3IiwiaWF0IjoxNzUyMTY2NTM4LCJleHAiOjE3NTIxNjc0MzgsInVzZXJOdW1iZXIiOiIrOTA1MzMzMDAwMDE3Iiwicm9sZSI6WyJBRE1JTiJdfQ.4_r99gzlfEDdG_wUNSzXSFMEIJHTrswDXB0cxDyrGLbShIQiVbtA9cuPj_jOwh3N",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"code\": \"881610\",\r\n  \"ipAddress\": \"192.168.1.45\",\r\n  \"deviceInfo\": \"Xiaomi Redmi Note 11 - Android 13\",\r\n  \"appVersion\": \"1.4.2\",\r\n  \"platform\": \"ANDROID\"\r\n}\r\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/feedback/admin/all?sort=type,asc&sort=submittedAt,desc",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"feedback",
+								"admin",
+								"all"
+							],
+							"query": [
+								{
+									"key": "sort",
+									"value": "type,asc"
+								},
+								{
+									"key": "sort",
+									"value": "submittedAt,desc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "id li geri bildirimi getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDE3IiwiaWF0IjoxNzUyMTY2NTM4LCJleHAiOjE3NTIxNjc0MzgsInVzZXJOdW1iZXIiOiIrOTA1MzMzMDAwMDE3Iiwicm9sZSI6WyJBRE1JTiJdfQ.4_r99gzlfEDdG_wUNSzXSFMEIJHTrswDXB0cxDyrGLbShIQiVbtA9cuPj_jOwh3N",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"code\": \"881610\",\r\n  \"ipAddress\": \"192.168.1.45\",\r\n  \"deviceInfo\": \"Xiaomi Redmi Note 11 - Android 13\",\r\n  \"appVersion\": \"1.4.2\",\r\n  \"platform\": \"ANDROID\"\r\n}\r\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/feedback/admin/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"feedback",
+								"admin",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "anonim olarak gönder",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/feedback/send-anonymous",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"feedback",
+								"send-anonymous"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "feedback gönder",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU1MDI5NTgwLCJleHAiOjE3NTUwMzA0ODAsImp0aSI6IjFhNDQ5ZmM2LThlOTMtNGE2Zi05ZWM5LTUwY2E2M2ZkNDk0NiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzEwMDAwMDEiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.15LNUNW3MonyR2qbA9qd3PfvOiIxxBIml5EuKWtfXj24M_-7RqLIC83n6jJ673osl46jB1AJTw9Salt2_enGxw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/feedback/send-general",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"feedback",
+								"send-general"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tipler",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU1MDI5NTgwLCJleHAiOjE3NTUwMzA0ODAsImp0aSI6IjFhNDQ5ZmM2LThlOTMtNGE2Zi05ZWM5LTUwY2E2M2ZkNDk0NiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzEwMDAwMDEiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.15LNUNW3MonyR2qbA9qd3PfvOiIxxBIml5EuKWtfXj24M_-7RqLIC83n6jJ673osl46jB1AJTw9Salt2_enGxw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/feedback/types",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"feedback",
+								"types"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm feedbackler",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU1MDI5NTgwLCJleHAiOjE3NTUwMzA0ODAsImp0aSI6IjFhNDQ5ZmM2LThlOTMtNGE2Zi05ZWM5LTUwY2E2M2ZkNDk0NiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzEwMDAwMDEiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.15LNUNW3MonyR2qbA9qd3PfvOiIxxBIml5EuKWtfXj24M_-7RqLIC83n6jJ673osl46jB1AJTw9Salt2_enGxw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/feedback/admin/all",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"feedback",
+								"admin",
+								"all"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "id li feedback",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU1MDI5NTgwLCJleHAiOjE3NTUwMzA0ODAsImp0aSI6IjFhNDQ5ZmM2LThlOTMtNGE2Zi05ZWM5LTUwY2E2M2ZkNDk0NiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzEwMDAwMDEiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.15LNUNW3MonyR2qbA9qd3PfvOiIxxBIml5EuKWtfXj24M_-7RqLIC83n6jJ673osl46jB1AJTw9Salt2_enGxw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/feedback/admin/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"feedback",
+								"admin",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "istatistikler",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU1MDI5NTgwLCJleHAiOjE3NTUwMzA0ODAsImp0aSI6IjFhNDQ5ZmM2LThlOTMtNGE2Zi05ZWM5LTUwY2E2M2ZkNDk0NiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzEwMDAwMDEiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.15LNUNW3MonyR2qbA9qd3PfvOiIxxBIml5EuKWtfXj24M_-7RqLIC83n6jJ673osl46jB1AJTw9Salt2_enGxw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/feedback/statistics/admin/general",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"feedback",
+								"statistics",
+								"admin",
+								"general"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "toplam geri bildirim istatistikleri",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU1MDI5NTgwLCJleHAiOjE3NTUwMzA0ODAsImp0aSI6IjFhNDQ5ZmM2LThlOTMtNGE2Zi05ZWM5LTUwY2E2M2ZkNDk0NiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzEwMDAwMDEiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.15LNUNW3MonyR2qbA9qd3PfvOiIxxBIml5EuKWtfXj24M_-7RqLIC83n6jJ673osl46jB1AJTw9Salt2_enGxw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "text",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "subject",
+									"value": "bu nasıl mobil uygulama",
+									"type": "text"
+								},
+								{
+									"key": "message",
+									"value": "fdsfsdfsd",
+									"type": "text"
+								},
+								{
+									"key": "type",
+									"value": "SUGGESTION",
+									"type": "text"
+								},
+								{
+									"key": "source",
+									"value": "mobil",
+									"type": "text"
+								},
+								{
+									"key": "photo",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Desktop/photo_2025-08-06_13-45-13.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/feedback/statistics/admin/anonymous-vs-user",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"feedback",
+								"statistics",
+								"admin",
+								"anonymous-vs-user"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ödeme noktası",
+			"item": [
+				{
+					"name": "ödeme noktası ekle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTcwNTkyLCJleHAiOjE3NTIxNzE0OTIsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.s9gHeOR0aIWTUCciK8mjwDClXwGCODxtBDad8wY_B1SVYkihlgexLzqCLShrcRSp",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Merkez Ödeme Noktası\",\r\n  \"location\": {\r\n    \"latitude\": 10.123456,\r\n    \"longitude\": 29.987654\r\n  },\r\n  \"address\": {\r\n    \"street\": \"Atatürk Caddesi No: 123\",\r\n    \"district\": \"İstanbul\",\r\n    \"city\": \"İstanbul\",\r\n    \"postalCode\": \"34000\"\r\n  },\r\n  \"contactNumber\": \"+90 212 123 45 67\",\r\n  \"workingHours\": \"09:00 - 18:00\",\r\n  \"paymentMethods\": [\"CREDIT_CARD\", \"CASH\"],\r\n  \"description\": \"Merkez şubemiz, haftanın 7 günü hizmet vermektedir.\",\r\n  \"active\": true\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/payment-point",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"payment-point"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "id li ödeme noktasını getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTcwNTkyLCJleHAiOjE3NTIxNzE0OTIsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.s9gHeOR0aIWTUCciK8mjwDClXwGCODxtBDad8wY_B1SVYkihlgexLzqCLShrcRSp",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Merkez Ödeme Noktası\",\r\n  \"location\": {\r\n    \"latitude\": 10.123456,\r\n    \"longitude\": 29.987654\r\n  },\r\n  \"address\": {\r\n    \"street\": \"Atatürk Caddesi No: 123\",\r\n    \"district\": \"İstanbul\",\r\n    \"city\": \"İstanbul\",\r\n    \"postalCode\": \"34000\"\r\n  },\r\n  \"contactNumber\": \"+90 212 123 45 67\",\r\n  \"workingHours\": \"09:00 - 18:00\",\r\n  \"paymentMethods\": [\"CREDIT_CARD\", \"CASH\"],\r\n  \"description\": \"Merkez şubemiz, haftanın 7 günü hizmet vermektedir.\",\r\n  \"active\": true\r\n}\r\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/payment-point/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"payment-point",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ödeme noktası güncelle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTcwNTkyLCJleHAiOjE3NTIxNzE0OTIsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.s9gHeOR0aIWTUCciK8mjwDClXwGCODxtBDad8wY_B1SVYkihlgexLzqCLShrcRSp",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Merkez Ödeme Noktası2\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/payment-point/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"payment-point",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm ödeme noktaları",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTcwNTkyLCJleHAiOjE3NTIxNzE0OTIsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.s9gHeOR0aIWTUCciK8mjwDClXwGCODxtBDad8wY_B1SVYkihlgexLzqCLShrcRSp",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"name\": \"Merkez Ödeme Noktası2\"\r\n}\r\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/payment-point",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"payment-point"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ödeme noktası arama",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"latitude\": 9.9208,\r\n  \"longitude\": 12.8541,\r\n  \"radiusKm\": 10.0,\r\n  \"name\": \"Ankara Kızılay Ödeme Noktası\",\r\n  \"city\": \"Ankara\",\r\n  \"district\": \"Çankaya\",\r\n  \"paymentMethods\": [\"CASH\", \"CREDIT_CARD\"],\r\n  \"active\": true,\r\n  \"workingHours\": \"08:00-18:00\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/payment-point/search",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"payment-point",
+								"search"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "yakınımdaki ödeme noktaları",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"city\": \"İstanbul\"\r\n}\r\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/payment-point/nearby?latitude=38.9065117&longitude=40.4812231&radiusKm=100.0&page=0&size=10&sort=distance,asc",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"payment-point",
+								"nearby"
+							],
+							"query": [
+								{
+									"key": "latitude",
+									"value": "38.9065117"
+								},
+								{
+									"key": "longitude",
+									"value": "40.4812231"
+								},
+								{
+									"key": "radiusKm",
+									"value": "100.0"
+								},
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "10"
+								},
+								{
+									"key": "sort",
+									"value": "distance,asc"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ödeme noktası durum güncelleme",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTcxMDkxLCJleHAiOjE3NTIxNzE5OTEsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.CDkIsWRuPRl8cFGKBh9R27iAF8m0gD767vKOsPPc_G7ky4wxfmewGCqumkej8eg3",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/payment-point/1/status?id=1&active=false",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"payment-point",
+								"1",
+								"status"
+							],
+							"query": [
+								{
+									"key": "id",
+									"value": "1"
+								},
+								{
+									"key": "active",
+									"value": "false"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ödeme noktası kaldırma",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTcxMDkxLCJleHAiOjE3NTIxNzE5OTEsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.CDkIsWRuPRl8cFGKBh9R27iAF8m0gD767vKOsPPc_G7ky4wxfmewGCqumkej8eg3",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/payment-point/2",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"payment-point",
+								"2"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ödeme noktasına fotoğraf ekleme",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTcxMDkxLCJleHAiOjE3NTIxNzE5OTEsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.CDkIsWRuPRl8cFGKBh9R27iAF8m0gD767vKOsPPc_G7ky4wxfmewGCqumkej8eg3",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-07-04 saat 17.51.43_92ebac3a.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/payment-point/3/photos",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"payment-point",
+								"3",
+								"photos"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ödeme noktasıa yüklenen fotoğrafı siler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDA1IiwiaWF0IjoxNzUyMTcxMDkxLCJleHAiOjE3NTIxNzE5OTEsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDA1Iiwicm9sZSI6WyJVU0VSIl19.CDkIsWRuPRl8cFGKBh9R27iAF8m0gD767vKOsPPc_G7ky4wxfmewGCqumkej8eg3",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-07-04 saat 17.51.43_92ebac3a.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/payment-point/3/photos/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"payment-point",
+								"3",
+								"photos",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "şehir bazlı ödeme noktaları",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-07-04 saat 17.51.43_92ebac3a.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/payment-point/by-city/ankara",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"payment-point",
+								"by-city",
+								"ankara"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ödeme tipine göre getir",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "files",
+									"type": "file",
+									"src": "/C:/Users/ysufa/Downloads/WhatsApp Görsel 2025-07-04 saat 17.51.43_92ebac3a.jpg"
+								}
+							]
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/payment-point/by-payment-method?paymentMethod=CASH",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"payment-point",
+								"by-payment-method"
+							],
+							"query": [
+								{
+									"key": "paymentMethod",
+									"value": "CASH"
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "otomatik yükleme",
+			"item": [
+				{
+					"name": "otomatik yükleme getir",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "otomatik yükleme ekle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ0ODAwLCJleHAiOjE3NTQwNDU3MDAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.ai_6C_PuvRb7yoQtgqNcfxPcJWchUmuY0g8X1L_LjQIwZN7bSN3BBpo8ty3CKRX6",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"busCard\":1,\r\n    \"threshold\":100.0,\r\n    \"amount\":100.0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auto_top_up",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auto_top_up"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "güncelleme",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ0ODAwLCJleHAiOjE3NTQwNDU3MDAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.ai_6C_PuvRb7yoQtgqNcfxPcJWchUmuY0g8X1L_LjQIwZN7bSN3BBpo8ty3CKRX6",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"busCard\":2,\r\n    \"threshold\":200.0,\r\n    \"amount\":100.0\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auto_top_up/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auto_top_up",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "toogle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ0ODAwLCJleHAiOjE3NTQwNDU3MDAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.ai_6C_PuvRb7yoQtgqNcfxPcJWchUmuY0g8X1L_LjQIwZN7bSN3BBpo8ty3CKRX6",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"busCard\":2,\r\n    \"threshold\":200.0,\r\n    \"amount\":100.0\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auto_top_up/1/toggle",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auto_top_up",
+								"1",
+								"toggle"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "manuel tetikle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ0ODAwLCJleHAiOjE3NTQwNDU3MDAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.ai_6C_PuvRb7yoQtgqNcfxPcJWchUmuY0g8X1L_LjQIwZN7bSN3BBpo8ty3CKRX6",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"busCard\":1,\r\n    \"threshold\":100.0,\r\n    \"amount\":100.0\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auto_top_up/process/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auto_top_up",
+								"process",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm otomatik talimatları manuel tetikle",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ0ODAwLCJleHAiOjE3NTQwNDU3MDAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.ai_6C_PuvRb7yoQtgqNcfxPcJWchUmuY0g8X1L_LjQIwZN7bSN3BBpo8ty3CKRX6",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"busCard\":1,\r\n    \"threshold\":100.0,\r\n    \"amount\":100.0\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auto_top_up/process",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auto_top_up",
+								"process"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "yükleme logları",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ0ODAwLCJleHAiOjE3NTQwNDU3MDAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.ai_6C_PuvRb7yoQtgqNcfxPcJWchUmuY0g8X1L_LjQIwZN7bSN3BBpo8ty3CKRX6",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"busCard\":1,\r\n    \"threshold\":100.0,\r\n    \"amount\":100.0\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auto_top_up/logs",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auto_top_up",
+								"logs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "bir otomatik talimatın logları",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ0ODAwLCJleHAiOjE3NTQwNDU3MDAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.ai_6C_PuvRb7yoQtgqNcfxPcJWchUmuY0g8X1L_LjQIwZN7bSN3BBpo8ty3CKRX6",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"busCard\":1,\r\n    \"threshold\":100.0,\r\n    \"amount\":100.0\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auto_top_up/1/logs",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auto_top_up",
+								"1",
+								"logs"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "istatistikler admin",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ0ODAwLCJleHAiOjE3NTQwNDU3MDAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.ai_6C_PuvRb7yoQtgqNcfxPcJWchUmuY0g8X1L_LjQIwZN7bSN3BBpo8ty3CKRX6",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"busCard\":1,\r\n    \"threshold\":100.0,\r\n    \"amount\":100.0\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auto_top_up/stats",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auto_top_up",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "belirli bir kartın otomatik talimatı durumu",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ0ODAwLCJleHAiOjE3NTQwNDU3MDAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.ai_6C_PuvRb7yoQtgqNcfxPcJWchUmuY0g8X1L_LjQIwZN7bSN3BBpo8ty3CKRX6",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"busCard\":1,\r\n    \"threshold\":100.0,\r\n    \"amount\":100.0\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/auto_top_up/check/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"auto_top_up",
+								"check",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "konum uyarısı",
+			"item": [
+				{
+					"name": "aktif konum uyarısını getir kullanıcı",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ1NTIwLCJleHAiOjE3NTQwNDY0MjAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.Ut4jC3_zExC4d6Sol9-us7QWBrbzvNePiGjpIMIOvsEkrjH9-XG5URV5nrNlI7fY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/geo-alert/alerts",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"geo-alert",
+								"alerts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "geçmiş konum uyarıları",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ1NTIwLCJleHAiOjE3NTQwNDY0MjAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.Ut4jC3_zExC4d6Sol9-us7QWBrbzvNePiGjpIMIOvsEkrjH9-XG5URV5nrNlI7fY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"busCard\":1,\r\n    \"threshold\":100.0,\r\n    \"amount\":100.0\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/geo-alert/alerts/history",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"geo-alert",
+								"alerts",
+								"history"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "konum uyarısı oluştur",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"routeId\":1,\r\n    \"stationId\":62,\r\n    \"alertName\":\"yusuf\",\r\n    \"notifyBeforeMinutes\":10,\r\n    \"radiusMeters\":500,\r\n    \"notes\":\"eve gidicek\"\r\n\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/geo-alert/alerts",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"geo-alert",
+								"alerts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "iptal et",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ1NTIwLCJleHAiOjE3NTQwNDY0MjAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.Ut4jC3_zExC4d6Sol9-us7QWBrbzvNePiGjpIMIOvsEkrjH9-XG5URV5nrNlI7fY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"routeId\":1,\r\n    \"stationId\":62,\r\n    \"alertName\":\"yusuf\",\r\n    \"notifyBeforeMinutes\":10,\r\n    \"radiusMeters\":500,\r\n    \"notes\":\"eve gidicek\"\r\n\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/geo-alert/alerts/1/cancel",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"geo-alert",
+								"alerts",
+								"1",
+								"cancel"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kalıcı olarak sil",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ1NTIwLCJleHAiOjE3NTQwNDY0MjAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.Ut4jC3_zExC4d6Sol9-us7QWBrbzvNePiGjpIMIOvsEkrjH9-XG5URV5nrNlI7fY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"routeId\":1,\r\n    \"stationId\":62,\r\n    \"alertName\":\"yusuf\",\r\n    \"notifyBeforeMinutes\":10,\r\n    \"radiusMeters\":500,\r\n    \"notes\":\"eve gidicek\"\r\n\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/geo-alert/alerts/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"geo-alert",
+								"alerts",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "yeniden aktifleştir",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiIrOTA1MzMxMDAwMDAxIiwiaWF0IjoxNzU0MDQ1NTIwLCJleHAiOjE3NTQwNDY0MjAsInVzZXJOdW1iZXIiOiIrOTA1MzMxMDAwMDAxIiwicm9sZSI6WyJVU0VSIl19.Ut4jC3_zExC4d6Sol9-us7QWBrbzvNePiGjpIMIOvsEkrjH9-XG5URV5nrNlI7fY",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"routeId\":1,\r\n    \"stationId\":62,\r\n    \"alertName\":\"yusuf\",\r\n    \"notifyBeforeMinutes\":10,\r\n    \"radiusMeters\":500,\r\n    \"notes\":\"eve gidicek\"\r\n\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/geo-alert/alerts/1/reactivate",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"geo-alert",
+								"alerts",
+								"1",
+								"reactivate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kaç adet uyarı var",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "sağlık",
+			"item": [
+				{
+					"name": "durum testi",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"resetToken\":\" \",\r\n    \"newPassword\":\"123456\"\r\n  \r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/health/status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"health",
+								"status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "db sağlığı",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"resetToken\":\" \",\r\n    \"newPassword\":\"123456\"\r\n  \r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/health/database-details",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"health",
+								"database-details"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "güvenlik testi",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"resetToken\":\" \",\r\n    \"newPassword\":\"123456\"\r\n  \r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/health/security-audit",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"health",
+								"security-audit"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "apilerin sağlığı",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"resetToken\":\" \",\r\n    \"newPassword\":\"123456\"\r\n  \r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/health/apis-status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"health",
+								"apis-status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm sistem raporu",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "sözleşme",
+			"item": [
+				{
+					"name": "üyelik sözleşmesi",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"alice\",\r\n  \"password\": \"pass123\",\r\n  \"role\": \"USER\"\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/public/contracts/membership",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"public",
+								"contracts",
+								"membership"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kvkk",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"username\": \"alice\",\r\n  \"password\": \"pass123\",\r\n  \"role\": \"USER\"\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/public/contracts/kvkk-illumination",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"public",
+								"contracts",
+								"kvkk-illumination"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "veri işlenmesi",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "gizililik politikası",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/public/contracts/privacy-policy",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"public",
+								"contracts",
+								"privacy-policy"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kullanım koşulları",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/public/contracts/terms-of-use",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"public",
+								"contracts",
+								"terms-of-use"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm sözleşme tipleri",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/public/contracts/types",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"public",
+								"contracts",
+								"types"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "yeni sözleşme oluştur",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDIzIiwiaWF0IjoxNzU0OTA4ODQyLCJleHAiOjE3NTQ5MDk3NDIsImp0aSI6IjUzZWNjYzc3LTU5NWEtNGZhYS05YzJkLWMxYzg3Zjk1ZTZiMCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzMwMDAwMjMiLCJyb2xlIjpbIkFETUlOIl0sInRva2VuVHlwZSI6ImFjY2VzcyIsInZlcnNpb24iOiIxLjAifQ._Pgu7yzWg0HWcAkWWWrP1iObOB9YbsGt-rBUq-AqKIAapc3DZj3VqeYE9_rp2zyknbWKrrLkJXVpKUr2INGNHw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"title\": \"KULLANIM_KOSULLARI\",\r\n  \"content\": \"Bu çerez politikası, web sitemizde kullanılan çerez türlerini, kullanım amaçlarını ve çerez tercihlerinizi nasıl yönetebileceğinizi açıklar.\",\r\n  \"version\": \"1.1\",\r\n  \"type\": \"CEREZ_POLITIKASI\",\r\n  \"mandatory\": false,\r\n  \"active\": true\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/public/contracts/contracts",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"public",
+								"contracts",
+								"contracts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sözleşme güncelleme",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDIzIiwiaWF0IjoxNzU0OTA4ODQyLCJleHAiOjE3NTQ5MDk3NDIsImp0aSI6IjUzZWNjYzc3LTU5NWEtNGZhYS05YzJkLWMxYzg3Zjk1ZTZiMCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzMwMDAwMjMiLCJyb2xlIjpbIkFETUlOIl0sInRva2VuVHlwZSI6ImFjY2VzcyIsInZlcnNpb24iOiIxLjAifQ._Pgu7yzWg0HWcAkWWWrP1iObOB9YbsGt-rBUq-AqKIAapc3DZj3VqeYE9_rp2zyknbWKrrLkJXVpKUr2INGNHw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"title\": \"KULLANIM_KOSULLARI\",\r\n  \"content\": \"Bu çerez politikası, web sitemizde kullanılan çerez türlerini, kullanım amaçlarını ve çerez tercihlerinizi nasıl yönetebileceğinizi açıklar.\",\r\n  \"version\": \"1.1\",\r\n  \"type\": \"CEREZ_POLITIKASI\",\r\n  \"mandatory\": false,\r\n  \"active\": true\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/admin/contract/contracts/1",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"admin",
+								"contract",
+								"contracts",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "pasif yap",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDIzIiwiaWF0IjoxNzU0OTA4ODQyLCJleHAiOjE3NTQ5MDk3NDIsImp0aSI6IjUzZWNjYzc3LTU5NWEtNGZhYS05YzJkLWMxYzg3Zjk1ZTZiMCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzMwMDAwMjMiLCJyb2xlIjpbIkFETUlOIl0sInRva2VuVHlwZSI6ImFjY2VzcyIsInZlcnNpb24iOiIxLjAifQ._Pgu7yzWg0HWcAkWWWrP1iObOB9YbsGt-rBUq-AqKIAapc3DZj3VqeYE9_rp2zyknbWKrrLkJXVpKUr2INGNHw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PATCH",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/admin/contract/contracts/1/deactivate",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"admin",
+								"contract",
+								"contracts",
+								"1",
+								"deactivate"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kabul edilen sözleşmeler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/contract/contracts",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"contract",
+								"contracts"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kullanıcı için zorunlu sözleşmeler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/contract/contracts/mandatory",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"contract",
+								"contracts",
+								"mandatory"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "bekleyen sözleşmeler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/contract/contracts/pending",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"contract",
+								"contracts",
+								"pending"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sözleşme onaylama",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"accepted\":\"true\",\r\n    \"contractVersion\":\"1.0\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/contract/contracts/1/accept",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"contract",
+								"contracts",
+								"1",
+								"accept"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "sözleşme reddetme",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"rejectionReason\":\"sevmedim\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/contract/contracts/7/reject",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"contract",
+								"contracts",
+								"7",
+								"reject"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "onayladığım sözleşmeler",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/contract/contracts/accepted",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"contract",
+								"contracts",
+								"accepted"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "bir sözleşmeyi kabul etmiş mi kullanıcı",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/contract/contracts/1/acceptance-status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"contract",
+								"contracts",
+								"1",
+								"acceptance-status"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "zorunlu sözleşmeleri kullanıcı kabul etmiş mi",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MDUwNDE2MzYyIiwiaWF0IjoxNzU1MDI0NTEwLCJleHAiOjE3NTUwMjU0MTAsImp0aSI6IjA0NWU4ZTJmLTkyY2MtNDRiYi1hNDA5LTBkZDFiMzE3NGI1YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUwNTA0MTYzNjIiLCJyb2xlIjpbIlVTRVIiXSwidG9rZW5UeXBlIjoiYWNjZXNzIiwidmVyc2lvbiI6IjEuMCJ9.O3iOMbRIJVxOPlsH5GkzqAhLuPcsB7H-ixTDdojV5MDjnRtqKyf9Cd3PYQWtuV5OQSPu_6PZQA_doOdZEZVltA",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/contract/contracts/mandatory/acceptance-status",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"contract",
+								"contracts",
+								"mandatory",
+								"acceptance-status"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "kartlar",
+			"item": [
+				{
+					"name": "kayıt,",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"uid\": \"04A224B1C23480\",\r\n  \"kartTipi\": \"ÖĞRENCİ\",\r\n  \"abonmanMi\": true,\r\n  \"abonmanBinisSayisi\": 50,\r\n  \"abonmanBitisTarihi\": 1735689600,\r\n  \"kartVizeBitisTarihi\": 1735689600,\r\n  \"bakiye\": 0.00,\r\n  \"sonIslemTutari\": 0.00,\r\n  \"sonIslemTarihi\": 0,\r\n  \"aktif\": true,\r\n  \"vizeTamamlandi\": true\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/buscard/register",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"buscard",
+								"register"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "oku",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"uid\": \"04A224B1C23480\",\r\n  \"kartTipi\": \"ÖĞRENCİ\",\r\n  \"abonmanMi\": true,\r\n  \"abonmanBinisSayisi\": 50,\r\n  \"abonmanBitisTarihi\": 1735689600,\r\n  \"kartVizeBitisTarihi\": 1735689600,\r\n  \"bakiye\": 0.00,\r\n  \"sonIslemTutari\": 0.00,\r\n  \"sonIslemTarihi\": 0,\r\n  \"aktif\": true,\r\n  \"vizeTamamlandi\": true\r\n}\r\n"
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/buscard/read",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"buscard",
+								"read"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "bakiye yükle",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"uid\": \"14A22411223480\",\r\n  \"amount\":1000.0\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/buscard/top-up",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"buscard",
+								"top-up"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "bin",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"uid\": \"04A224B1C23480\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/buscard/get-on",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"buscard",
+								"get-on"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "fiyat belirleme",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDMwIiwiaWF0IjoxNzYwMjEyOTY4LCJleHAiOjE3NjAyMTM4NjgsImp0aSI6IjE2NGE5MTAxLWRhNDktNGY5Yy1iZGQxLTBmNDY1ZWRhY2RhZSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzMwMDAwMzAiLCJyb2xlIjpbIkFETUlOIl0sInRva2VuVHlwZSI6ImFjY2VzcyIsInZlcnNpb24iOiIxLjAifQ.vecaih1zhlLkEQCU6OlOzVKJjmKzrOAoeesUB7Hj78uOBBA8FGrRfWd-g-TYBWsshSEv3JvgQsaq6_TBIgGs1A",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n\"cardType\":\"ÖĞRENCİ\",\r\n\"price\":10.50\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/buscard/card-pricing",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"buscard",
+								"card-pricing"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kart fiyat güncelleme",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"cardType\": \"TAM\",\r\n  \"price\":10.00\r\n\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/buscard/card-pricing",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"buscard",
+								"card-pricing"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "tüm kart fiyatları",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
