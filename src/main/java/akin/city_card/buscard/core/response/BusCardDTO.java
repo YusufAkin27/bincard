@@ -2,6 +2,7 @@ package akin.city_card.buscard.core.response;
 
 import akin.city_card.buscard.model.CardStatus;
 import akin.city_card.buscard.model.CardType;
+import akin.city_card.buscard.model.SubscriptionInfo;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -25,4 +26,6 @@ public class BusCardDTO {
     private boolean visaCompleted;
     private BigDecimal lastTransactionAmount;
     private LocalDate lastTransactionDate;
+    private SubscriptionInfo subscriptionInfo;
+    private Integer txCounter;
 }

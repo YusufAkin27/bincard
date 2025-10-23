@@ -14,7 +14,6 @@ import com.iyzipay.request.DeleteCardRequest;
 import io.craftgate.request.UpdateCardRequest;
 import jakarta.servlet.http.HttpServletRequest;
 
-import java.math.BigDecimal;
 import java.util.List;
 
 public interface BusCardService {
@@ -51,7 +50,7 @@ public interface BusCardService {
 
     ResponseMessage deleteCard(String username, DeleteCardRequest deleteCardRequest);
 
-    BusCardDTO abonmanOluştur(CreateSubscriptionRequest createSubscriptionRequest, String username);
+    BusCardDTO abonmanOluştur(CreateSubscriptionRequest createSubscriptionRequest, String username) throws BusCardNotFoundException, AdminNotFoundException;
 
     List<BusCardDTO> getAllCards(String username);
 }

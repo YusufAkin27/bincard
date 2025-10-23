@@ -92,7 +92,7 @@ public class BusCardController {
     }
 
     @PostMapping("/abonman")
-    public BusCardDTO abonmanOluştur(@RequestBody CreateSubscriptionRequest createSubscriptionRequest, @AuthenticationPrincipal UserDetails userDetails) {
+    public BusCardDTO abonmanOluştur(@RequestBody CreateSubscriptionRequest createSubscriptionRequest, @AuthenticationPrincipal UserDetails userDetails) throws BusCardNotFoundException, AdminNotFoundException {
         return busCardService.abonmanOluştur(createSubscriptionRequest, userDetails.getUsername());
     }
 
