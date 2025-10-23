@@ -52,4 +52,6 @@ public interface BusCardService {
     ResponseMessage deleteCard(String username, DeleteCardRequest deleteCardRequest);
 
     BusCardDTO abonmanOluştur(CreateSubscriptionRequest createSubscriptionRequest, String username);
+
+    List<BusCardDTO> getAllCards(String username);
 }

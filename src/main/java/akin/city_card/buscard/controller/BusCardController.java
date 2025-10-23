@@ -30,9 +30,6 @@ import java.util.List;
 public class BusCardController {
     private final BusCardService busCardService;
 
-    public BusCardController(BusCardService busCardService) {
-        this.busCardService = busCardService;
-    }
 
     private void isAdminOrSuperAdmin(UserDetails userDetails) throws UnauthorizedAccessException {
         if (userDetails == null || userDetails.getAuthorities() == null) {
@@ -59,7 +56,10 @@ public class BusCardController {
         isAdminOrSuperAdmin(userDetails);
         return busCardService.readCard(req.getUid(), userDetails.getUsername());
     }
-
+    @GetMapping("/all")
+    public List<BusCardDTO> getAllCards(@AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, AdminNotFoundException {
+        return busCardService.getAllCards(userDetails.getUsername());
+    }
 
     //bakiye yükleme
     @PostMapping("/top-up")
@@ -84,6 +84,7 @@ public class BusCardController {
     public List<BusCardDTO> getBlockedCards(@AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, AdminNotFoundException {
         return busCardService.getBlockedCards(userDetails.getUsername());
     }
+
 
     @DeleteMapping("/card-blocked")
     public BusCardDTO deleteCardBlocked(@RequestBody ReadCardRequest request, @AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, BusCardAlreadyIsBlockedException, AdminNotFoundException, BusCardNotBlockedException {

@@ -597,6 +597,11 @@ public class BusCardManager implements BusCardService {
         return null;
     }
 
+    @Override
+    public List<BusCardDTO> getAllCards(String username) {
+        return List.of();
+    }
+
 
     // helper: QR PNG byte[]
     private byte[] generateQrImageBytes(String token, int width, int height)
