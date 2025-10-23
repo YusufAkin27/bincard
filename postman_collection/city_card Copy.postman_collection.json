@@ -1,9 +1,9 @@
 {
 	"info": {
-		"_postman_id": "5e3af167-b51e-483e-802c-8a455480f32d",
+		"_postman_id": "23f3ea95-db1d-4a71-960c-3264ab9efb2a",
 		"name": "city_card Copy",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "27281663"
+		"_exporter_id": "38692941"
 	},
 	"item": [
 		{
@@ -1399,7 +1399,10 @@
 					"name": "hesap dondur",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				},
@@ -1407,7 +1410,10 @@
 					"name": "unfreeze account",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				}
@@ -2789,7 +2795,10 @@
 					"name": "şikayet durumunu düzenle admin",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				},
@@ -5939,7 +5948,10 @@
 					"name": "otomatik yükleme getir",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				},
@@ -6517,7 +6529,10 @@
 					"name": "kaç adet uyarı var",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				}
@@ -6646,7 +6661,10 @@
 					"name": "tüm sistem raporu",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				}
@@ -6719,7 +6737,10 @@
 					"name": "veri işlenmesi",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
 					},
 					"response": []
 				},
@@ -7206,13 +7227,20 @@
 					"name": "kayıt,",
 					"request": {
 						"auth": {
-							"type": "noauth"
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDI1IiwiaWF0IjoxNzYxMjIzMDU2LCJleHAiOjE3NjEyMjM5NTYsImp0aSI6IjY3Mjk2MjY2LWZhYzItNGYyOS04NmNiLWY2OWYwNDBmZTU0YSIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzMwMDAwMjUiLCJyb2xlIjpbIkFETUlOIl0sInRva2VuVHlwZSI6ImFjY2VzcyIsInZlcnNpb24iOiIxLjAifQ.VKq49YWluUhVmYdn-p7UC-DBM4zP5zduS2cNY90o6t0vwg9yOZxbGo7Lz_FAwq3gmekhTSL2kHM15Jtzc3pX5Q",
+									"type": "string"
+								}
+							]
 						},
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"uid\": \"04A224B1C23480\",\r\n  \"kartTipi\": \"ÖĞRENCİ\",\r\n  \"abonmanMi\": true,\r\n  \"abonmanBinisSayisi\": 50,\r\n  \"abonmanBitisTarihi\": 1735689600,\r\n  \"kartVizeBitisTarihi\": 1735689600,\r\n  \"bakiye\": 0.00,\r\n  \"sonIslemTutari\": 0.00,\r\n  \"sonIslemTarihi\": 0,\r\n  \"aktif\": true,\r\n  \"vizeTamamlandi\": true\r\n}\r\n",
+							"raw": "{\r\n  \"uid\": \"12345678910\",\r\n  \"fullName\" : \"zeki\",\r\n  \"kartTipi\": \"ÖĞRENCİ\",\r\n  \"kartVizeBitisTarihi\": 1735689600,\r\n  \"bakiye\": 0.00,\r\n  \"status\" : \"ACTIVE\"\r\n}\r\n",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -7412,7 +7440,124 @@
 					"name": "tüm kart fiyatları",
 					"request": {
 						"method": "GET",
-						"header": []
+						"header": [],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kart bloklama",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDI1IiwiaWF0IjoxNzYxMjI0MTg3LCJleHAiOjE3NjEyMjUwODcsImp0aSI6IjJlZTQ1ZGE5LWM2MzYtNDA4Yi04ODRkLTU2ZGIzNzc1N2IyOCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzMwMDAwMjUiLCJyb2xlIjpbIkFETUlOIl0sInRva2VuVHlwZSI6ImFjY2VzcyIsInZlcnNpb24iOiIxLjAifQ.f9gsQijbBrKXdp31k1VWrx9B4zETRr30kh3ynBZyCKK2b6ksNg1TNVzvqrH4kB71ZP28ca5kvAe_1I8qha3nLw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"uid\": \"98765432109\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/buscard/card-blocked",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"buscard",
+								"card-blocked"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "bloklanan kartlar",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDI1IiwiaWF0IjoxNzYxMjI0MTg3LCJleHAiOjE3NjEyMjUwODcsImp0aSI6IjJlZTQ1ZGE5LWM2MzYtNDA4Yi04ODRkLTU2ZGIzNzc1N2IyOCIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzMwMDAwMjUiLCJyb2xlIjpbIkFETUlOIl0sInRva2VuVHlwZSI6ImFjY2VzcyIsInZlcnNpb24iOiIxLjAifQ.f9gsQijbBrKXdp31k1VWrx9B4zETRr30kh3ynBZyCKK2b6ksNg1TNVzvqrH4kB71ZP28ca5kvAe_1I8qha3nLw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/v1/api/buscard/card-blocked",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"buscard",
+								"card-blocked"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "kart blok kaldırma",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiIrOTA1MzMzMDAwMDI1IiwiaWF0IjoxNzYxMjI1Mjk1LCJleHAiOjE3NjEyMjYxOTUsImp0aSI6IjFiYzViMzU3LTk2ZDEtNGI1OS1hMzU2LTE5NzJiN2ZhNjZlNiIsImlzcyI6IkNpdHlDYXJkLUFQSSIsImF1ZCI6WyJDaXR5Q2FyZC1DbGllbnQiXSwidXNlck51bWJlciI6Iis5MDUzMzMwMDAwMjUiLCJyb2xlIjpbIkFETUlOIl0sInRva2VuVHlwZSI6ImFjY2VzcyIsInZlcnNpb24iOiIxLjAifQ.GiD5vNpRSsrc_H92v6mhPQ9weTCfR9298I5MjnZPlYZncU_LDEIR3rd1yfM43ZmWb_VXWgUobeCgiU6KPzyUuw",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"uid\": \"98765432109\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost:8080/v1/api/buscard/card-blocked",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"v1",
+								"api",
+								"buscard",
+								"card-blocked"
+							]
+						}
 					},
 					"response": []
 				}
