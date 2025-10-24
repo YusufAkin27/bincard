@@ -10,6 +10,7 @@ import akin.city_card.buscard.exceptions.*;
 import akin.city_card.buscard.service.abstracts.BusCardService;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.wallet.exceptions.WalletNotActiveException;
 import akin.city_card.wallet.exceptions.WalletNotFoundException;
 import com.iyzipay.request.DeleteCardRequest;
 import io.craftgate.request.UpdateCardRequest;
@@ -56,6 +57,7 @@ public class BusCardController {
         isAdminOrSuperAdmin(userDetails);
         return busCardService.readCard(req.getUid(), userDetails.getUsername());
     }
+
     @GetMapping("/all")
     public List<BusCardDTO> getAllCards(@AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, AdminNotFoundException {
         return busCardService.getAllCards(userDetails.getUsername());
@@ -142,10 +144,17 @@ public class BusCardController {
                 .body(qrBytes);
     }
 
+    @GetMapping("/qr-status/{token}")
+    public boolean checkQrStatus(@PathVariable String token) {
+        return busCardService.qrStatus(token);
+
+    }
+
+
     @PostMapping("/scan-qr")
-    public ResponseEntity<ResponseMessage> scanQrCode(@RequestBody QrScanRequest request) throws UserNotFoundException, InvalidQrCodeException, WalletNotFoundException, InsufficientBalanceException, ExpiredQrCodeException {
-        ResponseMessage response = busCardService.verifyQrToken(request.getQrToken());
-        return ResponseEntity.ok(response);
+    public ResponseMessage scanQrCode(@RequestBody QrScanRequest request) throws UserNotFoundException, InvalidQrCodeException, WalletNotFoundException, InsufficientBalanceException, ExpiredQrCodeException, WalletNotActiveException, CardPricingNotFoundException {
+        return busCardService.verifyQrToken(request.getQrToken());
+
     }
 
 }

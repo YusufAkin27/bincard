@@ -7,6 +7,7 @@ public enum CardType {
     YAŞLI,
     ENGELLİ,
     TAM_AKTARMA,
-    ÖĞRENCİ_AKTARMA
+    ÖĞRENCİ_AKTARMA,
+    QR_ÖDEME
 
 }

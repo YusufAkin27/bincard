@@ -33,7 +33,7 @@ public interface BusCardService {
 
     byte[] generateQrCode(String username) throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException, CardPricingNotFoundException, InsufficientBalanceException;
 
-    ResponseMessage verifyQrToken(String qrToken) throws InvalidQrCodeException, ExpiredQrCodeException, UserNotFoundException, WalletNotFoundException, InsufficientBalanceException;
+    ResponseMessage verifyQrToken(String qrToken) throws InvalidQrCodeException, ExpiredQrCodeException, UserNotFoundException, WalletNotFoundException, InsufficientBalanceException, WalletNotActiveException, CardPricingNotFoundException;
 
     List<CardPricingDTO> getAllCardPricing();
 
@@ -53,4 +53,6 @@ public interface BusCardService {
     BusCardDTO abonmanOluştur(CreateSubscriptionRequest createSubscriptionRequest, String username) throws BusCardNotFoundException, AdminNotFoundException;
 
     List<BusCardDTO> getAllCards(String username);
+
+    boolean qrStatus(String token);
 }

@@ -17,6 +17,7 @@ import akin.city_card.buscard.model.*;
 import akin.city_card.buscard.repository.ActivityRepository;
 import akin.city_card.buscard.repository.BusCardRepository;
 import akin.city_card.buscard.repository.CardPricingRepository;
+import akin.city_card.buscard.repository.QRTokenRepository;
 import akin.city_card.buscard.service.abstracts.BusCardService;
 import akin.city_card.geoIpService.GeoIpService;
 import akin.city_card.geoIpService.GeoLocationData;
@@ -31,6 +32,7 @@ import akin.city_card.wallet.exceptions.WalletNotFoundException;
 import akin.city_card.wallet.model.Wallet;
 import akin.city_card.wallet.model.WalletStatus;
 import akin.city_card.wallet.repository.WalletRepository;
+import akin.city_card.wallet.service.abstracts.QRCodeService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.BarcodeFormat;
@@ -68,6 +70,7 @@ public class BusCardManager implements BusCardService {
     private final BusCardConverter busCardConverter;
     private final AuditLogRepository auditLogRepository;
     private final ActivityRepository activityRepository;
+    private final QRTokenRepository qrTokenRepository;
 
 
     @Override
@@ -421,9 +424,10 @@ public class BusCardManager implements BusCardService {
             throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException,
             CardPricingNotFoundException, InsufficientBalanceException {
 
-        // 1. validate entities
-        User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
-        Wallet wallet = walletRepository.findByUser(user).orElseThrow(WalletNotFoundException::new);
+        User user = userRepository.findByUserNumber(username)
+                .orElseThrow(UserNotFoundException::new);
+        Wallet wallet = walletRepository.findByUser(user)
+                .orElseThrow(WalletNotFoundException::new);
         CardPricing cardPricing = cardPricingRepository.findByCardType(CardType.TAM)
                 .orElseThrow(CardPricingNotFoundException::new);
 
@@ -434,30 +438,37 @@ public class BusCardManager implements BusCardService {
             throw new InsufficientBalanceException();
         }
 
-        // 2. build payload
+        Instant issuedAt = Instant.now();
+        Instant expiresAt = issuedAt.plusSeconds(300);
+        String nonce = UUID.randomUUID().toString();
+
         Map<String, Object> payload = new HashMap<>();
         payload.put("v", 1);
         payload.put("userNumber", user.getUsername());
         payload.put("walletId", wallet.getWiban());
         payload.put("price", cardPricing.getPrice());
-        payload.put("issuedAt", Instant.now().toEpochMilli());
-        payload.put("expiresAt", Instant.now().plusSeconds(600).toEpochMilli());
-        payload.put("nonce", UUID.randomUUID().toString());
+        payload.put("issuedAt", issuedAt.toEpochMilli());
+        payload.put("expiresAt", expiresAt.toEpochMilli());
+        payload.put("nonce", nonce);
 
         try {
-            // serialize JSON
             String json = objectMapper.writeValueAsString(payload);
 
-            // 3. generate HMAC signature
-            String secret = "veryStrongSecretKeyForQRCodeHmac";
+            String secret = "8de51002adb5ed3faf17076a91d4bbb98ffdd5be3c98812ed15c5f82e2f80e03";
             String signature = hmacSha256(json, secret);
-            
-            // 4. build final token: base64(payload).signature
-            String encodedPayload = Base64.getUrlEncoder().withoutPadding().encodeToString(json.getBytes(StandardCharsets.UTF_8));
-            String token = encodedPayload + "." + signature;
-            log.info("Generated QR Token: {}", token);
 
-            // 5. generate QR code image
+            String encodedPayload = Base64.getUrlEncoder().withoutPadding()
+                    .encodeToString(json.getBytes(StandardCharsets.UTF_8));
+            String token = encodedPayload + "." + signature;
+
+            QrToken qr = new QrToken();
+            qr.setToken(token);
+            qr.setUserNumber(user.getUsername());
+            qr.setIssuedAt(issuedAt);
+            qr.setExpiresAt(expiresAt);
+            qr.setUsed(false);
+            qrTokenRepository.save(qr);
+
             return generateQrImageBytes(token, 400, 400);
 
         } catch (Exception ex) {
@@ -471,75 +482,85 @@ public class BusCardManager implements BusCardService {
     public ResponseMessage verifyQrToken(String qrToken)
             throws InvalidQrCodeException, ExpiredQrCodeException,
             UserNotFoundException, WalletNotFoundException,
-            InsufficientBalanceException {
+            InsufficientBalanceException, WalletNotActiveException, CardPricingNotFoundException {
 
-        // QR token'ı konsola yazdır
-        System.out.println("🔍 QR Token Doğrulama - Gelen Token: " + qrToken);
-        log.info("QR Token Doğrulama - Gelen Token: {}", qrToken);
+        if (!qrStatus(qrToken)) {
+            throw new InvalidQrCodeException();
+        }
 
+        String[] parts = qrToken.split("\\.");
+        if (parts.length != 2) {
+            throw new InvalidQrCodeException();
+        }
+
+        String encodedPayload = parts[0];
+        String providedSignature = parts[1];
+
+        final String json;
         try {
-            // 1️⃣ Token parçala
-            String[] parts = qrToken.split("\\.");
-            if (parts.length != 2) {
-                throw new InvalidQrCodeException();
-            }
+            json = new String(Base64.getUrlDecoder().decode(encodedPayload), StandardCharsets.UTF_8);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidQrCodeException();
+        }
 
-            String encodedPayload = parts[0];
-            String providedSignature = parts[1];
+        String secret = "8de51002adb5ed3faf17076a91d4bbb98ffdd5be3c98812ed15c5f82e2f80e03";
+        String expectedSignature = hmacSha256(json, secret);
+        if (!expectedSignature.equals(providedSignature)) {
+            throw new InvalidQrCodeException();
+        }
 
-            // 2️⃣ Payload decode et
-            String json = new String(Base64.getUrlDecoder().decode(encodedPayload), StandardCharsets.UTF_8);
-
-            // 3️⃣ İmza doğrula
-            String secret = "veryStrongSecretKeyForQRCodeHmac";
-            String expectedSignature = hmacSha256(json, secret);
-
-            if (!expectedSignature.equals(providedSignature)) {
-                throw new InvalidQrCodeException();
-            }
-
-            // 4️⃣ JSON parse et
-            Map<String, Object> payload = objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {
-            });
-
-            String userNumber = (String) payload.get("userNumber");
-            BigDecimal price = new BigDecimal(payload.get("price").toString());
-            Long expiresAt = Long.valueOf(payload.get("expiresAt").toString());
-
-            // 5️⃣ Süre dolmuş mu?
-            if (Instant.now().toEpochMilli() > expiresAt) {
-                throw new ExpiredQrCodeException();
-            }
-
-            // 6️⃣ Kullanıcı ve cüzdan doğrula
-            User user = userRepository.findByUserNumber(userNumber)
-                    .orElseThrow(UserNotFoundException::new);
-
-            Wallet wallet = walletRepository.findByUser(user)
-                    .orElseThrow(WalletNotFoundException::new);
-
-            if (wallet.getBalance().compareTo(price) < 0) {
-                throw new InsufficientBalanceException();
-            }
-
-            // 7️⃣ Bakiye düş
-            wallet.setBalance(wallet.getBalance().subtract(price));
-            walletRepository.save(wallet);
-
-            // 8️⃣ Log kaydı (örnek)
-            System.out.println("✅ QR başarıyla doğrulandı, bakiye düşüldü. Yeni bakiye: " + wallet.getBalance());
-
-            // 9️⃣ ResponseMessage dön
-            return new ResponseMessage(
-                    "QR doğrulandı, " + price + "₺ düşüldü. Güncel bakiye: " + wallet.getBalance(), true
-            );
-
+        Map<String, Object> payload;
+        try {
+            payload = objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
         } catch (IOException e) {
             throw new InvalidQrCodeException();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
         }
+
+        String userNumber = (String) payload.get("userNumber");
+        long expiresAtMs = Long.parseLong(payload.get("expiresAt").toString());
+
+        QrToken qr = qrTokenRepository.findByTokenForUpdate(qrToken)
+                .orElseThrow(InvalidQrCodeException::new);
+
+        Instant now = Instant.now();
+        if (qr.isUsed()) {
+            throw new InvalidQrCodeException();
+        }
+        if (qr.getExpiresAt().isBefore(now) || now.toEpochMilli() > expiresAtMs) {
+            throw new ExpiredQrCodeException();
+        }
+
+        User user = userRepository.findByUserNumber(userNumber)
+                .orElseThrow(UserNotFoundException::new);
+
+        Wallet wallet = walletRepository.findByUser(user)
+                .orElseThrow(WalletNotFoundException::new);
+
+        if (!WalletStatus.ACTIVE.equals(wallet.getStatus())) {
+            throw new WalletNotActiveException();
+        }
+
+        CardPricing qrPricing = cardPricingRepository.findByCardType(CardType.QR_ÖDEME)
+                .orElseThrow(CardPricingNotFoundException::new);
+
+        BigDecimal qrPrice = qrPricing.getPrice();
+        if (wallet.getBalance().compareTo(qrPrice) < 0) {
+            throw new InsufficientBalanceException();
+        }
+
+        wallet.setBalance(wallet.getBalance().subtract(qrPrice));
+        walletRepository.save(wallet);
+
+        qr.setUsed(true);
+        qrTokenRepository.save(qr);
+
+        return new ResponseMessage(
+                "QR doğrulandı, " + qrPrice + "₺ düşüldü. Güncel bakiye: " + wallet.getBalance(),
+                true
+        );
     }
+
+
 
     private String hmacSha256(String json, String secret) {
         try {
@@ -687,6 +708,17 @@ public class BusCardManager implements BusCardService {
     public List<BusCardDTO> getAllCards(String username) {
         return List.of();
     }
+
+    @Override
+    public boolean qrStatus(String token) {
+        QrToken qr = qrTokenRepository.findByToken(token)
+                .orElse(null);
+        if (qr == null) return false;
+        if (qr.isUsed()) return false;
+        if (qr.getExpiresAt().isBefore(Instant.now())) return false;
+        return true;
+    }
+
 
 
     // helper: QR PNG byte[]

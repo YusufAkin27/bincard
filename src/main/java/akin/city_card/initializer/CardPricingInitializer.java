@@ -38,7 +38,8 @@ public class CardPricingInitializer implements CommandLineRunner {
                 CardType.YAŞLI, BigDecimal.valueOf(5),
                 CardType.ENGELLİ, BigDecimal.valueOf(5),
                 CardType.TAM_AKTARMA, BigDecimal.valueOf(7),
-                CardType.ÖĞRENCİ_AKTARMA, BigDecimal.valueOf(5)
+                CardType.ÖĞRENCİ_AKTARMA, BigDecimal.valueOf(5),
+                CardType.QR_ÖDEME,BigDecimal.valueOf(20)
         );
 
         cardPrices.forEach((type, price) -> {
