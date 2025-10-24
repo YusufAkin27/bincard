@@ -5,5 +5,6 @@ public enum WalletActivityType {
     TRANSFER,
     TRANSFER_SENT,
     TRANSFER_RECEIVED,
-    OTHER
+    OTHER,
+    QR_PAYMENT
 }

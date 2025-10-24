@@ -1,6 +1,5 @@
 package akin.city_card.security.manager;
 
-import akin.city_card.QRCodeDecryptAES;
 import akin.city_card.admin.exceptions.AdminNotApprovedException;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.ActionType;
@@ -61,7 +60,6 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static akin.city_card.QRCodeGenerateAES.SECRET_PASSPHRASE;
 
 @Service
 @RequiredArgsConstructor
@@ -720,26 +718,6 @@ public class AuthManager implements AuthService {
                 throw new IncorrectPasswordException();
             }
 
-            QRCodeDecryptAES    qrCodeDecryptAES=new QRCodeDecryptAES();
-            // 1. ADIM: HEX kodlamasını çöz (Log'da görülen formattaki veriyi Base64 stringine çevirir)
-            String decodedQRData = qrCodeDecryptAES.fromHex(qrData);
-
-            // 2. ADIM: HMAC Kontrolü ve Base64 çözme (HMAC.DATA formatındaki Base64 verisini çözer)
-            // HMAC anahtarı olarak STATIC IMPORT edilmiş SECRET_PASSPHRASE kullanılır.
-            String jsonString = QRCodeDecryptAES.decryptBase64(decodedQRData, SECRET_PASSPHRASE);
-
-            // JSON parse et
-            ObjectMapper om = new ObjectMapper();
-            Map<String, String> map = om.readValue(jsonString, new TypeReference<Map<String, String>>() {});
-
-            if (!map.containsKey("phone") || !map.containsKey("password")) {
-                throw new IncorrectPasswordException();
-            }
-
-            // DTO'ya set et (QR içindeki değerler)
-            loginRequestDTO.setTelephone(map.get("phone"));
-            loginRequestDTO.setPassword(map.get("password"));
-
         } catch (Exception e) {
             // Hata detayını logla, özellikle geçersiz format hatasını (HMAC.DATA ayracı)
             logger.warn("QR çözme veya parse hatası: {}", e.getMessage());
@@ -760,10 +738,8 @@ public class AuthManager implements AuthService {
 
             loginRequestDTO.setTelephone(normalizedPhone);
 
-            // 2) Sürücüyü bul (sadece var olanı al, yeni oluşturma yok)
             Driver driver = driverRepository.findByUserNumber(normalizedPhone);
             if (driver == null) {
-                // başarısız denemeyi kaydet
                 bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
                 auditService.logLoginFailure(normalizedPhone, request, "Driver not found");
                 throw new DriverNotFoundException();

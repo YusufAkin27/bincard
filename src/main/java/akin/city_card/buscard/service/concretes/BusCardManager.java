@@ -30,7 +30,10 @@ import akin.city_card.user.repository.UserRepository;
 import akin.city_card.wallet.exceptions.WalletNotActiveException;
 import akin.city_card.wallet.exceptions.WalletNotFoundException;
 import akin.city_card.wallet.model.Wallet;
+import akin.city_card.wallet.model.WalletActivity;
+import akin.city_card.wallet.model.WalletActivityType;
 import akin.city_card.wallet.model.WalletStatus;
+import akin.city_card.wallet.repository.WalletActivityRepository;
 import akin.city_card.wallet.repository.WalletRepository;
 import akin.city_card.wallet.service.abstracts.QRCodeService;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -71,6 +74,7 @@ public class BusCardManager implements BusCardService {
     private final AuditLogRepository auditLogRepository;
     private final ActivityRepository activityRepository;
     private final QRTokenRepository qrTokenRepository;
+    private final WalletActivityRepository walletActivityRepository;
 
 
     @Override
@@ -547,6 +551,17 @@ public class BusCardManager implements BusCardService {
         if (wallet.getBalance().compareTo(qrPrice) < 0) {
             throw new InsufficientBalanceException();
         }
+
+        WalletActivity activity = WalletActivity.builder()
+                .walletId(wallet.getId())
+                .wallet(wallet)
+                .activityType(WalletActivityType.QR_PAYMENT)
+                .activityDate(LocalDateTime.now())
+                .description("QR ile ödeme işlemi gerçekleştirildi. Tutar: " + qrPrice + "₺")
+                .build();
+
+        wallet.getActivities().add(activity);
+        walletActivityRepository.save(activity);
 
         wallet.setBalance(wallet.getBalance().subtract(qrPrice));
         walletRepository.save(wallet);
