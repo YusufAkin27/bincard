@@ -17,6 +17,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -39,7 +40,7 @@ public class PaymentPointController {
         if (userDetails == null) return false;
         return userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(role -> role.equals("ADMIN") || role.equals("SUPERADMIN"));
+                .anyMatch(role -> role.equals("ADMIN_ALL") || role.equals("SUPERADMIN")|| role.equals("PAYMENT_POINT_ADMIN"));
     }
 
     /**
@@ -47,6 +48,7 @@ public class PaymentPointController {
      */
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('PAYMENT_POINT_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage addPaymentPoint(
             @AuthenticationPrincipal UserDetails userDetails,
             @Valid @RequestBody AddPaymentPointRequest request) throws UnauthorizedAreaException {
@@ -60,6 +62,7 @@ public class PaymentPointController {
      * Ödeme noktasını günceller - Sadece admin veya süper admin
      */
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('PAYMENT_POINT_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage updatePaymentPoint(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails,
@@ -136,6 +139,7 @@ public class PaymentPointController {
      * Ödeme noktasını aktif/pasif yapar - Sadece admin veya süper admin
      */
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('PAYMENT_POINT_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage togglePaymentPointStatus(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails,
@@ -150,6 +154,7 @@ public class PaymentPointController {
      * Ödeme noktasını siler - Sadece admin veya süper admin
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('PAYMENT_POINT_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage deletePaymentPoint(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails) throws UnauthorizedAreaException {
@@ -163,6 +168,7 @@ public class PaymentPointController {
      * Ödeme noktasına fotoğraf ekler - Sadece admin veya süper admin
      */
     @PostMapping("/{id}/photos")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('PAYMENT_POINT_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage addPaymentPointPhotos(
             @PathVariable Long id,
             @AuthenticationPrincipal UserDetails userDetails,
@@ -186,6 +192,7 @@ public class PaymentPointController {
      * Ödeme noktasından fotoğraf siler - Sadece admin veya süper admin
      */
     @DeleteMapping("/{id}/photos/{photoId}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('PAYMENT_POINT_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage deletePaymentPointPhoto(
             @PathVariable Long id,
             @PathVariable Long photoId,

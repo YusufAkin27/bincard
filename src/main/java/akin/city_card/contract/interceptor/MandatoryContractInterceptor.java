@@ -102,7 +102,8 @@ public class MandatoryContractInterceptor implements HandlerInterceptor {
                 .map(GrantedAuthority::getAuthority)
                 .anyMatch(authority ->
                         Role.SUPERADMIN.getAuthority().equals(authority) ||
-                                Role.ADMIN.getAuthority().equals(authority)
+                                Role.ADMIN_ALL.getAuthority().equals(authority)
+                                ||  Role.CONTRACT_ADMIN.getAuthority().equals(authority)
                 );
     }
 

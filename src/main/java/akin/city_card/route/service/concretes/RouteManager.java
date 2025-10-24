@@ -75,8 +75,9 @@ public class RouteManager implements RouteService {
         SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
                 .orElseThrow(UnauthorizedAreaException::new);
 
-        boolean isAdmin = securityUser.getRoles().contains(Role.ADMIN) ||
-                securityUser.getRoles().contains(Role.SUPERADMIN);
+        boolean isAdmin = securityUser.getRoles().contains(Role.ADMIN_ALL) ||
+                securityUser.getRoles().contains(Role.SUPERADMIN)||
+                securityUser.getRoles().contains(Role.ROUTE_ADMIN);
         if (!isAdmin) {
             throw new UnauthorizedAreaException();
         }
@@ -238,8 +239,9 @@ public class RouteManager implements RouteService {
         SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
                 .orElseThrow(UnauthorizedAreaException::new);
 
-        boolean isAdmin = securityUser.getRoles().contains(Role.ADMIN) ||
-                securityUser.getRoles().contains(Role.SUPERADMIN);
+        boolean isAdmin = securityUser.getRoles().contains(Role.ADMIN_ALL) ||
+                securityUser.getRoles().contains(Role.SUPERADMIN)||
+                securityUser.getRoles().contains(Role.ROUTE_ADMIN) ;
         if (!isAdmin) {
             throw new UnauthorizedAreaException();
         }

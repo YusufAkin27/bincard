@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -42,7 +43,7 @@ public class BusController {
 
         boolean authorized = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(role -> role.equals("ADMIN") || role.equals("SUPERADMIN"));
+                .anyMatch(role -> role.equals("ADMIN_ALL") || role.equals("SUPERADMIN") || role.equals("BUS_ADMIN"));
 
         if (!authorized) {
             throw new UnauthorizedAccessException();
@@ -91,6 +92,7 @@ public class BusController {
     }
 
     @GetMapping("/active")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<DataResponseMessage<PageDTO<BusDTO>>> getActiveBuses(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -113,6 +115,7 @@ public class BusController {
     // === CRUD İŞLEMLERİ ===
 
     @PostMapping("/create")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage createBus(
             @Valid @RequestBody CreateBusRequest request,
             @AuthenticationPrincipal UserDetails userDetails) throws UnauthorizedAreaException, DriverNotFoundException, AdminNotFoundException, DriverAlreadyAssignedToBusException, DriverInactiveException, DuplicateBusPlateException, BusAlreadyAssignedAnotherDriverException, RouteNotFoundException, UnauthorizedAccessException, UserNotFoundException, RouteNotActiveException {
@@ -124,6 +127,7 @@ public class BusController {
 
 
     @PutMapping("/update/{busId}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> updateBus(
             @PathVariable Long busId,
             @Valid @RequestBody UpdateBusRequest request,
@@ -154,6 +158,7 @@ public class BusController {
     }
 
     @DeleteMapping("/delete/{busId}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> deleteBus(
             @PathVariable Long busId,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -174,6 +179,7 @@ public class BusController {
     }
 
     @PutMapping("/{busId}/toggle-active")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> toggleActiveStatus(
             @PathVariable Long busId,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -196,6 +202,7 @@ public class BusController {
     // === ŞOFÖR YÖNETİMİ ===
 
     @PutMapping("/{busId}/assign-driver")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> assignDriverToBus(
             @PathVariable Long busId,
             @Valid @RequestBody AssignDriverRequest request,
@@ -261,6 +268,7 @@ public class BusController {
     }
 
     @GetMapping("/{busId}/location-history")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<DataResponseMessage<PageDTO<BusLocationDTO>>> getLocationHistory(
             @PathVariable Long busId,
             @RequestParam(required = false) LocalDate date,
@@ -291,6 +299,7 @@ public class BusController {
     // === ROTA YÖNETİMİ ===
 
     @PutMapping("/{busId}/route")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> assignRouteToBus(
             @PathVariable Long busId,
             @Valid @RequestBody AssignRouteRequest request,
@@ -357,6 +366,7 @@ public class BusController {
     // === İSTATİSTİKLER ===
 
     @GetMapping("/statistics")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<DataResponseMessage<Object>> getBusStatistics(
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
@@ -373,6 +383,7 @@ public class BusController {
     // === ARAMA VE FİLTRELEME ===
 
     @GetMapping("/search")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<DataResponseMessage<PageDTO<BusDTO>>> searchBuses(
             @RequestParam(required = false) String numberPlate,
             @RequestParam(required = false) Long routeId,
@@ -460,6 +471,7 @@ public class BusController {
     // === DURUM YÖNETİMİ ===
 
     @PutMapping("/{busId}/status")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> updateBusStatus(
             @PathVariable Long busId,
             @Valid @RequestBody BusStatusUpdateRequest request,
@@ -484,6 +496,7 @@ public class BusController {
     // === TOPLU İŞLEMLER ===
 
     @PutMapping("/bulk/activate")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> bulkActivateBuses(
             @RequestBody List<Long> busIds,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -501,6 +514,7 @@ public class BusController {
     }
 
     @PutMapping("/bulk/deactivate")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> bulkDeactivateBuses(
             @RequestBody List<Long> busIds,
             @AuthenticationPrincipal UserDetails userDetails) {

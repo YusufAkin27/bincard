@@ -15,6 +15,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -116,12 +117,12 @@ public class GeoAlertController {
         return ResponseEntity.ok(response);
     }
 
-    // ===================== ADMIN ENDPOINTLER ======================
 
     /**
      * Tüm kullanıcıların uyarılarını getir (isteğe bağlı statü filtresiyle)
      */
     @GetMapping("/admin/alerts")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('GEO_ALERT_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<List<GeoAlertDTO>> getAllGeoAlerts(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) GeoAlertStatus status) {
@@ -135,6 +136,7 @@ public class GeoAlertController {
      * Belirli bir kullanıcının uyarılarını getir
      */
     @GetMapping("/admin/alerts/user/{username}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('GEO_ALERT_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<List<GeoAlertDTO>> getGeoAlertsByUser(
             @PathVariable String username,
             @AuthenticationPrincipal UserDetails userDetails,
@@ -149,6 +151,7 @@ public class GeoAlertController {
      * Belirli bir uyarıyı admin olarak sil
      */
     @DeleteMapping("/admin/alerts/{alertId}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('GEO_ALERT_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> deleteAlertById(
             @PathVariable Long alertId,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -162,6 +165,7 @@ public class GeoAlertController {
      * Belirli bir statüye sahip kaç uyarı olduğunu getir (admin)
      */
     @GetMapping("/admin/alerts/count")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('GEO_ALERT_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<Long> countGeoAlertsByStatus(
             @RequestParam(required = false) GeoAlertStatus status,
             @AuthenticationPrincipal UserDetails userDetails) {

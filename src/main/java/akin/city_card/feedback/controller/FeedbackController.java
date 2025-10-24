@@ -82,6 +82,7 @@ public class FeedbackController {
     }
 
     @GetMapping("/admin/all")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('FEED_BACK_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<Page<FeedbackDTO>> getAllFeedbacks(
             @AuthenticationPrincipal UserDetails user,
             @RequestParam(required = false) String type,
@@ -136,7 +137,7 @@ public class FeedbackController {
 
         boolean authorized = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(role -> role.equals("ADMIN") || role.equals("SUPERADMIN"));
+                .anyMatch(role -> role.equals("ADMIN_ALL") || role.equals("SUPERADMIN") || role.equals("FEED_BACK_ADMIN"));
 
         if (!authorized) {
             throw new UnauthorizedAccessException();
@@ -145,7 +146,7 @@ public class FeedbackController {
 
     // Tekil geri bildirimi görüntüleme
     @GetMapping("/admin/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('FEED_BACK_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<FeedbackDTO> getFeedbackById(
             @AuthenticationPrincipal UserDetails adminUser,
             @PathVariable Long id) throws UnauthorizedAccessException {

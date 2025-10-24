@@ -17,6 +17,7 @@ import akin.city_card.security.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -34,6 +35,7 @@ public class DriverController {
     // === DRIVER CRUD ===
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<DriverDto> createDriver(@RequestBody CreateDriverRequest request,
                                                        @AuthenticationPrincipal UserDetails userDetails,
                                                        HttpServletRequest httpServletRequest) throws UserNotFoundException, DriverAlreadyExistsException {
@@ -74,6 +76,7 @@ public class DriverController {
         return driverService.unassignDriverFromBus( userDetails.getUsername());
     }
     @GetMapping
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<PageDTO<DriverDto>> getAllDrivers(@RequestParam(required = false) int page,
                                                                  @RequestParam(required = false) int size,
                                                                  @AuthenticationPrincipal UserDetails userDetails) {
@@ -83,6 +86,7 @@ public class DriverController {
     // === DOCUMENTS ===
 
     @GetMapping("/{id}/documents")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<PageDTO<DriverDocumentDto>> getDriverDocuments(@PathVariable Long id,
                                                                               Pageable pageable,
                                                                               @AuthenticationPrincipal UserDetails userDetails) throws DriverNotFoundException {
@@ -90,6 +94,7 @@ public class DriverController {
     }
 
     @PostMapping("/{id}/documents")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<DriverDocumentDto> addDriverDocument(@PathVariable Long id,
                                                                     @RequestBody DriverDocumentDto dto,
                                                                     @AuthenticationPrincipal UserDetails userDetails) throws DriverNotFoundException {
@@ -97,6 +102,7 @@ public class DriverController {
     }
 
     @PutMapping("/documents/{docId}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<DriverDocumentDto> updateDriverDocument(@PathVariable Long docId,
                                                                        @RequestBody DriverDocumentDto dto,
                                                                        @AuthenticationPrincipal UserDetails userDetails) throws DriverDocumentNotFoundException {
@@ -104,6 +110,7 @@ public class DriverController {
     }
 
     @DeleteMapping("/documents/{docId}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<Void> deleteDriverDocument(@PathVariable Long docId,
                                                           @AuthenticationPrincipal UserDetails userDetails) throws DriverDocumentNotFoundException {
         return driverService.deleteDriverDocument(docId, userDetails.getUsername());
@@ -112,6 +119,7 @@ public class DriverController {
     // === PENALTIES ===
 
     @GetMapping("/{id}/penalties")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<PageDTO<DriverPenaltyDto>> getDriverPenalties(@PathVariable Long id,
                                                                              Pageable pageable,
                                                                              @AuthenticationPrincipal UserDetails userDetails) throws DriverNotFoundException {
@@ -119,6 +127,7 @@ public class DriverController {
     }
 
     @PostMapping("/{id}/penalties")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<DriverPenaltyDto> addDriverPenalty(@PathVariable Long id,
                                                                   @RequestBody DriverPenaltyDto dto,
                                                                   @AuthenticationPrincipal UserDetails userDetails) throws DriverNotFoundException {
@@ -126,6 +135,7 @@ public class DriverController {
     }
 
     @PutMapping("/penalties/{penaltyId}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<DriverPenaltyDto> updateDriverPenalty(@PathVariable Long penaltyId,
                                                                      @RequestBody DriverPenaltyDto dto,
                                                                      @AuthenticationPrincipal UserDetails userDetails) throws DriverPenaltyNotFoundException {
@@ -133,6 +143,7 @@ public class DriverController {
     }
 
     @DeleteMapping("/penalties/{penaltyId}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<Void> deleteDriverPenalty(@PathVariable Long penaltyId,
                                                          @AuthenticationPrincipal UserDetails userDetails) throws DriverPenaltyNotFoundException {
         return driverService.deleteDriverPenalty(penaltyId, userDetails.getUsername());
@@ -141,6 +152,7 @@ public class DriverController {
     // === PERFORMANCE ===
 
     @GetMapping("/{id}/performance")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<DriverPerformanceDto> getDriverPerformance(@PathVariable Long id,
                                                                           @AuthenticationPrincipal UserDetails userDetails) throws DriverNotFoundException {
         return driverService.getDriverPerformance(id, userDetails.getUsername());
@@ -150,6 +162,7 @@ public class DriverController {
 
     // Aktif sürücüleri getir
     @GetMapping("/active")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<PageDTO<DriverDto>> getActiveDrivers(@RequestParam(defaultValue = "0") int page,
                                                                     @RequestParam(defaultValue = "10") int size,
                                                                     @AuthenticationPrincipal UserDetails userDetails) {
@@ -158,6 +171,7 @@ public class DriverController {
 
     // Belirli vardiya tipindeki sürücüleri getir
     @GetMapping("/by-shift/{shift}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<PageDTO<DriverDto>> getDriversByShift(@PathVariable String shift,
                                                                      @RequestParam(defaultValue = "0") int page,
                                                                      @RequestParam(defaultValue = "10") int size,
@@ -167,6 +181,7 @@ public class DriverController {
 
     // Sürücü arama (isim, soyisim veya TC kimlik no ile)
     @GetMapping("/search")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<PageDTO<DriverDto>> searchDrivers(@RequestParam String query,
                                                                  @RequestParam(defaultValue = "0") int page,
                                                                  @RequestParam(defaultValue = "10") int size,
@@ -176,6 +191,7 @@ public class DriverController {
 
     // Sürücüyü aktif/pasif yapma
     @PutMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<DriverDto> changeDriverStatus(@PathVariable Long id,
                                                              @RequestParam Boolean active,
                                                              @AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException, DriverNotFoundException {
@@ -184,12 +200,14 @@ public class DriverController {
 
     // Sürücü istatistikleri özeti
     @GetMapping("/statistics")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<Object> getDriverStatistics(@AuthenticationPrincipal UserDetails userDetails) {
         return driverService.getDriverStatistics(userDetails.getUsername());
     }
 
     // Lisansı yakında dolacak sürücüler
     @GetMapping("/expiring-licenses")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<List<DriverDto>> getDriversWithExpiringLicenses(@RequestParam(defaultValue = "30") int days,
                                                                                @AuthenticationPrincipal UserDetails userDetails) {
         return driverService.getDriversWithExpiringLicenses(days, userDetails.getUsername());
@@ -197,13 +215,16 @@ public class DriverController {
 
     // Sağlık raporu yakında dolacak sürücüler
     @GetMapping("/expiring-health-certificates")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<List<DriverDto>> getDriversWithExpiringHealthCertificates(@RequestParam(defaultValue = "30") int days,
                                                                                          @AuthenticationPrincipal UserDetails userDetails) {
         return driverService.getDriversWithExpiringHealthCertificates(days, userDetails.getUsername());
     }
 
     // Belirli tarih aralığında işe başlayan sürücüler
+
     @GetMapping("/hired-between")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<PageDTO<DriverDto>> getDriversHiredBetween(@RequestParam LocalDate startDate,
                                                                           @RequestParam LocalDate endDate,
                                                                           @RequestParam(defaultValue = "0") int page,
@@ -214,6 +235,7 @@ public class DriverController {
 
     // En yüksek performans gösteren sürücüler
     @GetMapping("/top-performers")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<List<DriverDto>> getTopPerformingDrivers(@RequestParam(defaultValue = "10") int limit,
                                                                         @AuthenticationPrincipal UserDetails userDetails) throws InvalidLimitException {
         return driverService.getTopPerformingDrivers(limit, userDetails.getUsername());
@@ -221,6 +243,7 @@ public class DriverController {
 
     // Ceza sayısına göre sürücü listesi
     @GetMapping("/with-penalties")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<PageDTO<DriverDto>> getDriversWithPenalties(@RequestParam(defaultValue = "0") int page,
                                                                            @RequestParam(defaultValue = "10") int size,
                                                                            @AuthenticationPrincipal UserDetails userDetails) {

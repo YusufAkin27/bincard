@@ -14,6 +14,7 @@ import akin.city_card.route.service.abstracts.RouteService;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.station.exceptions.StationNotFoundException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -31,6 +32,7 @@ public class RouteController {
      * İki yönlü rota oluşturma
      */
     @PostMapping("/create-bidirectional")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('ROUTE_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage createBidirectionalRoute(@AuthenticationPrincipal UserDetails userDetails,
                                                     @RequestBody CreateRouteRequest request)
             throws StationNotFoundException, UnauthorizedAreaException {
@@ -41,6 +43,7 @@ public class RouteController {
      * Rotayı silme
      */
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('ROUTE_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage deleteRoute(@AuthenticationPrincipal UserDetails userDetails,
                                        @PathVariable Long id)
             throws UnauthorizedAreaException, RouteNotFoundException {
@@ -51,6 +54,7 @@ public class RouteController {
      * Belirli yöne durak ekleme
      */
     @PostMapping("/{routeId}/direction/{directionType}/add-station")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('ROUTE_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<RouteDTO> addStationToDirection(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long routeId,
@@ -66,6 +70,7 @@ public class RouteController {
      * Belirli yönden durak çıkarma
      */
     @DeleteMapping("/{routeId}/direction/{directionType}/remove-station")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('ROUTE_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<RouteDTO> removeStationFromDirection(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long routeId,

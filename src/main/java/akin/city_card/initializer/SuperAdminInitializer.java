@@ -45,7 +45,7 @@ public class SuperAdminInitializer implements CommandLineRunner {
         SuperAdmin superAdmin = new SuperAdmin();
         superAdmin.setUserNumber(defaultPhone);
         superAdmin.setPassword(passwordEncoder.encode(defaultPassword));
-        superAdmin.setRoles(Set.of(Role.SUPERADMIN, Role.ADMIN, Role.USER, Role.DRIVER));
+        superAdmin.setRoles(Set.of(Role.SUPERADMIN, Role.ADMIN_ALL, Role.USER, Role.DRIVER));
         superAdmin.setStatus(UserStatus.ACTIVE);
         superAdmin.setDeleted(false);
         superAdmin.setProfileInfo(profileInfo);

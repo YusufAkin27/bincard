@@ -31,6 +31,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -63,6 +64,7 @@ public class WalletController {
 
     //admin
     @PostMapping("/process")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('WALLET_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage processIdentityRequest(
             @RequestBody @Valid ProcessIdentityRequest request,
             @AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException, IdentityVerificationRequestNotFoundException, UnauthorizedAreaException, AlreadyWalletUserException {
@@ -71,6 +73,7 @@ public class WalletController {
 
     //admin
     @GetMapping("/identity-requests")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('WALLET_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<Page<IdentityVerificationRequestDTO>> getIdentityRequests(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) RequestStatus status,
@@ -194,6 +197,7 @@ public class WalletController {
 
     //admin
     @PostMapping("/admin/change-status")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('WALLET_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage changeWalletStatusAsAdmin(
             @RequestParam String userNumber,
             @RequestParam String statusReason,
@@ -321,6 +325,7 @@ public class WalletController {
     // ========== Admin İşlemleri ==========
 //admin
     @GetMapping("/admin/all")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('WALLET_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<Page<WalletDTO>> getAllWallets(
             @AuthenticationPrincipal UserDetails admin,
             @RequestParam(defaultValue = "0") int page,
@@ -355,6 +360,7 @@ public class WalletController {
 
     //admin
     @GetMapping("/admin/stats")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('WALLET_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<Map<String, Object>> getSystemStats(
             @AuthenticationPrincipal UserDetails admin) throws AdminOrSuperAdminNotFoundException {
         return walletService.getSystemStats(admin.getUsername());
@@ -362,6 +368,7 @@ public class WalletController {
 
     //admin
     @PostMapping("/admin/force-transaction")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('WALLET_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage forceTransaction(
             @AuthenticationPrincipal UserDetails admin,
             @RequestParam String userPhone,
@@ -372,6 +379,7 @@ public class WalletController {
 
     //admin
     @GetMapping("/admin/suspicious-activities")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('WALLET_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<PageDTO<TransferDetailsDTO>> getSuspiciousActivities(
             @AuthenticationPrincipal UserDetails admin,
             @RequestParam(defaultValue = "0") int page,
@@ -384,6 +392,7 @@ public class WalletController {
 
     //admin
     @GetMapping("/admin/export/transactions/excel")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('WALLET_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<byte[]> exportAllTransactionsExcel(
             @AuthenticationPrincipal UserDetails admin,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,
@@ -399,6 +408,7 @@ public class WalletController {
 
     //admin
     @PostMapping("/export/pdf")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('WALLET_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<byte[]> exportTransactionsPDF(
             @AuthenticationPrincipal UserDetails user,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate start,

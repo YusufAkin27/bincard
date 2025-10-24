@@ -27,6 +27,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -44,6 +45,7 @@ public class NewsController {
     private final NewsService newsService;
 
     @GetMapping("/")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('NEWS_ADMIN') or hasAuthority('SUPERADMIN')")
     public Page<AdminNewsDTO> getAll(@AuthenticationPrincipal UserDetails userDetails,
                                      @RequestParam(name = "platform", required = false) PlatformType platform,
                                      Pageable pageable)
@@ -58,10 +60,11 @@ public class NewsController {
         if (userDetails == null) return false;
         return userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(role -> role.equals("ADMIN") || role.equals("SUPERADMIN"));
+                .anyMatch(role -> role.equals("ADMIN_ALL") || role.equals("SUPERADMIN") || role.equals("NEWS_ADMIN"));
     }
 
     @PostMapping(value = "/create", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('NEWS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage createNews(@AuthenticationPrincipal UserDetails userDetails,
                                       @Valid @ModelAttribute CreateNewsRequest news)
             throws AdminNotFoundException, UnauthorizedAreaException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException, OnlyPhotosAndVideosException, VideoSizeLargerException, FileFormatCouldNotException {
@@ -71,6 +74,7 @@ public class NewsController {
     }
 
     @PutMapping("/{id}/soft-delete")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('NEWS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage softDeleteNews(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long id)
             throws NewsNotFoundException, AdminNotFoundException, UnauthorizedAreaException {
         if (!isAdminOrSuperAdmin(userDetails)) throw new UnauthorizedAreaException();
@@ -79,6 +83,7 @@ public class NewsController {
     }
 
     @PutMapping(value = "/update", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('NEWS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage updateNews(@AuthenticationPrincipal UserDetails userDetails,
                                       @Valid @ModelAttribute UpdateNewsRequest request)
             throws NewsNotFoundException, AdminNotFoundException, UnauthorizedAreaException, NewsIsNotActiveException, PhotoSizeLargerException, IOException, ExecutionException, InterruptedException, OnlyPhotosAndVideosException, VideoSizeLargerException, FileFormatCouldNotException {
@@ -89,6 +94,7 @@ public class NewsController {
     }
 
     @GetMapping("/admin/{id}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('NEWS_ADMIN') or hasAuthority('SUPERADMIN')")
     public AdminNewsDTO getNewsByIdForAdmin(@AuthenticationPrincipal UserDetails userDetails,
                                             @PathVariable Long id)
             throws AdminNotFoundException, NewsNotFoundException, NewsIsNotActiveException, UnauthorizedAreaException {
@@ -137,6 +143,7 @@ public class NewsController {
     }
 
     @GetMapping("/active-admin")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('NEWS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<PageDTO<AdminNewsDTO>> getActiveNewsForAdmin(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) PlatformType platform,
@@ -226,6 +233,7 @@ public class NewsController {
 
 
     @GetMapping("/statistics")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('NEWS_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<PageDTO<NewsStatistics>> getMonthlyNewsStatistics(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,

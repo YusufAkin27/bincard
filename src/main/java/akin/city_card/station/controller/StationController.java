@@ -17,6 +17,7 @@ import akin.city_card.station.exceptions.StationNotFoundException;
 import akin.city_card.station.model.StationType;
 import akin.city_card.station.service.abstracts.StationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -32,21 +33,25 @@ public class StationController {
     private final StationService stationService;
 
     @PostMapping
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('STATION_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<StationDTO> createStation(@AuthenticationPrincipal UserDetails userDetails, @RequestBody CreateStationRequest request) throws AdminNotFoundException, UnauthorizedAreaException {
         return stationService.createStation(userDetails, request);
     }
 
     @PutMapping
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('STATION_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<StationDTO> updateStation(@RequestBody UpdateStationRequest request, @AuthenticationPrincipal UserDetails userDetails) {
         return stationService.updateStation(userDetails.getUsername(), request);
     }
 
     @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('STATION_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<StationDTO> changeStationStatus(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long id, @RequestParam boolean active) {
         return stationService.changeStationStatus(id, active, userDetails.getUsername());
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('STATION_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage deleteStation(@AuthenticationPrincipal UserDetails userDetails, @PathVariable Long id) {
         return stationService.deleteStation(id, userDetails.getUsername());
     }

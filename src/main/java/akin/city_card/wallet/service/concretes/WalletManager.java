@@ -839,7 +839,7 @@ public class WalletManager implements WalletService {
 
         SecurityUser user = securityUserOpt.get();
 
-        boolean isAdmin = user.getRoles().contains(Role.ADMIN) || user.getRoles().contains(Role.SUPERADMIN);
+        boolean isAdmin = user.getRoles().contains(Role.ADMIN_ALL) || user.getRoles().contains(Role.SUPERADMIN)|| user.getRoles().contains(Role.WALLET_ADMIN);
         if (!isAdmin) {
             throw new UnauthorizedAreaException();
         }
@@ -926,7 +926,7 @@ public class WalletManager implements WalletService {
         SecurityUser admin = adminOpt.get();
 
         // Rol kontrolü
-        boolean isAdmin = admin.getRoles().contains(Role.ADMIN) || admin.getRoles().contains(Role.SUPERADMIN);
+        boolean isAdmin = admin.getRoles().contains(Role.ADMIN_ALL) || admin.getRoles().contains(Role.SUPERADMIN) || admin.getRoles().contains(Role.WALLET_ADMIN);
         if (!isAdmin) {
             throw new UnauthorizedAreaException();
         }
@@ -1110,7 +1110,7 @@ public class WalletManager implements WalletService {
             throw new UserNotFoundException();
         }
 
-        boolean isAuthorized = securityUser.get().getRoles().contains(Role.ADMIN) || securityUser.get().getRoles().contains(Role.SUPERADMIN);
+        boolean isAuthorized = securityUser.get().getRoles().contains(Role.ADMIN_ALL) || securityUser.get().getRoles().contains(Role.SUPERADMIN) || securityUser.get().getRoles().contains(Role.WALLET_ADMIN);
         if (!isAuthorized) {
             throw new UnauthorizedAreaException();
         }

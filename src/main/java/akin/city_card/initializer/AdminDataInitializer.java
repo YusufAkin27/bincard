@@ -72,7 +72,7 @@ public class AdminDataInitializer implements ApplicationRunner {
         return Admin.builder()
                 .userNumber(phoneNumber)
                 .password(passwordEncoder.encode("123456"))
-                .roles(Set.of(Role.ADMIN))
+                .roles(Set.of(Role.ADMIN_ALL))
                 .status(UserStatus.ACTIVE)
                 .isDeleted(false)
                 .emailVerified(true)

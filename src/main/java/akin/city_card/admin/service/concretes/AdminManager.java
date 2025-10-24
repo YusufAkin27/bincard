@@ -74,7 +74,7 @@ public class AdminManager implements AdminService {
                 .build();
 
         Admin admin = Admin.builder()
-                .roles(Collections.singleton(Role.ADMIN))
+                .roles(Collections.singleton(Role.ADMIN_ALL))
                 .password(passwordEncoder.encode(adminRequest.getPassword()))
                 .currentDeviceInfo(deviceInfo)
                 .profileInfo(profileInfo)

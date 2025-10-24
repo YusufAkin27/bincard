@@ -30,7 +30,7 @@ public class WalletDataInitializer implements ApplicationRunner {
         // Sadece USER rolüne sahip kullanıcıları al (Admin, Driver değil)
         List<User> users = userRepository.findAll().stream()
                 .filter(user -> user.getRoles().contains(akin.city_card.security.entity.Role.USER))
-                .filter(user -> !user.getRoles().contains(akin.city_card.security.entity.Role.ADMIN))
+                .filter(user -> !user.getRoles().contains(akin.city_card.security.entity.Role.ADMIN_ALL))
                 .filter(user -> !user.getRoles().contains(akin.city_card.security.entity.Role.DRIVER))
                 .toList();
 

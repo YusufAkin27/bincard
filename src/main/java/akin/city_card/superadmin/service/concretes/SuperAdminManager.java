@@ -284,7 +284,6 @@ public class SuperAdminManager implements SuperAdminService {
     @Transactional
     public ResponseMessage removeRole(String username, AddRoleAdminRequest addRoleAdminRequest) throws AdminNotFoundException, AdminNotActiveException {
 
-        // Admin kontrolü
         Admin admin = adminRepository.findById(addRoleAdminRequest.getAdminId())
                 .orElseThrow(AdminNotFoundException::new);
 
@@ -292,7 +291,6 @@ public class SuperAdminManager implements SuperAdminService {
             throw new AdminNotActiveException();
         }
 
-        // Silinmek istenen roller
         List<Role> rolesToRemove = addRoleAdminRequest.getRoles();
         if (rolesToRemove == null || rolesToRemove.isEmpty()) {
             return new ResponseMessage("Silinicek Rol verisi yok", false);
@@ -388,7 +386,7 @@ public class SuperAdminManager implements SuperAdminService {
         // 5. Roller
         List<Role> roles = request.getRoles();
         if (roles == null || roles.isEmpty()) {
-            admin.setRoles(Set.of(Role.ADMIN)); // Varsayılan olarak sadece ADMIN verilebilir
+            admin.setRoles(Set.of(Role.ADMIN_ALL)); // Varsayılan olarak sadece ADMIN verilebilir
         } else {
             admin.setRoles(Set.copyOf(roles));
         }

@@ -44,6 +44,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/v1/api/admin/users")
 @RequiredArgsConstructor
+@PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('USER_ADMIN') or hasAuthority('SUPERADMIN')")
 public class AdminUserController {
 
     private final AdminUserService adminUserService;
@@ -55,7 +56,7 @@ public class AdminUserController {
 
         boolean authorized = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
-                .anyMatch(role -> role.equals("ADMIN") || role.equals("SUPERADMIN"));
+                .anyMatch(role -> role.equals("USER_ADMIN") || role.equals("SUPERADMIN") || role.equals("ADMIN_ALL"));
 
         if (!authorized) {
             throw new UnauthorizedAccessException();

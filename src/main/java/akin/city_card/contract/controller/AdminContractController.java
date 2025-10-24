@@ -21,7 +21,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/api/admin/contract")
 @RequiredArgsConstructor
-@PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+@PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('CONTRACT_ADMIN') or hasAuthority('SUPERADMIN')")
 public class AdminContractController {
 
     private final ContractService contractService;

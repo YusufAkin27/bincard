@@ -302,7 +302,7 @@ public class NewsManager implements NewsService {
             throws AdminNotFoundException {
 
         Admin admin = adminRepository.findByUserNumber(username);
-        if (admin == null || !admin.getRoles().contains(Role.ADMIN)) {
+        if (admin == null || !admin.getRoles().contains(Role.ADMIN_ALL) || !admin.getRoles().contains(Role.NEWS_ADMIN) || !admin.getRoles().contains(Role.SUPERADMIN) ) {
             throw new AdminNotFoundException();
         }
 

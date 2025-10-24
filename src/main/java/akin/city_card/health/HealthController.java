@@ -13,6 +13,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +38,7 @@ import java.util.Properties;
 @RestController
 @RequestMapping("v1/api/health")
 @RequiredArgsConstructor
+@PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('HEALTH_ADMIN') or hasAuthority('SUPERADMIN')")
 @Slf4j
 public class HealthController {
 
