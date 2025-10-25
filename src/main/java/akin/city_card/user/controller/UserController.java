@@ -154,7 +154,7 @@ public class UserController {
                                            @RequestBody FavoriteCardRequest request) throws UserNotFoundException, BusCardNotFoundException {
         return userService.addFavoriteCard(userDetails.getUsername(), request);
     }
-
+// favori
     @DeleteMapping("/favorites/cards/{cardId}")
     public ResponseMessage removeFavoriteCard(@AuthenticationPrincipal UserDetails userDetails,
                                               @PathVariable String cardNumber) throws UserNotFoundException {
