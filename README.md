@@ -184,6 +184,8 @@ export IYZICO_API_KEY=your_iyzico_key
 export IYZICO_SECRET_KEY=your_iyzico_secret
 export IYZICO_BASE_URL=https://sandbox-api.iyzipay.com
 export GOOGLE_MAP_KEY=your_google_maps_key
+DB diagram
+<img width="11364" height="16000" alt="activity" src="https://github.com/user-attachments/assets/56f07cfd-f7b4-46f4-b562-6240464e8e60" />
 
 # Maven ile çalıştırma
 ./mvnw spring-boot:run
