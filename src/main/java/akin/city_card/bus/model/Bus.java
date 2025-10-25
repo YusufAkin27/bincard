@@ -1,6 +1,5 @@
 package akin.city_card.bus.model;
 
-import akin.city_card.buscard.model.CardType;
 import akin.city_card.driver.model.Driver;
 import akin.city_card.route.model.Route;
 import akin.city_card.route.model.RouteDirection;
@@ -29,8 +28,6 @@ public class Bus {
     @Column(unique = true)
     private String validatorId;
 
-
-
     @Column(nullable = false, unique = true, length = 20)
     private String numberPlate;
 
@@ -53,20 +50,11 @@ public class Bus {
     @Column(nullable = false)
     private boolean isActive = true;
 
-    @Column(nullable = false)
-    private double baseFare;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private BusStatus status = BusStatus.CALISIYOR;
 
-
-    @Column(nullable = false)
-    private int capacity = 50; // Varsayılan kapasite
-
-
-    @Column(nullable = false)
-    private int currentPassengerCount = 0;
 
     private Double currentLatitude;
     private Double currentLongitude;
@@ -123,15 +111,6 @@ public class Bus {
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
-    }
-
-
-    public boolean isFull() {
-        return currentPassengerCount >= capacity;
-    }
-
-    public double getOccupancyRate() {
-        return capacity > 0 ? (double) currentPassengerCount / capacity * 100 : 0;
     }
 
 

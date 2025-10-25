@@ -33,10 +33,6 @@ public class BusConverterImpl implements BusConverter {
                 .isActive(bus.isActive())
                 .status(bus.getStatus())
                 .statusDisplayName(bus.getStatus() != null ? bus.getStatus().getDisplayName() : null)
-                .capacity(bus.getCapacity())
-                .currentPassengerCount(bus.getCurrentPassengerCount())
-                .occupancyRate(bus.getOccupancyRate())
-                .baseFare(bus.getBaseFare())
                 .assignedRouteName(bus.getRouteDisplayName())
                 .assignedRouteCode(bus.getRouteCode())
                 .currentDirectionName(bus.getCurrentDirectionName())
@@ -53,7 +49,6 @@ public class BusConverterImpl implements BusConverter {
                 .createdByUsername(bus.getCreatedBy() != null ? bus.getCreatedBy().getUsername() : null)
                 .updatedByUsername(bus.getUpdatedBy() != null ? bus.getUpdatedBy().getUsername() : null)
                 .canTakePassengers(bus.getStatus() != null ? bus.getStatus().canTakePassengers() : false)
-                .isFull(bus.isFull())
                 .isOperational(bus.getStatus() != null ? bus.getStatus().isOperational() : false)
                 .build();
     }
@@ -69,8 +64,6 @@ public class BusConverterImpl implements BusConverter {
     public Bus fromCreateBusRequest(CreateBusRequest request) {
         Bus bus = new Bus();
         bus.setNumberPlate(request.getNumberPlate().trim().toUpperCase());
-        bus.setBaseFare(request.getBaseFare() != null ? request.getBaseFare() : 0.0);
-        bus.setCapacity(request.getCapacity() != null ? request.getCapacity() : 50);
         bus.setActive(true);
         return bus;
     }
@@ -79,14 +72,6 @@ public class BusConverterImpl implements BusConverter {
     public void updateBusFromRequest(Bus bus, UpdateBusRequest request) {
         if (request.getNumberPlate() != null && !request.getNumberPlate().trim().isEmpty()) {
             bus.setNumberPlate(request.getNumberPlate().trim().toUpperCase());
-        }
-
-        if (request.getBaseFare() != null) {
-            bus.setBaseFare(request.getBaseFare());
-        }
-
-        if (request.getCapacity() != null) {
-            bus.setCapacity(request.getCapacity());
         }
 
         if (request.getActive() != null) {

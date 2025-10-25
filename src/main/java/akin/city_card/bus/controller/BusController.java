@@ -202,16 +202,15 @@ public class BusController {
     // === ŞOFÖR YÖNETİMİ ===
 
     @PutMapping("/{busId}/assign-driver")
-    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_ADMIN') or hasAuthority('SUPERADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER') or hasAuthority('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> assignDriverToBus(
             @PathVariable Long busId,
-            @Valid @RequestBody AssignDriverRequest request,
             @AuthenticationPrincipal UserDetails userDetails) {
         try {
             isAdminOrSuperAdmin(userDetails);
 
 
-            ResponseMessage response = busService.assignDriver(busId, request.getDriverId(), userDetails.getUsername());
+            ResponseMessage response = busService.assignDriver(busId,  userDetails.getUsername());
             return ResponseEntity.ok(response);
         } catch (BusNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)

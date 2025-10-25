@@ -184,7 +184,6 @@ public class BusManager implements BusService {
         }
 
         bus.setStatus(BusStatus.CALISIYOR);
-        bus.setCurrentPassengerCount(0);
         bus.setCreatedBy(securityUser);
         bus.setUpdatedBy(securityUser);
 
@@ -293,7 +292,6 @@ public class BusManager implements BusService {
             bus.setStatus(BusStatus.CALISIYOR);
         } else {
             bus.setStatus(BusStatus.SERVIS_DISI);
-            bus.setCurrentPassengerCount(0);
         }
 
         bus.setUpdatedBy(securityUser);
@@ -308,38 +306,6 @@ public class BusManager implements BusService {
     }
 
 
-    @Override
-    @Transactional
-    public ResponseMessage assignDriver(Long busId, Long driverId, String username)
-            throws AdminNotFoundException, BusNotFoundException, DriverNotFoundException, DriverAlreadyAssignedException, DriverInactiveException {
-
-        SecurityUser securityUser = getAdminOrSuperAdmin(username);
-
-        Bus bus = busRepository.findById(busId)
-                .orElseThrow(() -> new BusNotFoundException(busId));
-        if (!bus.isActive() || bus.isDeleted()) throw new BusNotFoundException(busId);
-
-        Driver driver = driverRepository.findById(driverId)
-                .orElseThrow(() -> new DriverNotFoundException());
-
-        if (!driver.getActive()) throw new DriverInactiveException(driverId);
-
-        if (driver.getAssignedBus() != null || driver.getAssignedBus().getId().equals(busId)) {
-            throw new DriverAlreadyAssignedException(driverId);
-        }
-
-        if (bus.getDriver() != null && !bus.getDriver().getId().equals(driverId)) {
-            bus.setDriver(null);
-        }
-
-        bus.setDriver(driver);
-        bus.setUpdatedBy(securityUser);
-
-        busRepository.save(bus);
-
-        log.info("Driver assigned to bus: {} -> {}", driver.getId(), bus.getNumberPlate());
-        return new ResponseMessage("Şoför başarıyla otobüse atandı.", true);
-    }
 
 
     @Override
@@ -740,11 +706,8 @@ public class BusManager implements BusService {
                 return new ResponseMessage("Yolcu sayısı negatif olamaz.", false);
             }
 
-            if (count > bus.getCapacity()) {
-                return new ResponseMessage("Yolcu sayısı kapasiteyi aşamaz.", false);
-            }
 
-            bus.setCurrentPassengerCount(count);
+
             bus.setUpdatedBy(adminOrSuperAdmin);
             busRepository.save(bus);
 
@@ -807,9 +770,7 @@ public class BusManager implements BusService {
                     if (bus.isActive()) {
                         bus.setActive(false);
                         bus.setDeleted(true);
-                        bus.setStatus(BusStatus.SERVIS_DISI);
-                        bus.setCurrentPassengerCount(0);
-                        bus.setUpdatedBy(adminOrSuperAdmin);
+                        bus.setStatus(BusStatus.SERVIS_DISI);bus.setUpdatedBy(adminOrSuperAdmin);
                         busRepository.save(bus);
                         updatedCount++;
                     }
@@ -823,6 +784,38 @@ public class BusManager implements BusService {
             log.error("Error in bulk deactivate: ", e);
             return new ResponseMessage("Toplu pasifleştirme sırasında hata oluştu.", false);
         }
+    }
+
+    @Override
+    public ResponseMessage assignDriver(Long busId, String username) throws BusNotFoundException, DriverInactiveException, DriverAlreadyAssignedException, DriverNotFoundException {
+
+        Driver driver = driverRepository.findByUserNumber(username);
+
+        if (driver == null) {
+            throw new DriverNotFoundException();
+        }
+        Bus bus = busRepository.findById(busId)
+                .orElseThrow(() -> new BusNotFoundException(busId));
+        if (!bus.isActive() || bus.isDeleted()) throw new BusNotFoundException(busId);
+
+        if (!driver.getActive()) throw new DriverInactiveException(driver.getId());
+
+        if (driver.getAssignedBus() != null || driver.getAssignedBus().getId().equals(busId)) {
+            throw new DriverAlreadyAssignedException(driver.getId());
+        }
+
+        if (bus.getDriver() != null && !bus.getDriver().getId().equals(driver.getId())) {
+            bus.setDriver(null);
+        }
+
+        bus.setDriver(driver);
+
+        busRepository.save(bus);
+
+        log.info("Driver assigned to bus: {} -> {}", driver.getId(), bus.getNumberPlate());
+        return new ResponseMessage("Şoför başarıyla otobüse atandı.", true);
+
+
     }
 
     @Override

@@ -8,6 +8,11 @@ import akin.city_card.admin.model.AuditLog;
 import akin.city_card.admin.repository.AdminRepository;
 import akin.city_card.admin.repository.AuditLogRepository;
 import akin.city_card.bus.exceptions.InsufficientBalanceException;
+import akin.city_card.bus.model.Bus;
+import akin.city_card.bus.model.BusRide;
+import akin.city_card.bus.model.RideStatus;
+import akin.city_card.bus.repository.BusRepository;
+import akin.city_card.bus.repository.BusRideRepository;
 import akin.city_card.buscard.core.converter.BusCardConverter;
 import akin.city_card.buscard.core.request.*;
 import akin.city_card.buscard.core.response.BusCardDTO;
@@ -73,8 +78,10 @@ public class BusCardManager implements BusCardService {
     private final BusCardConverter busCardConverter;
     private final AuditLogRepository auditLogRepository;
     private final ActivityRepository activityRepository;
+    private final BusRepository busRepository;
     private final QRTokenRepository qrTokenRepository;
     private final WalletActivityRepository walletActivityRepository;
+    private final BusRideRepository busRideRepository;
 
 
     @Override
@@ -104,6 +111,7 @@ public class BusCardManager implements BusCardService {
 
 
     @Override
+    @Transactional
     public BusCardDTO getOn(GetOnBusRequest request) throws BusCardNotFoundException, CardInactiveException, CardPricingNotFoundException, CorruptedDataException, SubscriptionNotFoundException, SubscriptionExpiredException, InsufficientBalanceException {
 
         String uid = request.getUid();
@@ -204,6 +212,19 @@ public class BusCardManager implements BusCardService {
         Activity activity = createActivity(busCard, request, fare, isTransfer, now);
         activityRepository.save(activity);
         busCard.getActivities().add(activity);
+
+
+
+        Bus bus=busRepository.findByValidatorId(validatorId).orElseThrow(BusCardNotFoundException::new);
+        BusRide busRide=new BusRide();
+        busRide.setBus(bus);
+        busRide.setBusCard(busCard);
+        busRide.setStatus(RideStatus.SUCCESS);
+        busRide.setBoardingTime(LocalDateTime.now());
+        busRide.setFareCharged(fare);
+        bus.getRides().add(busRide);
+        busCardRepository.save(busCard);
+        busRideRepository.save(busRide);
 
         busCardRepository.save(busCard);
 

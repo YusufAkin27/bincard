@@ -19,6 +19,7 @@ public interface BusRepository extends JpaRepository<Bus, Long> {
 
     Optional<Bus> findByIdAndIsDeletedFalse(Long id);
 
+    Optional<Bus> findByValidatorId(String validatorId);
 
     Page<Bus> findAllByIsActiveTrueAndIsDeletedFalse(Pageable pageable);
 

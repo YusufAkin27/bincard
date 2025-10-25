@@ -366,7 +366,6 @@ public class RouteManager implements RouteService {
                                 .directionName(direction.getName())
                                 .currentLocation(nearestBus.getLastSeenStation() != null ?
                                         nearestBus.getLastSeenStation().getName() : "Bilinmeyen")
-                                .occupancyRate((int) nearestBus.getOccupancyRate())
                                 .busStatus(nearestBus.getStatus().getDisplayName())
                                 .build());
                     }

@@ -44,7 +44,7 @@ public class AuthController {
     }
 
     @PostMapping("/driver-login")
-    public TokenResponseDTO driverLogin(HttpServletRequest request, @RequestBody QRLoginRequestDTO  loginRequestDTO) throws DriverNotFoundException, IncorrectPasswordException, UnrecognizedDeviceException, AccountFrozenException, PhoneNotVerifiedException {
+    public TokenResponseDTO driverLogin(HttpServletRequest request, @RequestBody LoginRequestDTO  loginRequestDTO) throws DriverNotFoundException, IncorrectPasswordException, UnrecognizedDeviceException, AccountFrozenException, PhoneNotVerifiedException {
         return authService.driverLogin(request, loginRequestDTO);
     }
 

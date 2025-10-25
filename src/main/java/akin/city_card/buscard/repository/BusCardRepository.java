@@ -14,4 +14,5 @@ public interface BusCardRepository extends JpaRepository<BusCard, Long>, JpaSpec
     Optional<BusCard> findByCardNumber(String uid);
 
     boolean existsByCardNumber(String uid);
+
 }

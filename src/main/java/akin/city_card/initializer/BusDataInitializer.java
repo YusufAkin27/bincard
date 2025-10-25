@@ -59,9 +59,6 @@ public class BusDataInitializer implements ApplicationRunner {
             bus.setDriver(null);
             bus.setAssignedRoute(route);
             bus.setNumberPlate(generatePlate(createdCount));
-            bus.setBaseFare(10.0 + random.nextDouble(5.0)); // Doğru field
-            bus.setCapacity(30 + random.nextInt(30));
-            bus.setCurrentPassengerCount(0);
             bus.setLastKnownSpeed(20.0 + random.nextInt(20));
             bus.setStatus(BusStatus.CALISIYOR);
             bus.setLastSeenStation(startStation);

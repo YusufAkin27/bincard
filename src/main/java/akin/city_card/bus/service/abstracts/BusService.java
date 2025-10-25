@@ -44,8 +44,6 @@ public interface BusService {
     ResponseMessage toggleBusActive(Long busId, String username)
             throws AdminNotFoundException, BusNotFoundException;
 
-    ResponseMessage assignDriver(Long busId, Long driverId, String username)
-            throws AdminNotFoundException, BusNotFoundException, DriverNotFoundException, DriverAlreadyAssignedException, DriverInactiveException;
 
     DataResponseMessage<BusLocationDTO> getCurrentLocation(Long busId, String username) throws BusNotFoundException, AdminNotFoundException, BusLocationNotFoundException;
 
@@ -80,4 +78,6 @@ public interface BusService {
     ResponseMessage bulkActivate(List<Long> busIds, String username);
 
     ResponseMessage bulkDeactivate(List<Long> busIds, String username);
+
+    ResponseMessage assignDriver(Long busId, String username) throws BusNotFoundException, DriverInactiveException, DriverAlreadyAssignedException, DriverNotFoundException;
 }

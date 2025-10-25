@@ -281,7 +281,6 @@ public class StationManager implements StationService {
                     .directionName(direction.getName())
                     .currentLocation(getCurrentLocationDescription(bus, busPosition))
                     .remainingStops(remainingStops)
-                    .occupancyRate((int) bus.getOccupancyRate())
                     .busStatus(bus.getStatus().getDisplayName())
                     .currentSpeed(bus.getLastKnownSpeed() != null ?
                             bus.getLastKnownSpeed().intValue() : null)

@@ -56,6 +56,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -705,106 +706,74 @@ public class AuthManager implements AuthService {
 
     @Override
     @Transactional
-    public TokenResponseDTO driverLogin(HttpServletRequest request, QRLoginRequestDTO loginRequestDTO)
-            throws DriverNotFoundException, IncorrectPasswordException, AccountFrozenException,
-            PhoneNotVerifiedException, UnrecognizedDeviceException {
-        System.out.printf(loginRequestDTO.getData());
+    public TokenResponseDTO driverLogin(HttpServletRequest request, LoginRequestDTO loginRequestDTO)
+            throws DriverNotFoundException, IncorrectPasswordException, AccountFrozenException {
+
         String normalizedPhone = null;
-        String clientIp = extractClientIp(request); // proje içinde zaten varsa kullan
+        String clientIp = extractClientIp(request);
 
-        try {
-            String qrData = loginRequestDTO.getData();
-            if (qrData == null || qrData.isEmpty()) {
-                throw new IncorrectPasswordException();
-            }
-
-        } catch (Exception e) {
-            // Hata detayını logla, özellikle geçersiz format hatasını (HMAC.DATA ayracı)
-            logger.warn("QR çözme veya parse hatası: {}", e.getMessage());
+        if (loginRequestDTO == null || loginRequestDTO.getTelephone() == null || loginRequestDTO.getTelephone().isBlank()) {
+            throw new DriverNotFoundException();
+        }
+        if (loginRequestDTO.getPassword() == null || loginRequestDTO.getPassword().isBlank()) {
             throw new IncorrectPasswordException();
         }
 
-        // ... (Kalan login mantığı değişmedi)
         normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
 
-        try {
-            // 1) Brute force kontrolü / hesap kilidi
-            long remainingMinutes = bruteForceService.getRemainingLockTimeMinutes(normalizedPhone);
-            if (bruteForceService.isAccountLocked(normalizedPhone)) {
-                auditService.logSecurityEvent(SecurityEventType.ACCOUNT_LOCKED, normalizedPhone, request,
-                        "Driver login attempt on locked account");
-                throw new AccountFrozenException();
-            }
-
-            loginRequestDTO.setTelephone(normalizedPhone);
-
-            Driver driver = driverRepository.findByUserNumber(normalizedPhone);
-            if (driver == null) {
-                bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
-                auditService.logLoginFailure(normalizedPhone, request, "Driver not found");
-                throw new DriverNotFoundException();
-            }
-
-            // 3) Hesap durum kontrolleri
-            if (driver.getStatus() == UserStatus.FROZEN) {
-                auditService.logLoginFailure(normalizedPhone, request, "Driver account frozen");
-                throw new AccountFrozenException();
-            }
-
-            if (driver.isDeleted()) {
-                auditService.logLoginFailure(normalizedPhone, request, "Driver account deleted");
-                throw new DriverNotFoundException();
-            }
-
-            if (!driver.getStatus().equals(UserStatus.ACTIVE)) {
-                auditService.logLoginFailure(normalizedPhone, request, "Driver not active");
-                throw new DriverNotFoundException();
-            }
-
-            if (!passwordEncoder.matches(loginRequestDTO.getPassword(), driver.getPassword())) {
-                bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
-                auditService.logLoginFailure(normalizedPhone, request, "Incorrect password for driver");
-                throw new IncorrectPasswordException();
-            }
-
-            // 5) Rol / yetki kontrolü (eğer sürücü için gerekli ise)
-            if (driver.getRoles() == null || driver.getRoles().isEmpty()) {
-                auditService.logLoginFailure(normalizedPhone, request, "Driver has no roles assigned");
-                throw new DriverNotFoundException();
-            }
-
-            // 6) Eğer Driver tipinde ekstra kontroller varsa (ör. enabled)
-            if (!driver.isEnabled()) {
-                auditService.logLoginFailure(normalizedPhone, request, "Driver not enabled");
-                throw new AccountFrozenException();
-            }
-
-            // Metadata çıkar
-            LoginMetadataDTO metadata = extractClientMetadata(request);
-
-            // 9) Token üret
-            TokenResponseDTO tokenResponseDTO = generateTokenResponse(
-                    driver,
-                    metadata.getIpAddress(),
-                    metadata.getDeviceInfo()
-            );
-
-            driverRepository.save(driver); // gerekliyse driver üzerinde update varsa kaydet
-
-            // 11) Başarılı giriş - brute force ve audit
-            bruteForceService.recordSuccessfulLogin(normalizedPhone);
-            auditService.logLoginSuccess(normalizedPhone, request);
-
-            logger.info("Driver login successful: {} from IP: {}", normalizedPhone, clientIp);
-            System.out.println(tokenResponseDTO.getRefreshToken()+" " +tokenResponseDTO.getAccessToken());
-            return tokenResponseDTO;
-
-        } catch (RuntimeException e) {
-            // Hata loglamasında normalizedPhone ve clientIp kullan
-            logger.error("Driver login failed for user: {} from IP: {}", normalizedPhone, clientIp, e);
-            throw e;
+        if (bruteForceService.isAccountLocked(normalizedPhone)) {
+            throw new AccountFrozenException();
         }
+
+        loginRequestDTO.setTelephone(normalizedPhone);
+
+        Driver driver = driverRepository.findByUserNumber(normalizedPhone);
+        if (driver == null) {
+            bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
+            throw new DriverNotFoundException();
+        }
+
+        if (driver.getStatus() == UserStatus.FROZEN || !driver.isEnabled()) {
+            throw new AccountFrozenException();
+        }
+
+        if (driver.isDeleted()) {
+            throw new DriverNotFoundException();
+        }
+
+        if (!UserStatus.ACTIVE.equals(driver.getStatus())) {
+            throw new DriverNotFoundException();
+        }
+
+        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), driver.getPassword())) {
+            bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
+            throw new IncorrectPasswordException();
+        }
+
+        if (driver.getRoles() == null || driver.getRoles().isEmpty()) {
+            throw new DriverNotFoundException();
+        }
+
+        if (!driver.isEnabled()) {
+            throw new AccountFrozenException();
+        }
+
+        LoginMetadataDTO metadata = extractClientMetadata(request);
+
+        TokenResponseDTO tokenResponseDTO = generateTokenResponse(
+                driver,
+                metadata.getIpAddress(),
+                metadata.getDeviceInfo()
+        );
+
+        driverRepository.save(driver);
+
+        bruteForceService.recordSuccessfulLogin(normalizedPhone);
+        auditService.logLoginSuccess(normalizedPhone, request);
+
+        return tokenResponseDTO;
     }
+
 
 
 
@@ -841,7 +810,6 @@ public class AuthManager implements AuthService {
                 .build();
     }
 
-// AuthManager.java içindeki applyLoginMetadataToUser metodunun düzeltilmesi
 
     public void applyLoginMetadataToUser(SecurityUser user, LoginMetadataDTO metadata) {
         LoginHistory history = LoginHistory.builder()
