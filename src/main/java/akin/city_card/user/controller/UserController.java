@@ -151,14 +151,14 @@ public class UserController {
 
     @PostMapping("/favorites/cards")
     public ResponseMessage addFavoriteCard(@AuthenticationPrincipal UserDetails userDetails,
-                                           @RequestBody FavoriteCardRequest request) throws UserNotFoundException {
+                                           @RequestBody FavoriteCardRequest request) throws UserNotFoundException, BusCardNotFoundException {
         return userService.addFavoriteCard(userDetails.getUsername(), request);
     }
 
     @DeleteMapping("/favorites/cards/{cardId}")
     public ResponseMessage removeFavoriteCard(@AuthenticationPrincipal UserDetails userDetails,
-                                              @PathVariable Long cardId) throws UserNotFoundException {
-        return userService.removeFavoriteCard(userDetails.getUsername(), cardId);
+                                              @PathVariable String cardNumber) throws UserNotFoundException {
+        return userService.removeFavoriteCard(userDetails.getUsername(), cardNumber);
     }
 
     @PostMapping("/location")

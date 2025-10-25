@@ -48,9 +48,9 @@ public interface UserService {
 
     List<FavoriteBusCardDTO> getFavoriteCards(String username) throws UserNotFoundException;
 
-    ResponseMessage addFavoriteCard(String username, FavoriteCardRequest request) throws UserNotFoundException;
+    ResponseMessage addFavoriteCard(String username, FavoriteCardRequest request) throws UserNotFoundException, BusCardNotFoundException;
 
-    ResponseMessage removeFavoriteCard(String username, Long cardId) throws UserNotFoundException;
+    ResponseMessage removeFavoriteCard(String username, String cardNumber) throws UserNotFoundException;
 
 
     CacheUserDTO updateNotificationPreferences(String username, NotificationPreferencesDTO preferences) throws UserNotFoundException;

@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class FavoriteCardRequest {
 
-    private Long busCardId;     // Favoriye alınacak kartın ID'si
+    private String cardNumber;     // Favoriye alınacak kartın ID'si
     private String nickname;    // Kullanıcının vereceği takma isim
 
 }

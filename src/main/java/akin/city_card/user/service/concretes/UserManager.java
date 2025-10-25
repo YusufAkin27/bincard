@@ -861,11 +861,11 @@ public class UserManager implements UserService {
 
     @Override
     @Transactional
-    public ResponseMessage addFavoriteCard(String username, FavoriteCardRequest request) throws UserNotFoundException {
+    public ResponseMessage addFavoriteCard(String username, FavoriteCardRequest request) throws UserNotFoundException, BusCardNotFoundException {
         User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
-        BusCard busCard = busCardRepository.findById(request.getBusCardId())
-                .orElseThrow(() -> new RuntimeException("BusCard bulunamadı - ID: " + request.getBusCardId()));
+        BusCard busCard = busCardRepository.findByCardNumber(request.getCardNumber())
+                .orElseThrow(BusCardNotFoundException::new);
 
         boolean alreadyFavorited = user.getFavoriteCards().stream()
                 .anyMatch(fav -> fav.getBusCard().getId().equals(busCard.getId()));
@@ -886,12 +886,12 @@ public class UserManager implements UserService {
     }
 
     @Override
-    public ResponseMessage removeFavoriteCard(String username, Long cardId) throws UserNotFoundException {
+    public ResponseMessage removeFavoriteCard(String username, String cardNumber) throws UserNotFoundException {
         User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
         List<UserFavoriteCard> favoriteCards = user.getFavoriteCards();
         boolean isSuccess = favoriteCards.removeIf(fav ->
-                fav.getBusCard() != null && fav.getBusCard().getId().equals(cardId)
+                fav.getBusCard() != null && fav.getBusCard().getCardNumber().equals(cardNumber)
         );
 
         if (isSuccess) {
