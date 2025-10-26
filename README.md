@@ -134,7 +134,18 @@ bir şekilde gerçekleştirebilmeleri için tasarlanmıştır.
 - **Swagger/OpenAPI** - API dokümantasyonu
 - **Jackson** - JSON işleme
 - **Maven** - Dependency yönetimi
+## Veritabanı Mimarisi
 
+<p align="center">
+  <a href="https://github.com/user-attachments/assets/56f07cfd-f7b4-46f4-b562-6240464e8e60" target="_blank">
+    <img
+      src="https://github.com/user-attachments/assets/56f07cfd-f7b4-46f4-b562-6240464e8e60"
+      alt="Uygulamanın veritabanı diyagramı"
+      style="max-width: 100%; height: auto;" />
+  </a>
+</p>
+
+<p align="center"><i>Şema genel görünüm — tablo ilişkileri ve anahtarlar.</i></p>
 ---
 
 ## 🚀 Kurulum
@@ -184,6 +195,7 @@ export IYZICO_API_KEY=your_iyzico_key
 export IYZICO_SECRET_KEY=your_iyzico_secret
 export IYZICO_BASE_URL=https://sandbox-api.iyzipay.com
 export GOOGLE_MAP_KEY=your_google_maps_key
+
 
 # Maven ile çalıştırma
 ./mvnw spring-boot:run
