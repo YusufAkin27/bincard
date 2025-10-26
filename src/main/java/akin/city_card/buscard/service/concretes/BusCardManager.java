@@ -26,21 +26,25 @@ import akin.city_card.buscard.repository.QRTokenRepository;
 import akin.city_card.buscard.service.abstracts.BusCardService;
 import akin.city_card.geoIpService.GeoIpService;
 import akin.city_card.geoIpService.GeoLocationData;
+import akin.city_card.news.model.PlatformType;
+import akin.city_card.notification.model.NotificationType;
+import akin.city_card.notification.service.FCMService;
+import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.DeviceInfo;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.model.User;
 import akin.city_card.user.repository.UserRepository;
+import akin.city_card.user.service.concretes.UserManager;
+import akin.city_card.wallet.core.request.TopUpBalanceRequest;
+import akin.city_card.wallet.core.response.TopUpSessionData;
 import akin.city_card.wallet.exceptions.WalletNotActiveException;
 import akin.city_card.wallet.exceptions.WalletNotFoundException;
-import akin.city_card.wallet.model.Wallet;
-import akin.city_card.wallet.model.WalletActivity;
-import akin.city_card.wallet.model.WalletActivityType;
-import akin.city_card.wallet.model.WalletStatus;
+import akin.city_card.wallet.model.*;
 import akin.city_card.wallet.repository.WalletActivityRepository;
 import akin.city_card.wallet.repository.WalletRepository;
-import akin.city_card.wallet.service.abstracts.QRCodeService;
+import akin.city_card.wallet.service.concretes.TopUpSessionCache;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.zxing.BarcodeFormat;
@@ -48,11 +52,18 @@ import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+import com.iyzipay.Options;
+import com.iyzipay.model.*;
+import com.iyzipay.model.Currency;
+import com.iyzipay.model.Locale;
+import com.iyzipay.request.CreatePaymentRequest;
 import com.iyzipay.request.DeleteCardRequest;
+import com.iyzipay.request.RetrievePaymentRequest;
 import io.craftgate.request.UpdateCardRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -63,6 +74,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Service
@@ -70,6 +82,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class BusCardManager implements BusCardService {
     private final ObjectMapper objectMapper;
+    private final Options iyzicoOptions;
     private final BusCardRepository busCardRepository;
     private final CardPricingRepository cardPricingRepository;
     private final UserRepository userRepository;
@@ -78,10 +91,14 @@ public class BusCardManager implements BusCardService {
     private final BusCardConverter busCardConverter;
     private final AuditLogRepository auditLogRepository;
     private final ActivityRepository activityRepository;
+    private final TopUpSessionCache topUpSessionCache;
     private final BusRepository busRepository;
     private final QRTokenRepository qrTokenRepository;
     private final WalletActivityRepository walletActivityRepository;
+    private final FCMService fcmService;
     private final BusRideRepository busRideRepository;
+    private final GeoIpService geoIpService;
+    private final UserManager userManager;
 
 
     @Override
@@ -89,7 +106,7 @@ public class BusCardManager implements BusCardService {
     public BusCardDTO registerCard(HttpServletRequest httpServletRequest, RegisterCardRequest req, String username) throws AlreadyBusCardNumberException {
         Admin admin = adminRepository.findByUserNumber(username);
         createAuditLog(admin, ActionType.NEW_CARD_REGISTRATION, "Yeni kart kaydedildi", admin.getCurrentDeviceInfo(), admin.getId(), admin.getRoles().toString(), null, null, null);
-        
+
         if (busCardRepository.existsByCardNumber(req.getUid())) {
             throw new AlreadyBusCardNumberException();
 
@@ -106,8 +123,6 @@ public class BusCardManager implements BusCardService {
 
         return busCardConverter.BusCardToBusCardDTO(busCardRepository.findByCardNumber(reqUid).orElseThrow(BusCardNotFoundException::new));
     }
-
-
 
 
     @Override
@@ -131,17 +146,17 @@ public class BusCardManager implements BusCardService {
             throw new CorruptedDataException();
         }
 
-        Activity lastActivity = getLastActivity(busCard);
+        BusCardActivity lastBusCardActivity = getLastActivity(busCard);
         LocalDateTime now = LocalDateTime.now();
 
         boolean isTransfer = false;
         boolean sameValidator = false;
 
-        if (lastActivity != null) {
-            long minutesSinceLast = java.time.Duration.between(lastActivity.getUseDateTime(), now).toMinutes();
+        if (lastBusCardActivity != null) {
+            long minutesSinceLast = java.time.Duration.between(lastBusCardActivity.getUseDateTime(), now).toMinutes();
 
             if (minutesSinceLast <= 45) {
-                if (lastActivity.getValidatorId().equals(validatorId)) {
+                if (lastBusCardActivity.getValidatorId().equals(validatorId)) {
                     sameValidator = true;
                 } else {
                     isTransfer = true;
@@ -165,10 +180,10 @@ public class BusCardManager implements BusCardService {
             sub.setRemainingUses(sub.getRemainingUses() - 1);
             busCard.setTxCounter(busCard.getTxCounter() + 1);
 
-            Activity activity = createActivity(busCard, request, BigDecimal.ZERO, false, now);
-            activityRepository.save(activity);
+            BusCardActivity busCardActivity = createActivity(busCard, request, BigDecimal.ZERO, false, now);
+            activityRepository.save(busCardActivity);
 
-            busCard.getActivities().add(activity);
+            busCard.getActivities().add(busCardActivity);
             busCardRepository.save(busCard);
 
             return busCardConverter.BusCardToBusCardDTO(busCard);
@@ -209,14 +224,13 @@ public class BusCardManager implements BusCardService {
         busCard.setLastTransactionDate(LocalDate.now());
         busCard.setTxCounter(busCard.getTxCounter() + 1);
 
-        Activity activity = createActivity(busCard, request, fare, isTransfer, now);
-        activityRepository.save(activity);
-        busCard.getActivities().add(activity);
+        BusCardActivity busCardActivity = createActivity(busCard, request, fare, isTransfer, now);
+        activityRepository.save(busCardActivity);
+        busCard.getActivities().add(busCardActivity);
 
 
-
-        Bus bus=busRepository.findByValidatorId(validatorId).orElseThrow(BusCardNotFoundException::new);
-        BusRide busRide=new BusRide();
+        Bus bus = busRepository.findByValidatorId(validatorId).orElseThrow(BusCardNotFoundException::new);
+        BusRide busRide = new BusRide();
         busRide.setBus(bus);
         busRide.setBusCard(busCard);
         busRide.setStatus(RideStatus.SUCCESS);
@@ -231,25 +245,25 @@ public class BusCardManager implements BusCardService {
         return busCardConverter.BusCardToBusCardDTO(busCard);
     }
 
-    private Activity getLastActivity(BusCard card) {
+    private BusCardActivity getLastActivity(BusCard card) {
         if (card.getActivities() == null || card.getActivities().isEmpty())
             return null;
         return card.getActivities()
                 .stream()
-                .max(Comparator.comparing(Activity::getUseDateTime))
+                .max(Comparator.comparing(BusCardActivity::getUseDateTime))
                 .orElse(null);
     }
 
-    private Activity createActivity(BusCard busCard, GetOnBusRequest request,
-                                    BigDecimal price, boolean isTransfer, LocalDateTime time) {
+    private BusCardActivity createActivity(BusCard busCard, GetOnBusRequest request,
+                                           BigDecimal price, boolean isTransfer, LocalDateTime time) {
 
-        Activity activity = new Activity();
-        activity.setBusCard(busCard);
-        activity.setUseDateTime(time);
-        activity.setPrice(price);
-        activity.setValidatorId(request.getValidatorId());
-        activity.setTransfer(isTransfer);
-        return activity;
+        BusCardActivity busCardActivity = new BusCardActivity();
+        busCardActivity.setBusCard(busCard);
+        busCardActivity.setUseDateTime(time);
+        busCardActivity.setPrice(price);
+        busCardActivity.setValidatorId(request.getValidatorId());
+        busCardActivity.setTransfer(isTransfer);
+        return busCardActivity;
     }
 
 
@@ -303,24 +317,23 @@ public class BusCardManager implements BusCardService {
     }
 
 
-
     @Override
     @Transactional
     public BusCardDTO cardBlocked(ReadCardRequest request, String username) throws AdminNotFoundException, BusCardNotActiveException, BusCardNotFoundException, BusCardAlreadyIsBlockedException {
         Admin admin = adminRepository.findByUserNumber(username);
         if (admin == null) throw new AdminNotFoundException();
-        
+
         BusCard busCard = busCardRepository.findByCardNumber(request.getUid()).orElseThrow(BusCardNotFoundException::new);
         if (!busCard.isActive()) throw new BusCardNotActiveException();
         if (busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardAlreadyIsBlockedException();
-        
-        createAuditLog(admin, ActionType.CARD_BLOCKED, "Kart bloklandı: " + request.getUid(), 
-                      admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
-                      "Kart numarası: " + request.getUid(), null);
-        
+
+        createAuditLog(admin, ActionType.CARD_BLOCKED, "Kart bloklandı: " + request.getUid(),
+                admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null,
+                "Kart numarası: " + request.getUid(), null);
+
         busCard.setStatus(CardStatus.BLOCKED);
         BusCard savedBusCard = busCardRepository.save(busCard);
-        
+
         return busCardConverter.BusCardToBusCardDTO(savedBusCard);
     }
 
@@ -536,7 +549,8 @@ public class BusCardManager implements BusCardService {
 
         Map<String, Object> payload;
         try {
-            payload = objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+            payload = objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {
+            });
         } catch (IOException e) {
             throw new InvalidQrCodeException();
         }
@@ -597,7 +611,6 @@ public class BusCardManager implements BusCardService {
     }
 
 
-
     private String hmacSha256(String json, String secret) {
         try {
             javax.crypto.Mac mac = javax.crypto.Mac.getInstance("HmacSHA256");
@@ -629,7 +642,7 @@ public class BusCardManager implements BusCardService {
         CardPricing cardPricing = cardPricingRepository.findByCardType(updateCardPricingRequest.getCardType()).orElseThrow(CardPricingNotFoundException::new);
         cardPricing.setPrice(updateCardPricingRequest.getPrice());
         cardPricing.setUpdatedAt(LocalDateTime.now());
-        return new ResponseMessage("Kart fiyatı güncellendi",true);
+        return new ResponseMessage("Kart fiyatı güncellendi", true);
     }
 
     @Override
@@ -639,18 +652,18 @@ public class BusCardManager implements BusCardService {
         if (admin == null) {
             throw new AdminNotFoundException();
         }
-        
+
         BusCard busCard = busCardRepository.findByCardNumber(request.getUid()).orElseThrow(BusCardNotFoundException::new);
         if (!busCard.isActive()) throw new BusCardNotActiveException();
         if (!busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardNotBlockedException();
-        
-        createAuditLog(admin, ActionType.CARD_UNBLOCKED, "Kart blokajı kaldırıldı: " + request.getUid(), 
-                      admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
-                      "Kart numarası: " + request.getUid(), null);
-        
+
+        createAuditLog(admin, ActionType.CARD_UNBLOCKED, "Kart blokajı kaldırıldı: " + request.getUid(),
+                admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null,
+                "Kart numarası: " + request.getUid(), null);
+
         busCard.setStatus(CardStatus.ACTIVE);
         BusCard savedBusCard = busCardRepository.save(busCard);
-        
+
         return busCardConverter.BusCardToBusCardDTO(savedBusCard);
     }
 
@@ -711,32 +724,32 @@ public class BusCardManager implements BusCardService {
         if (admin == null) {
             throw new AdminNotFoundException();
         }
-        
+
         BusCard busCard = busCardRepository.findByCardNumber(createSubscriptionRequest.getUid())
                 .orElseThrow(BusCardNotFoundException::new);
-        
+
         // Abonman bilgilerini oluştur
         SubscriptionInfo subscriptionInfo = new SubscriptionInfo();
         subscriptionInfo.setType(createSubscriptionRequest.getType());
         subscriptionInfo.setLoaded(createSubscriptionRequest.getLoaded());
-        subscriptionInfo.setStartDate(createSubscriptionRequest.getStartDate() != null ? 
+        subscriptionInfo.setStartDate(createSubscriptionRequest.getStartDate() != null ?
                 createSubscriptionRequest.getStartDate() : LocalDate.now());
-        subscriptionInfo.setEndDate(createSubscriptionRequest.getEndDate() != null ? 
+        subscriptionInfo.setEndDate(createSubscriptionRequest.getEndDate() != null ?
                 createSubscriptionRequest.getEndDate() : LocalDate.now().plusDays(30));
         subscriptionInfo.setRemainingUses(createSubscriptionRequest.getRemainingUses());
         subscriptionInfo.setRemainingDays(createSubscriptionRequest.getRemainingDays());
-        
+
         // Kartı abonman kartına dönüştür
         busCard.setSubscriptionInfo(subscriptionInfo);
         busCard.setType(CardType.TAM); // Abonman kartı genellikle tam kart olur
-        
+
         // Audit log oluştur
-        createAuditLog(admin, ActionType.BUS_CARD_TOP_UP, "Abonman oluşturuldu: " + createSubscriptionRequest.getUid(), 
-                      admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null, 
-                      "Abonman tipi: " + createSubscriptionRequest.getType(), null);
-        
+        createAuditLog(admin, ActionType.BUS_CARD_TOP_UP, "Abonman oluşturuldu: " + createSubscriptionRequest.getUid(),
+                admin.getCurrentDeviceInfo(), busCard.getId(), "BusCard", null,
+                "Abonman tipi: " + createSubscriptionRequest.getType(), null);
+
         BusCard savedBusCard = busCardRepository.save(busCard);
-        
+
         return busCardConverter.BusCardToBusCardDTO(savedBusCard);
     }
 
@@ -755,6 +768,269 @@ public class BusCardManager implements BusCardService {
         return true;
     }
 
+    @Override
+    @Transactional
+    public ResponseEntity<String> complete3DPayment(String paymentId, String conversationId,HttpServletRequest httpServletRequest) {
+        log.info("3D Callback alındı - paymentId: {}, conversationId: {}", paymentId, conversationId);
+
+        if (paymentId == null || paymentId.isEmpty() || conversationId == null || conversationId.isEmpty()) {
+            log.warn("Callback parametreleri eksik! paymentId veya conversationId boş.");
+            return ResponseEntity.badRequest().body("Eksik parametreler gönderildi.");
+        }
+
+        // İyzico'dan ödeme detayını sorgula
+        RetrievePaymentRequest retrieveRequest = new RetrievePaymentRequest();
+        retrieveRequest.setPaymentId(paymentId);
+        retrieveRequest.setConversationId(conversationId);
+        retrieveRequest.setLocale("tr");
+
+        try {
+            Payment payment = Payment.retrieve(retrieveRequest, iyzicoOptions);
+            log.info("İyzico'dan dönen payment status: {}", payment.getStatus());
+
+            if ("success".equalsIgnoreCase(payment.getStatus())) {
+                TopUpSessionData sessionData = topUpSessionCache.get(conversationId);
+                if (sessionData == null) {
+                    log.warn("TopUpSessionCache içinde '{}' için veri bulunamadı", conversationId);
+                    return ResponseEntity.badRequest().body("Yükleme oturum bilgisi bulunamadı.");
+                }
+
+                String username = sessionData.getUsername();
+                String cardNumber = sessionData.getCardNumber();
+                BigDecimal amount = sessionData.getAmount();
+
+                log.info("Yükleme işlemi bilgileri -> Kullanıcı: {}, Kart: {}, Tutar: {}",
+                        username, cardNumber, amount);
+
+                // Kullanıcı doğrulaması
+                User user = userRepository.findByUserNumber(username).orElse(null);
+                if (user == null) {
+                    log.warn("TopUp işlemi için kullanıcı bulunamadı. username: {}", username);
+                    return ResponseEntity.badRequest().body("Kullanıcı bulunamadı. Yükleme yapılamadı.");
+                }
+
+                // BusCard'ı bul
+                BusCard busCard = busCardRepository.findByCardNumber(cardNumber)
+                        .orElse(null);
+                if (busCard == null) {
+                    log.warn("BusCard bulunamadı. cardNumber: {}", cardNumber);
+                    return ResponseEntity.badRequest().body("Kart bulunamadı. Yükleme yapılamadı.");
+                }
+
+                // Kart durumu kontrolü
+                if (!busCard.getStatus().equals(CardStatus.ACTIVE)) {
+                    log.warn("Kart aktif değil: {}", cardNumber);
+                    return ResponseEntity.badRequest().body("Kart aktif değil, işlem yapılamaz.");
+                }
+                if (busCard.getStatus().equals(CardStatus.BLOCKED)) {
+                    log.warn("Kart bloke: {}", cardNumber);
+                    return ResponseEntity.badRequest().body("Kart bloke edilmiş, işlem yapılamaz.");
+                }
+
+                handleSuccessfulTopUp(user,amount,paymentId,cardNumber,httpServletRequest);
+
+                topUpSessionCache.remove(conversationId);
+
+                return ResponseEntity.ok("");
+
+            } else {
+                log.warn("3D ödeme başarısız: {}", payment.getErrorMessage());
+                return ResponseEntity.badRequest().body("3D ödeme başarısız: " + payment.getErrorMessage());
+            }
+
+        } catch (Exception e) {
+            log.error("3D ödeme tamamlama sırasında hata:", e);
+            return ResponseEntity.internalServerError().body("Hata: " + e.getMessage());
+        }
+    }
+
+
+    @Override
+    @Transactional
+    public ResponseMessage topUp(String username, String cardNumber, TopUpBalanceRequest topUpBalanceRequest) throws BusCardNotFoundException, BusCardNotActiveException, BusCardIsBlockedException, MinumumTopUpAmountException, UserNotFoundException {
+
+        User user = userRepository.findByUserNumber(username)
+                .orElseThrow(UserNotFoundException::new);
+
+        if (!user.isEnabled()) {
+            return new ResponseMessage("Kullanıcı hesabı aktif değil.", false);
+        }
+
+        if (topUpBalanceRequest.getAmount() == null
+                || topUpBalanceRequest.getAmount().compareTo(BigDecimal.valueOf(20)) < 0) {
+            throw new MinumumTopUpAmountException();
+        }
+        BusCard busCard = busCardRepository.findByCardNumber(cardNumber).orElseThrow(BusCardNotFoundException::new);
+
+
+        if (!busCard.getStatus().equals(CardStatus.ACTIVE)) throw new BusCardNotActiveException();
+        if(busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardIsBlockedException();
+
+        try {
+            Options options = iyzicoOptions;
+
+            // 1. Kart Bilgisi
+            PaymentCard paymentCard = new PaymentCard();
+            paymentCard.setCardHolderName(busCard.getFullName());
+            paymentCard.setCardNumber(topUpBalanceRequest.getCardNumber());
+            paymentCard.setExpireMonth(topUpBalanceRequest.getCardExpiry().split("/")[0].trim());
+            paymentCard.setExpireYear("20" + topUpBalanceRequest.getCardExpiry().split("/")[1].trim());
+            paymentCard.setCvc(topUpBalanceRequest.getCardCvc());
+            paymentCard.setRegisterCard(0);
+
+            // 2. Buyer
+            LocalDateTime lastLogin = user.getLoginHistory().isEmpty() ? LocalDateTime.now() : user.getLoginHistory().get(0).getLoginAt();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            Buyer buyer = new Buyer();
+            buyer.setId(user.getId().toString());
+            buyer.setName(user.getProfileInfo().getName());
+            buyer.setSurname(user.getProfileInfo().getSurname());
+            buyer.setGsmNumber(user.getUserNumber());
+            buyer.setEmail(Optional.ofNullable(user.getProfileInfo().getEmail()).orElse("default@mail.com"));
+            buyer.setIdentityNumber(user.getIdentityInfo().getNationalId());
+            buyer.setLastLoginDate(lastLogin.format(formatter));
+            buyer.setRegistrationDate(user.getCreatedAt().format(formatter));
+            buyer.setRegistrationAddress("Türkiye");
+            buyer.setIp(user.getCurrentDeviceInfo().getIpAddress());
+            buyer.setCity("İstanbul");
+            buyer.setCountry("Turkey");
+            buyer.setZipCode("34000");
+
+            // 3. Adres
+            Address address = new Address();
+            address.setContactName(username);
+            address.setCity("İstanbul");
+            address.setCountry("Turkey");
+            address.setAddress("Türkiye");
+            address.setZipCode("34000");
+
+            // 4. Sepet
+            BasketItem item = new BasketItem();
+            item.setId("BI101");
+            item.setName("Bakiye Yükleme");
+            item.setCategory1("BusCard");
+            item.setItemType(BasketItemType.VIRTUAL.name());
+            item.setPrice(topUpBalanceRequest.getAmount());
+
+            List<BasketItem> items = List.of(item);
+
+            // 5. Request Hazırlığı
+            String conversationId = UUID.randomUUID().toString();
+
+            CreatePaymentRequest request = new CreatePaymentRequest();
+            request.setLocale(Locale.TR.getValue());
+            request.setConversationId(conversationId);
+            request.setPrice(topUpBalanceRequest.getAmount());
+            request.setPaidPrice(topUpBalanceRequest.getAmount());
+            request.setCurrency(Currency.TRY.name());
+            request.setInstallment(1);
+            request.setBasketId("B67832");
+            request.setPaymentChannel(PaymentChannel.WEB.name());
+            request.setPaymentGroup(PaymentGroup.PRODUCT.name());
+
+
+            String baseUrl;
+            System.out.println(topUpBalanceRequest.getPlatformType());
+            if (topUpBalanceRequest.getPlatformType() == PlatformType.MOBILE) {
+                baseUrl = "http://192.168.174.214:8080";
+            } else if (topUpBalanceRequest.getPlatformType() == PlatformType.WEB) {
+                baseUrl = "http://localhost:8080";
+            } else {
+                baseUrl = "http://localhost:8080";
+            }
+
+            request.setCallbackUrl(baseUrl + "/v1/api/buscard/payment/3d-callback");
+
+            request.setConversationId(conversationId);
+
+            request.setPaymentCard(paymentCard);
+            request.setBuyer(buyer);
+            request.setShippingAddress(address);
+            request.setBillingAddress(address);
+            request.setBasketItems(items);
+
+            // 6. Iyzico 3D Başlat
+            ThreedsInitialize threedsInitialize = ThreedsInitialize.create(request, options);
+
+            if ("success".equals(threedsInitialize.getStatus())) {
+
+                topUpSessionCache.put(conversationId,
+                        new TopUpSessionData(username, busCard.getCardNumber(),topUpBalanceRequest.getAmount()));
+
+                String htmlContent = threedsInitialize.getHtmlContent();
+                return new DataResponseMessage<>("3D doğrulama başlatıldı. Yönlendirme yapılıyor.", true, htmlContent);
+            } else {
+                return new ResponseMessage("3D başlatma başarısız: " + threedsInitialize.getErrorMessage(), false);
+            }
+
+        } catch (Exception e) {
+            return new ResponseMessage("3D başlatma hatası: " + e.getMessage(), false);
+        }
+    }
+
+    @Transactional
+    public ResponseMessage handleSuccessfulTopUp(User user, BigDecimal amount, String paymentId, String cardNumber,HttpServletRequest httpServletRequest) throws BusCardIsBlockedException, BusCardNotActiveException, BusCardNotFoundException {
+
+        BusCard busCard = busCardRepository.findByCardNumber(cardNumber)
+                .orElseThrow(BusCardNotFoundException::new);
+
+        if (busCard.getStatus() == CardStatus.BLOCKED) {
+            throw new BusCardIsBlockedException();
+        }
+        if (busCard.getStatus() != CardStatus.ACTIVE) {
+            throw new BusCardNotActiveException();
+        }
+
+        BigDecimal oldBalance = busCard.getBalance() == null ? BigDecimal.ZERO : busCard.getBalance();
+        BigDecimal newBalance = oldBalance.add(amount);
+        busCard.setBalance(newBalance);
+        busCard.setLastTransactionAmount(amount);
+        busCard.setLastTransactionDate(LocalDate.now());
+        busCard.setTxCounter(busCard.getTxCounter() + 1);
+
+        busCardRepository.save(busCard);
+
+        BusCardActivity busCardActivity = new BusCardActivity();
+        busCardActivity.setBusCard(busCard);
+        busCardActivity.setUser(user);
+        busCardActivity.setPrice(amount);
+        busCardActivity.setUseDateTime(LocalDateTime.now());
+        busCardActivity.setTransfer(false);
+        busCardActivity.setValidatorId("TOPUP-IYZICO-" + paymentId);
+        activityRepository.save(busCardActivity);
+
+        String metadata = String.format(
+                "Kart numarası: %s, Eski bakiye: %s, Yeni bakiye: %s, Payment ID: %s",
+                busCard.getCardNumber(),
+                oldBalance,
+                newBalance,
+                paymentId
+        );
+
+        userManager.updateDeviceInfoAndCreateAuditLog(
+                user,
+                httpServletRequest,
+                geoIpService,
+                ActionType.CARD_TOPUP_SUCCESS,
+                String.format("Kart %s için %s TL yüklendi.", busCard.getCardNumber(), amount),
+                amount.doubleValue(),
+                metadata
+        );
+
+        // 7. (Opsiyonel) Bildirim gönder
+        fcmService.sendNotificationToToken(
+                user,
+                "Kart Yükleme Başarılı",
+                amount + " TL kart bakiyenize başarıyla yüklendi.",
+                NotificationType.SUCCESS,
+                null
+        );
+
+        log.info("BusCard {} için bakiye artırıldı: {} -> {}", cardNumber, oldBalance, newBalance);
+
+        return new ResponseMessage("Yükleme başarılı. Yeni bakiye: " + newBalance, true);
+    }
 
 
     // helper: QR PNG byte[]

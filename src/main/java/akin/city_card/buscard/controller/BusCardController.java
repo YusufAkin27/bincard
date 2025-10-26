@@ -10,11 +10,13 @@ import akin.city_card.buscard.exceptions.*;
 import akin.city_card.buscard.service.abstracts.BusCardService;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.wallet.core.request.TopUpBalanceRequest;
 import akin.city_card.wallet.exceptions.WalletNotActiveException;
 import akin.city_card.wallet.exceptions.WalletNotFoundException;
 import com.iyzipay.request.DeleteCardRequest;
 import io.craftgate.request.UpdateCardRequest;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
@@ -169,7 +171,26 @@ public class BusCardController {
     @PostMapping("/scan-qr")
     public ResponseMessage scanQrCode(@RequestBody QrScanRequest request) throws UserNotFoundException, InvalidQrCodeException, WalletNotFoundException, InsufficientBalanceException, ExpiredQrCodeException, WalletNotActiveException, CardPricingNotFoundException {
         return busCardService.verifyQrToken(request.getQrToken());
-
     }
+
+
+    @PostMapping("/top-up/card")
+    public ResponseMessage topUpBalance(
+            @Valid @RequestBody TopUpBalanceRequest topUpBalanceRequest,
+            @RequestParam String cardNumber,
+            @AuthenticationPrincipal UserDetails userDetails) throws BusCardIsBlockedException, UserNotFoundException, BusCardNotActiveException, BusCardNotFoundException, MinumumTopUpAmountException {
+        return busCardService.topUp(userDetails.getUsername(),cardNumber,topUpBalanceRequest);
+    }
+
+    @PostMapping("/payment/3d-callback")
+    public ResponseEntity<String> complete3DPayment(
+            @RequestParam(name = "paymentId", required = false) String paymentId,
+            @RequestParam(name = "conversationId", required = false) String conversationId,
+            HttpServletRequest httpServletRequest) {
+
+        return busCardService.complete3DPayment(paymentId, conversationId,httpServletRequest);
+    }
+
+
 
 }

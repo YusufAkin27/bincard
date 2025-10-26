@@ -1089,7 +1089,7 @@ public class WalletManager implements WalletService {
             if ("success".equals(threedsInitialize.getStatus())) {
 
                 topUpSessionCache.put(conversationId,
-                        new TopUpSessionData(username, topUpBalanceRequest.getAmount()));
+                        new TopUpSessionData(username,null,topUpBalanceRequest.getAmount()));
 
                 String htmlContent = threedsInitialize.getHtmlContent();
                 return new DataResponseMessage<>("3D doğrulama başlatıldı. Yönlendirme yapılıyor.", true, htmlContent);

@@ -3,6 +3,7 @@ package akin.city_card.wallet.service.concretes;
 import akin.city_card.wallet.core.response.TopUpSessionData;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -21,5 +22,20 @@ public class TopUpSessionCache {
 
     public void remove(String conversationId) {
         sessionMap.remove(conversationId);
+    }
+
+    public String getCardNumber(String conversationId) {
+        TopUpSessionData data = sessionMap.get(conversationId);
+        return data != null ? data.getCardNumber() : null;
+    }
+
+    public BigDecimal getAmount(String conversationId) {
+        TopUpSessionData data = sessionMap.get(conversationId);
+        return data != null ? data.getAmount() : null;
+    }
+
+    public String getUsername(String conversationId) {
+        TopUpSessionData data = sessionMap.get(conversationId);
+        return data != null ? data.getUsername() : null;
     }
 }

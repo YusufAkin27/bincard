@@ -19,6 +19,9 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     boolean existsByIdentityInfo_NationalId(String nationalId);
 
+
+    Page<User> findAll(Pageable pageable);
+
     User findByIdentityInfo_NationalId(String nationalId);
 
     User findByProfileInfo_Email(String email);

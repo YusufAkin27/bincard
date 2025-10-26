@@ -8,11 +8,14 @@ import akin.city_card.buscard.core.response.CardPricingDTO;
 import akin.city_card.buscard.exceptions.*;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.wallet.core.request.TopUpBalanceRequest;
 import akin.city_card.wallet.exceptions.WalletNotActiveException;
 import akin.city_card.wallet.exceptions.WalletNotFoundException;
 import com.iyzipay.request.DeleteCardRequest;
 import io.craftgate.request.UpdateCardRequest;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
@@ -55,4 +58,8 @@ public interface BusCardService {
     List<BusCardDTO> getAllCards(String username);
 
     boolean qrStatus(String token);
+
+    ResponseEntity<String> complete3DPayment(String paymentId, String conversationId, HttpServletRequest httpServletRequest);
+
+    ResponseMessage topUp(String username, String cardNumber, @Valid TopUpBalanceRequest topUpBalanceRequest) throws BusCardNotFoundException, BusCardNotActiveException, BusCardIsBlockedException, MinumumTopUpAmountException, UserNotFoundException;
 }

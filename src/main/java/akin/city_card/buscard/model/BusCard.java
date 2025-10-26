@@ -51,7 +51,7 @@ public class BusCard {
     private List<UserFavoriteCard> favoredByUsers;
 
     @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Activity> activities;
+    private List<BusCardActivity> activities;
 
     @Column(name = "tx_counter")
     private Integer txCounter = 0;

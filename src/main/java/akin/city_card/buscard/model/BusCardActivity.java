@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
-public class Activity {
+public class BusCardActivity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
