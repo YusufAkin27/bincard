@@ -35,6 +35,7 @@ import akin.city_card.security.entity.DeviceInfo;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.user.model.User;
+import akin.city_card.user.model.UserStatus;
 import akin.city_card.user.repository.UserRepository;
 import akin.city_card.user.service.concretes.UserManager;
 import akin.city_card.wallet.core.request.TopUpBalanceRequest;
@@ -59,6 +60,7 @@ import com.iyzipay.model.Locale;
 import com.iyzipay.request.CreatePaymentRequest;
 import com.iyzipay.request.DeleteCardRequest;
 import com.iyzipay.request.RetrievePaymentRequest;
+import com.twilio.rest.taskrouter.v1.workspace.Activity;
 import io.craftgate.request.UpdateCardRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -968,6 +970,110 @@ public class BusCardManager implements BusCardService {
             return new ResponseMessage("3D başlatma hatası: " + e.getMessage(), false);
         }
     }
+
+    @Override
+    public BusCardDTO balanceInquiry(String cardNumber) throws BusCardNotFoundException {
+        return busCardConverter.BusCardToBusCardDTO(busCardRepository.findByCardNumber(cardNumber).orElseThrow(BusCardNotFoundException::new));
+    }
+
+    @Override
+    @Transactional
+    public ResponseMessage topUpUsingWallet(String username, TopUpCardRequest topUpCardRequest, HttpServletRequest httpServletRequest) throws UserNotFoundException, BusCardNotFoundException, WalletNotFoundException, BusCardIsBlockedException, BusCardNotActiveException, MinumumTopUpAmountException, InsufficientBalanceException {
+
+        User user = userRepository.findByUserNumber(username)
+                .orElseThrow(UserNotFoundException::new);
+
+        BusCard busCard = busCardRepository.findByCardNumber(topUpCardRequest.getCardNumber())
+                .orElseThrow(BusCardNotFoundException::new);
+
+        Wallet wallet = walletRepository.findByUser(user)
+                .orElseThrow(WalletNotFoundException::new);
+
+        BigDecimal amount = topUpCardRequest.getAmount();
+
+        if (!user.isEnabled() || user.getStatus() == UserStatus.BANNED) {
+            return new ResponseMessage("Kullanıcı hesabı aktif değil veya yasaklı.", false);
+        }
+
+        if (busCard.getStatus() == CardStatus.BLOCKED) {
+            throw new BusCardIsBlockedException();
+        }
+        if (busCard.getStatus() != CardStatus.ACTIVE) {
+            throw new BusCardNotActiveException();
+        }
+
+        if (amount == null || amount.compareTo(BigDecimal.valueOf(20)) < 0) {
+            throw new MinumumTopUpAmountException();
+        }
+
+        if (wallet.getBalance().compareTo(amount) < 0) {
+            throw new InsufficientBalanceException();
+        }
+
+        BigDecimal oldWalletBalance = wallet.getBalance();
+        BigDecimal newWalletBalance = oldWalletBalance.subtract(amount);
+        wallet.setBalance(newWalletBalance);
+        wallet.setTotalTransactionCount(wallet.getTotalTransactionCount() + 1);
+        wallet.setLastUpdated(LocalDateTime.now());
+
+        BigDecimal oldCardBalance = busCard.getBalance() == null ? BigDecimal.ZERO : busCard.getBalance();
+        BigDecimal newCardBalance = oldCardBalance.add(amount);
+        busCard.setBalance(newCardBalance);
+        busCard.setLastTransactionAmount(amount);
+        busCard.setLastTransactionDate(LocalDate.now());
+        busCard.setTxCounter(busCard.getTxCounter() + 1);
+
+        walletRepository.save(wallet);
+        busCardRepository.save(busCard);
+
+        WalletActivity walletActivity = WalletActivity.builder()
+                .walletId(wallet.getId())
+                .activityType(WalletActivityType.TRANSACTION)
+                .activityDate(LocalDateTime.now())
+                .description(String.format("Kart %s için %s TL yüklendi (cüzdandan düşüldü).", busCard.getCardNumber(), amount))
+                .build();
+        walletActivityRepository.save(walletActivity);
+
+        BusCardActivity activity = new BusCardActivity();
+        activity.setBusCard(busCard);
+        activity.setUser(user);
+        activity.setPrice(amount);
+        activity.setUseDateTime(LocalDateTime.now());
+        activity.setTransfer(false);
+        activity.setValidatorId("WALLET-TOPUP-" + UUID.randomUUID());
+        activityRepository.save(activity);
+
+        String metadata = String.format(
+                "Kart numarası: %s, Eski Kart Bakiye: %s, Yeni Kart Bakiye: %s, Eski Cüzdan Bakiye: %s, Yeni Cüzdan Bakiye: %s",
+                busCard.getCardNumber(), oldCardBalance, newCardBalance, oldWalletBalance, newWalletBalance
+        );
+
+        userManager.updateDeviceInfoAndCreateAuditLog(
+                user,
+                httpServletRequest,
+                geoIpService,
+                ActionType.CARD_TOPUP_SUCCESS,
+                String.format("Kart %s için %s TL yüklendi (cüzdandan).", busCard.getCardNumber(), amount),
+                amount.doubleValue(),
+                metadata
+        );
+
+        fcmService.sendNotificationToToken(
+                user,
+                "Kart Yükleme Başarılı",
+                amount + " TL kart bakiyenize eklendi. Cüzdanınızdan düşülmüştür.",
+                NotificationType.SUCCESS,
+                null
+        );
+
+        log.info("Wallet {} → BusCard {} aktarımı tamamlandı: {} TL", username, busCard.getCardNumber(), amount);
+
+        return new ResponseMessage(String.format(
+                "Cüzdandan %s TL başarıyla karta aktarıldı. Yeni kart bakiyesi: %s TL",
+                amount, newCardBalance
+        ), true);
+    }
+
 
     @Transactional
     public ResponseMessage handleSuccessfulTopUp(User user, BigDecimal amount, String paymentId, String cardNumber,HttpServletRequest httpServletRequest) throws BusCardIsBlockedException, BusCardNotActiveException, BusCardNotFoundException {

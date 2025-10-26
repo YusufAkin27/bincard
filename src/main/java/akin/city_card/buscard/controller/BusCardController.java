@@ -190,6 +190,17 @@ public class BusCardController {
 
         return busCardService.complete3DPayment(paymentId, conversationId,httpServletRequest);
     }
+    @PostMapping("/top-up/wallet")
+    public ResponseMessage topUpWallet(@Valid @RequestBody TopUpCardRequest topUpCardRequest,
+                                       @AuthenticationPrincipal UserDetails userDetails,
+                                       HttpServletRequest httpServletRequest) throws WalletNotFoundException, InsufficientBalanceException, WalletNotActiveException, BusCardIsBlockedException, UserNotFoundException, BusCardNotActiveException, BusCardNotFoundException, MinumumTopUpAmountException {
+        return busCardService.topUpUsingWallet(userDetails.getUsername(),topUpCardRequest,httpServletRequest);
+    }
+
+    @GetMapping("/balance inquiry")
+    public BusCardDTO balanceInquiry(@RequestParam String cardNumber) throws BusCardNotFoundException, WalletNotFoundException, WalletNotActiveException {
+        return busCardService.balanceInquiry(cardNumber);
+    }
 
 
 

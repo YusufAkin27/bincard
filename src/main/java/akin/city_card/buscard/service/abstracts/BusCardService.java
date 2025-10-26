@@ -62,4 +62,8 @@ public interface BusCardService {
     ResponseEntity<String> complete3DPayment(String paymentId, String conversationId, HttpServletRequest httpServletRequest);
 
     ResponseMessage topUp(String username, String cardNumber, @Valid TopUpBalanceRequest topUpBalanceRequest) throws BusCardNotFoundException, BusCardNotActiveException, BusCardIsBlockedException, MinumumTopUpAmountException, UserNotFoundException;
+
+    BusCardDTO balanceInquiry(String cardNumber) throws BusCardNotFoundException;
+
+    ResponseMessage topUpUsingWallet(String username, @Valid TopUpCardRequest topUpCardRequest, HttpServletRequest httpServletRequest) throws BusCardIsBlockedException, BusCardNotActiveException, MinumumTopUpAmountException, InsufficientBalanceException, UserNotFoundException, BusCardNotFoundException, WalletNotFoundException;
 }
