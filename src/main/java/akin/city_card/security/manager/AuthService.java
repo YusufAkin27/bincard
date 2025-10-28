@@ -34,5 +34,5 @@ public interface AuthService {
 
     ResponseMessage unfreezeAccount(UnfreezeAccountRequest request, HttpServletRequest httpRequest) throws AccountNotFrozenException, UserNotFoundException, IncorrectPasswordException;
 
-    TokenResponseDTO driverLogin(HttpServletRequest request, LoginRequestDTO loginRequestDTO) throws DriverNotFoundException, IncorrectPasswordException, AccountFrozenException, PhoneNotVerifiedException, UnrecognizedDeviceException;
+    TokenResponseDTO driverLogin(HttpServletRequest request, String cardUid) throws DriverNotFoundException, IncorrectPasswordException, AccountFrozenException, PhoneNotVerifiedException, UnrecognizedDeviceException;
 }

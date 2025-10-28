@@ -45,8 +45,6 @@ import akin.city_card.verification.model.VerificationChannel;
 import akin.city_card.verification.model.VerificationCode;
 import akin.city_card.verification.model.VerificationPurpose;
 import akin.city_card.verification.repository.VerificationCodeRepository;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
@@ -56,7 +54,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -706,30 +703,15 @@ public class AuthManager implements AuthService {
 
     @Override
     @Transactional
-    public TokenResponseDTO driverLogin(HttpServletRequest request, LoginRequestDTO loginRequestDTO)
+    public TokenResponseDTO driverLogin(HttpServletRequest request, String cardUid)
             throws DriverNotFoundException, IncorrectPasswordException, AccountFrozenException {
 
-        String normalizedPhone = null;
+        Driver driver=driverRepository.findByCardUid(cardUid).orElseThrow(DriverNotFoundException::new);
         String clientIp = extractClientIp(request);
 
-        if (loginRequestDTO == null || loginRequestDTO.getTelephone() == null || loginRequestDTO.getTelephone().isBlank()) {
-            throw new DriverNotFoundException();
-        }
-        if (loginRequestDTO.getPassword() == null || loginRequestDTO.getPassword().isBlank()) {
-            throw new IncorrectPasswordException();
-        }
 
-        normalizedPhone = PhoneNumberFormatter.normalizeTurkishPhoneNumber(loginRequestDTO.getTelephone());
-
-        if (bruteForceService.isAccountLocked(normalizedPhone)) {
-            throw new AccountFrozenException();
-        }
-
-        loginRequestDTO.setTelephone(normalizedPhone);
-
-        Driver driver = driverRepository.findByUserNumber(normalizedPhone);
         if (driver == null) {
-            bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
+            bruteForceService.recordFailedLogin(driver.getUserNumber(), clientIp, request.getHeader("User-Agent"));
             throw new DriverNotFoundException();
         }
 
@@ -743,11 +725,6 @@ public class AuthManager implements AuthService {
 
         if (!UserStatus.ACTIVE.equals(driver.getStatus())) {
             throw new DriverNotFoundException();
-        }
-
-        if (!passwordEncoder.matches(loginRequestDTO.getPassword(), driver.getPassword())) {
-            bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
-            throw new IncorrectPasswordException();
         }
 
         if (driver.getRoles() == null || driver.getRoles().isEmpty()) {
@@ -768,8 +745,8 @@ public class AuthManager implements AuthService {
 
         driverRepository.save(driver);
 
-        bruteForceService.recordSuccessfulLogin(normalizedPhone);
-        auditService.logLoginSuccess(normalizedPhone, request);
+        bruteForceService.recordSuccessfulLogin(driver.getUserNumber());
+        auditService.logLoginSuccess(driver.getUserNumber(), request);
 
         return tokenResponseDTO;
     }

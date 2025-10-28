@@ -23,6 +23,9 @@ public class Driver extends SecurityUser {
     @Column(unique = true, nullable = false, length = 11)
     private String nationalId;
 
+    @Column(unique = true, nullable = false)
+    private String cardUid;
+
     @Column(nullable = false)
     private LocalDate dateOfBirth;
 

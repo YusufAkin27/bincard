@@ -13,6 +13,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class CreateDriverRequest {
+    private String cardUid;
     private String firstName;
     private String lastName;
     private String email;

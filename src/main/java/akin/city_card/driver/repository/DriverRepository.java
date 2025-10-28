@@ -87,4 +87,6 @@ public interface DriverRepository extends JpaRepository<Driver, Long>, JpaSpecif
     Double getLowestAverageRating();
 
     Driver findByUserNumber(String telephone);
+
+    Optional<Driver> findByCardUid(String cardUid);
 }

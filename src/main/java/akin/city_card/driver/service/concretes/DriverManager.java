@@ -98,6 +98,7 @@ public class DriverManager implements DriverService {
         String password = "123456";
         Driver driver = Driver.builder()
                 .profileInfo(profileInfo)
+                .cardUid(request.getCardUid())
                 .nationalId(request.getNationalId())
                 .dateOfBirth(request.getDateOfBirth())
                 .licenseClass(request.getLicenseClass())

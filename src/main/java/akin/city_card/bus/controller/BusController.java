@@ -202,30 +202,12 @@ public class BusController {
     // === ŞOFÖR YÖNETİMİ ===
 
     @PutMapping("/{busId}/assign-driver")
-    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER') or hasAuthority('SUPERADMIN')")
-    public ResponseEntity<ResponseMessage> assignDriverToBus(
+    @PreAuthorize("hasAuthority('DRIVER')")
+    public ResponseMessage assignDriverToBus(
             @PathVariable Long busId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        try {
-            isAdminOrSuperAdmin(userDetails);
+            @AuthenticationPrincipal UserDetails userDetails) throws DriverAlreadyAssignedException, DriverNotFoundException, BusNotFoundException, DriverInactiveException {
 
-
-            ResponseMessage response = busService.assignDriver(busId,  userDetails.getUsername());
-            return ResponseEntity.ok(response);
-        } catch (BusNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseMessage("Otobüs bulunamadı.", false));
-        } catch (DriverNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ResponseMessage("Şoför bulunamadı.", false));
-        } catch (DriverAlreadyAssignedException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(new ResponseMessage("Şoför zaten başka bir otobüse atanmış.", false));
-        } catch (Exception e) {
-            log.error("Error assigning driver to bus: ", e);
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ResponseMessage("Şoför ataması yapılırken hata oluştu.", false));
-        }
+         return busService.assignDriver(busId,  userDetails.getUsername());
     }
 
     // === KONUM YÖNETİMİ ===

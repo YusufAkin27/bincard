@@ -787,35 +787,47 @@ public class BusManager implements BusService {
     }
 
     @Override
-    public ResponseMessage assignDriver(Long busId, String username) throws BusNotFoundException, DriverInactiveException, DriverAlreadyAssignedException, DriverNotFoundException {
+    public ResponseMessage assignDriver(Long busId, String username)
+            throws BusNotFoundException, DriverInactiveException, DriverAlreadyAssignedException, DriverNotFoundException {
 
         Driver driver = driverRepository.findByUserNumber(username);
 
         if (driver == null) {
             throw new DriverNotFoundException();
         }
+
         Bus bus = busRepository.findById(busId)
                 .orElseThrow(() -> new BusNotFoundException(busId));
-        if (!bus.isActive() || bus.isDeleted()) throw new BusNotFoundException(busId);
 
-        if (!driver.getActive()) throw new DriverInactiveException(driver.getId());
-
-        if (driver.getAssignedBus() != null || driver.getAssignedBus().getId().equals(busId)) {
-            throw new DriverAlreadyAssignedException(driver.getId());
+        if (!bus.isActive() || bus.isDeleted()) {
+            throw new BusNotFoundException(busId);
         }
 
+        if (!driver.getActive()) {
+            throw new DriverInactiveException(driver.getId());
+        }
+
+        // Şoförün zaten bir otobüsü varsa atama yapma
+        if (driver.getAssignedBus() != null) {
+            Bus assignedBus = driver.getAssignedBus();
+            // Aynı otobüsse tekrar atamaya gerek yok
+            if (assignedBus.getId().equals(busId)) {
+                return new ResponseMessage("Şoför zaten bu otobüse atanmış.", false);
+            } else {
+                throw new DriverAlreadyAssignedException(driver.getId());
+            }
+        }
+
+        // Otobüste başka bir şoför varsa boşalt
         if (bus.getDriver() != null && !bus.getDriver().getId().equals(driver.getId())) {
             bus.setDriver(null);
         }
 
         bus.setDriver(driver);
-
         busRepository.save(bus);
 
         log.info("Driver assigned to bus: {} -> {}", driver.getId(), bus.getNumberPlate());
         return new ResponseMessage("Şoför başarıyla otobüse atandı.", true);
-
-
     }
 
     @Override

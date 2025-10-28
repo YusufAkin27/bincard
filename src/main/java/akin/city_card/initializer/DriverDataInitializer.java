@@ -19,6 +19,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.IntStream;
 
@@ -30,6 +31,7 @@ public class DriverDataInitializer implements ApplicationRunner {
 
     private final DriverRepository driverRepository;
     private final PasswordEncoder passwordEncoder;
+    private final Random random = new Random();
     private final ContractService contractService;
 
     @Override
@@ -74,6 +76,9 @@ public class DriverDataInitializer implements ApplicationRunner {
                 .emailVerified(true)
                 .phoneVerified(true)
                 .status(UserStatus.ACTIVE)
+                .cardUid(String.valueOf(random.nextInt(1000000000)))
+                .active(true)
+                .assignedBus(null)
                 .profileInfo(ProfileInfo.builder()
                         .name("Sürücü" + i)
                         .surname("Soyad" + i)
