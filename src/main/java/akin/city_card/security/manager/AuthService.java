@@ -6,11 +6,16 @@ import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.bus.exceptions.DriverNotFoundException;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.dto.*;
+import akin.city_card.security.entity.Role;
 import akin.city_card.security.exception.*;
 import akin.city_card.user.core.request.UnfreezeAccountRequest;
 import akin.city_card.user.exceptions.AccountNotFrozenException;
 import akin.city_card.verification.exceptions.VerificationCodeExpiredException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import java.util.List;
+import java.util.Set;
 
 public interface AuthService {
 
@@ -35,4 +40,6 @@ public interface AuthService {
     ResponseMessage unfreezeAccount(UnfreezeAccountRequest request, HttpServletRequest httpRequest) throws AccountNotFrozenException, UserNotFoundException, IncorrectPasswordException;
 
     TokenResponseDTO driverLogin(HttpServletRequest request, String cardUid) throws DriverNotFoundException, IncorrectPasswordException, AccountFrozenException, PhoneNotVerifiedException, UnrecognizedDeviceException;
+
+    Set<Role> getRoles(UserDetails userDetails) throws UserNotFoundException;
 }

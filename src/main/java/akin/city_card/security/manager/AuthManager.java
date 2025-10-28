@@ -17,10 +17,7 @@ import akin.city_card.notification.model.NotificationType;
 import akin.city_card.notification.service.FCMService;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.dto.*;
-import akin.city_card.security.entity.DeviceInfo;
-import akin.city_card.security.entity.SecurityEventType;
-import akin.city_card.security.entity.SecurityUser;
-import akin.city_card.security.entity.Token;
+import akin.city_card.security.entity.*;
 import akin.city_card.security.entity.enums.TokenType;
 import akin.city_card.security.exception.*;
 import akin.city_card.security.filter.SecurityAuditService;
@@ -49,6 +46,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -751,7 +749,12 @@ public class AuthManager implements AuthService {
         return tokenResponseDTO;
     }
 
+    @Override
+    public Set<Role> getRoles(UserDetails userDetails) throws UserNotFoundException {
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(userDetails.getUsername()).orElseThrow(UserNotFoundException::new);
+        return securityUser.getRoles();
 
+    }
 
 
     private String extractClientIp(HttpServletRequest request) {

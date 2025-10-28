@@ -6,6 +6,7 @@ import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.bus.exceptions.DriverNotFoundException;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.dto.*;
+import akin.city_card.security.entity.Role;
 import akin.city_card.security.exception.*;
 import akin.city_card.security.manager.AuthService;
 import akin.city_card.user.core.request.UnfreezeAccountRequest;
@@ -18,6 +19,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Set;
 
 
 @RestController
@@ -93,6 +97,10 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(new ResponseMessage("Token bulunamadı", false));
         }
+    }
+    @GetMapping("/role")
+    public Set<Role> roles(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+        return authService.getRoles(userDetails);
     }
 
 }
