@@ -239,11 +239,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- WebClient -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webflux</artifactId>
-        </dependency>
 
         <!-- Twilio SMS -->
         <dependency>
