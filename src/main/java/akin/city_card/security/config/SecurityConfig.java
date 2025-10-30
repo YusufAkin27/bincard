@@ -39,7 +39,7 @@ public class SecurityConfig {
     /* ---------------------- PUBLIC ENDPOINTS ---------------------- */
     public static final String[] publicPaths = {
             "/v1/api/user/sign-up/**",
-            "/v1/api/user/collective-sign-up/**",
+            "/v1/api/admin/sign-up",
             "/v1/api/user/verify/phone/**",
             "/v1/api/user/verify/email/**",
             "/v1/api/user/verify/email/send",

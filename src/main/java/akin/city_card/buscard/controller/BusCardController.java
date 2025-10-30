@@ -179,7 +179,12 @@ public class BusCardController {
             @Valid @RequestBody TopUpBalanceRequest topUpBalanceRequest,
             @RequestParam String cardNumber,
             @AuthenticationPrincipal UserDetails userDetails) throws BusCardIsBlockedException, UserNotFoundException, BusCardNotActiveException, BusCardNotFoundException, MinumumTopUpAmountException {
-        return busCardService.topUp(userDetails.getUsername(),cardNumber,topUpBalanceRequest);
+        if (userDetails != null){
+            return busCardService.topUp(userDetails.getUsername(),cardNumber,topUpBalanceRequest);
+        }
+        // Giriş yapılmamışsa misafir olarak karta yükleme başlat
+        return busCardService.topUpAsGuest(cardNumber, topUpBalanceRequest);
+
     }
 
     @PostMapping("/payment/3d-callback")

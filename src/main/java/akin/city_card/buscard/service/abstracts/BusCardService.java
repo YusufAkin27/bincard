@@ -63,6 +63,9 @@ public interface BusCardService {
 
     ResponseMessage topUp(String username, String cardNumber, @Valid TopUpBalanceRequest topUpBalanceRequest) throws BusCardNotFoundException, BusCardNotActiveException, BusCardIsBlockedException, MinumumTopUpAmountException, UserNotFoundException;
 
+    // Login olmadan kart numarasıyla 3D top-up başlatma
+    ResponseMessage topUpAsGuest(String cardNumber, @Valid TopUpBalanceRequest topUpBalanceRequest) throws BusCardNotFoundException, BusCardNotActiveException, BusCardIsBlockedException, MinumumTopUpAmountException;
+
     BusCardDTO balanceInquiry(String cardNumber) throws BusCardNotFoundException;
 
     ResponseMessage topUpUsingWallet(String username, @Valid TopUpCardRequest topUpCardRequest, HttpServletRequest httpServletRequest) throws BusCardIsBlockedException, BusCardNotActiveException, MinumumTopUpAmountException, InsufficientBalanceException, UserNotFoundException, BusCardNotFoundException, WalletNotFoundException;

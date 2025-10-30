@@ -624,7 +624,7 @@ public class BusCardManager implements BusCardService {
         } catch (Exception e) {
             return "fallback_signature";
         }
-    }
+}
 
     @Override
     public List<CardPricingDTO> getAllCardPricing() {
@@ -804,11 +804,14 @@ public class BusCardManager implements BusCardService {
                 log.info("Yükleme işlemi bilgileri -> Kullanıcı: {}, Kart: {}, Tutar: {}",
                         username, cardNumber, amount);
 
-                // Kullanıcı doğrulaması
-                User user = userRepository.findByUserNumber(username).orElse(null);
-                if (user == null) {
-                    log.warn("TopUp işlemi için kullanıcı bulunamadı. username: {}", username);
-                    return ResponseEntity.badRequest().body("Kullanıcı bulunamadı. Yükleme yapılamadı.");
+                // Kullanıcı doğrulaması (misafir olabilir)
+                User user = null;
+                if (username != null) {
+                    user = userRepository.findByUserNumber(username).orElse(null);
+                    if (user == null) {
+                        log.warn("TopUp işlemi için kullanıcı bulunamadı. username: {}", username);
+                        return ResponseEntity.badRequest().body("Kullanıcı bulunamadı. Yükleme yapılamadı.");
+                    }
                 }
 
                 // BusCard'ı bul
@@ -829,15 +832,69 @@ public class BusCardManager implements BusCardService {
                     return ResponseEntity.badRequest().body("Kart bloke edilmiş, işlem yapılamaz.");
                 }
 
-                handleSuccessfulTopUp(user,amount,paymentId,cardNumber,httpServletRequest);
+                if (user != null) {
+                    handleSuccessfulTopUp(user,amount,paymentId,cardNumber,httpServletRequest);
+                } else {
+                    // Misafir yükleme: yalnızca kart bakiyesini artır, kullanıcıya bağlı log/bildirim atlama
+                    if (busCard.getStatus() == CardStatus.BLOCKED) {
+                        return ResponseEntity.badRequest().body("Kart bloke edilmiş, işlem yapılamaz.");
+                    }
+                    if (busCard.getStatus() != CardStatus.ACTIVE) {
+                        return ResponseEntity.badRequest().body("Kart aktif değil, işlem yapılamaz.");
+                    }
+
+                    BigDecimal oldBalance = busCard.getBalance() == null ? BigDecimal.ZERO : busCard.getBalance();
+                    BigDecimal newBalance = oldBalance.add(amount);
+                    busCard.setBalance(newBalance);
+                    busCard.setLastTransactionAmount(amount);
+                    busCard.setLastTransactionDate(LocalDate.now());
+                    busCard.setTxCounter(busCard.getTxCounter() + 1);
+                    busCardRepository.save(busCard);
+
+                    BusCardActivity busCardActivity = new BusCardActivity();
+                    busCardActivity.setBusCard(busCard);
+                    busCardActivity.setUser(null);
+                    busCardActivity.setPrice(amount);
+                    busCardActivity.setUseDateTime(LocalDateTime.now());
+                    busCardActivity.setTransfer(false);
+                    busCardActivity.setValidatorId("TOPUP-IYZICO-" + paymentId);
+                    activityRepository.saveAndFlush(busCardActivity);
+                    log.info("Misafir top-up aktivitesi oluşturuldu: card={}, amount={}, paymentId={}",
+                            busCard.getCardNumber(), amount, paymentId);
+                }
 
                 topUpSessionCache.remove(conversationId);
 
-                return ResponseEntity.ok("");
+                String successHtml = "<html><head><meta charset=\"UTF-8\"/>"
+                        + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/>"
+                        + "<title>Ödeme Başarılı</title>"
+                        + "<style>body{font-family:Arial,sans-serif;background:#f7f7f7;color:#222;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}"
+                        + ".card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:24px;box-shadow:0 8px 24px rgba(0,0,0,0.08);max-width:420px;text-align:center}"
+                        + ".title{font-size:20px;margin-bottom:8px} .desc{font-size:14px;color:#555;margin-bottom:16px}"
+                        + ".btn{display:inline-block;background:#16a34a;color:#fff;padding:10px 16px;border-radius:8px;text-decoration:none}"
+                        + "</style></head><body>"
+                        + "<div class=\"card\">"
+                        + "<div class=\"title\">Ödeme Başarılı</div>"
+                        + "<div class=\"desc\">Kart bakiyesi güncellendi. Bu pencereyi kapatabilirsiniz.</div>"
+                        + "<a class=\"btn\" href=\"/\">Kapat</a>"
+                        + "</div></body></html>";
+
+                return ResponseEntity.ok(successHtml);
 
             } else {
                 log.warn("3D ödeme başarısız: {}", payment.getErrorMessage());
-                return ResponseEntity.badRequest().body("3D ödeme başarısız: " + payment.getErrorMessage());
+                String errorHtml = "<html><head><meta charset=\"UTF-8\"/>"
+                        + "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"/>"
+                        + "<title>Ödeme Başarısız</title>"
+                        + "<style>body{font-family:Arial,sans-serif;background:#fff;color:#222;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}"
+                        + ".card{border:1px solid #fee2e2;background:#fef2f2;border-radius:12px;padding:24px;max-width:480px}"
+                        + ".title{font-size:20px;color:#b91c1c;margin-bottom:8px} .desc{font-size:14px;color:#7f1d1d}"
+                        + "</style></head><body>"
+                        + "<div class=\"card\">"
+                        + "<div class=\"title\">Ödeme Başarısız</div>"
+                        + "<div class=\"desc\">3D ödeme başarısız: " + (payment.getErrorMessage() == null ? "Bilinmeyen hata" : payment.getErrorMessage()) + "</div>"
+                        + "</div></body></html>";
+                return ResponseEntity.badRequest().body(errorHtml);
             }
 
         } catch (Exception e) {
@@ -959,6 +1016,111 @@ public class BusCardManager implements BusCardService {
 
                 topUpSessionCache.put(conversationId,
                         new TopUpSessionData(username, busCard.getCardNumber(),topUpBalanceRequest.getAmount()));
+
+                String htmlContent = threedsInitialize.getHtmlContent();
+                return new DataResponseMessage<>("3D doğrulama başlatıldı. Yönlendirme yapılıyor.", true, htmlContent);
+            } else {
+                return new ResponseMessage("3D başlatma başarısız: " + threedsInitialize.getErrorMessage(), false);
+            }
+
+        } catch (Exception e) {
+            return new ResponseMessage("3D başlatma hatası: " + e.getMessage(), false);
+        }
+    }
+
+    @Override
+    @Transactional
+    public ResponseMessage topUpAsGuest(String cardNumber, TopUpBalanceRequest topUpBalanceRequest) throws BusCardNotFoundException, BusCardNotActiveException, BusCardIsBlockedException, MinumumTopUpAmountException {
+
+        if (topUpBalanceRequest.getAmount() == null
+                || topUpBalanceRequest.getAmount().compareTo(BigDecimal.valueOf(20)) < 0) {
+            throw new MinumumTopUpAmountException();
+        }
+
+        BusCard busCard = busCardRepository.findByCardNumber(cardNumber).orElseThrow(BusCardNotFoundException::new);
+
+        if (!busCard.getStatus().equals(CardStatus.ACTIVE)) throw new BusCardNotActiveException();
+        if (busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardIsBlockedException();
+
+        try {
+            Options options = iyzicoOptions;
+
+            PaymentCard paymentCard = new PaymentCard();
+            paymentCard.setCardHolderName(busCard.getFullName());
+            paymentCard.setCardNumber(topUpBalanceRequest.getCardNumber());
+            paymentCard.setExpireMonth(topUpBalanceRequest.getCardExpiry().split("/")[0].trim());
+            paymentCard.setExpireYear("20" + topUpBalanceRequest.getCardExpiry().split("/")[1].trim());
+            paymentCard.setCvc(topUpBalanceRequest.getCardCvc());
+            paymentCard.setRegisterCard(0);
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+            Buyer buyer = new Buyer();
+            buyer.setId("GUEST");
+            buyer.setName("Guest");
+            buyer.setSurname("User");
+            buyer.setGsmNumber("0000000000");
+            buyer.setEmail("guest@example.com");
+            buyer.setIdentityNumber("00000000000");
+            buyer.setLastLoginDate(LocalDateTime.now().format(formatter));
+            buyer.setRegistrationDate(LocalDateTime.now().format(formatter));
+            buyer.setRegistrationAddress("Türkiye");
+            buyer.setIp("0.0.0.0");
+            buyer.setCity("İstanbul");
+            buyer.setCountry("Turkey");
+            buyer.setZipCode("34000");
+
+            Address address = new Address();
+            address.setContactName("Guest");
+            address.setCity("İstanbul");
+            address.setCountry("Turkey");
+            address.setAddress("Türkiye");
+            address.setZipCode("34000");
+
+            BasketItem item = new BasketItem();
+            item.setId("BI101");
+            item.setName("Bakiye Yükleme");
+            item.setCategory1("BusCard");
+            item.setItemType(BasketItemType.VIRTUAL.name());
+            item.setPrice(topUpBalanceRequest.getAmount());
+
+            List<BasketItem> items = List.of(item);
+
+            String conversationId = UUID.randomUUID().toString();
+
+            CreatePaymentRequest request = new CreatePaymentRequest();
+            request.setLocale(Locale.TR.getValue());
+            request.setConversationId(conversationId);
+            request.setPrice(topUpBalanceRequest.getAmount());
+            request.setPaidPrice(topUpBalanceRequest.getAmount());
+            request.setCurrency(Currency.TRY.name());
+            request.setInstallment(1);
+            request.setBasketId("B67832");
+            request.setPaymentChannel(PaymentChannel.WEB.name());
+            request.setPaymentGroup(PaymentGroup.PRODUCT.name());
+
+            String baseUrl;
+            if (topUpBalanceRequest.getPlatformType() == PlatformType.MOBILE) {
+                baseUrl = "http://192.168.174.214:8080";
+            } else if (topUpBalanceRequest.getPlatformType() == PlatformType.WEB) {
+                baseUrl = "http://localhost:8080";
+            } else {
+                baseUrl = "http://localhost:8080";
+            }
+
+            request.setCallbackUrl(baseUrl + "/v1/api/buscard/payment/3d-callback");
+            request.setConversationId(conversationId);
+            request.setPaymentCard(paymentCard);
+            request.setBuyer(buyer);
+            request.setShippingAddress(address);
+            request.setBillingAddress(address);
+            request.setBasketItems(items);
+
+            ThreedsInitialize threedsInitialize = ThreedsInitialize.create(request, options);
+
+            if ("success".equals(threedsInitialize.getStatus())) {
+                topUpSessionCache.put(conversationId,
+                        new TopUpSessionData(null, busCard.getCardNumber(), topUpBalanceRequest.getAmount()));
 
                 String htmlContent = threedsInitialize.getHtmlContent();
                 return new DataResponseMessage<>("3D doğrulama başlatıldı. Yönlendirme yapılıyor.", true, htmlContent);

@@ -14,7 +14,10 @@ public class QrToken {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(length = 2048, nullable = false)
     private String token;
+
+    @Column(length = 255)
     private String userNumber;
     private Instant issuedAt;
     private Instant expiresAt;
