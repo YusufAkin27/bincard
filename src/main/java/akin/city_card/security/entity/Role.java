@@ -3,6 +3,8 @@ package akin.city_card.security.entity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 
+import java.util.Set;
+
 @RequiredArgsConstructor
 public enum Role implements GrantedAuthority {
     SUPERADMIN("SUPERADMIN"),

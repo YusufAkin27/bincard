@@ -8,7 +8,11 @@ import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.SuperAdminNotFoundException;
 import akin.city_card.superadmin.core.request.AddRoleAdminRequest;
+import akin.city_card.superadmin.core.request.BulkRoleAssignmentRequest;
+import akin.city_card.superadmin.core.request.SystemConfigRequest;
 import akin.city_card.superadmin.core.request.UpdateAdminRequest;
+import akin.city_card.superadmin.core.response.AdminDetailsResponse;
+import akin.city_card.superadmin.core.response.SystemStatsResponse;
 import akin.city_card.superadmin.exceptions.AdminApprovalRequestNotFoundException;
 import akin.city_card.superadmin.exceptions.AdminNotActiveException;
 import akin.city_card.superadmin.exceptions.RequestAlreadyProcessedException;
@@ -151,7 +155,7 @@ public class SuperAdminController {
                                              @PathVariable Long adminId) throws AdminNotFoundException {
         return superAdminService.toggleAdminStatus(userDetails.getUsername(), adminId);
     }
-/*
+
     @GetMapping("/admins/{adminId}")
     public DataResponseMessage<AdminDetailsResponse> getAdminDetails(
             @AuthenticationPrincipal UserDetails userDetails,
@@ -160,7 +164,7 @@ public class SuperAdminController {
     }
 
     @GetMapping("/admins")
-    public DataResponseMessage<List<AdminListResponse>> getAllAdmins(
+    public DataResponseMessage<List<AdminDetailsResponse>> getAllAdmins(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String role,
@@ -168,7 +172,7 @@ public class SuperAdminController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return superAdminService.getAllAdmins(userDetails.getUsername(), status, role, searchTerm, pageable);
     }
-
+/*
     @PostMapping("/admins/{adminId}/reset-password")
     public ResponseMessage resetAdminPassword(@AuthenticationPrincipal UserDetails userDetails,
                                               @PathVariable Long adminId) throws AdminNotFoundException {
@@ -192,8 +196,7 @@ public class SuperAdminController {
     @PostMapping("/admins/bulk-assign-roles")
     public ResponseMessage assignRolesToMultipleAdmins(@AuthenticationPrincipal UserDetails userDetails,
                                                        @RequestBody BulkRoleAssignmentRequest request) {
-        return superAdminService.assignRolesToMultipleAdmins(userDetails.getUsername(),
-                request.getAdminIds(), request.getRoles());
+        return superAdminService.assignRolesToMultipleAdmins(userDetails.getUsername(), request.getAdminId(), request.getRoles());
     }
 
     @PostMapping("/admins/bulk-deactivate")
@@ -208,121 +211,9 @@ public class SuperAdminController {
         return superAdminService.activateMultipleAdmins(userDetails.getUsername(), adminIds);
     }
 
-    // ===== SİSTEM YÖNETİMİ =====
-
-    @GetMapping("/system/statistics")
-    public DataResponseMessage<SystemStatsResponse> getSystemStatistics(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        return superAdminService.getSystemStatistics(userDetails.getUsername());
-    }
-
-    @PutMapping("/system/config")
-    public ResponseMessage updateSystemConfig(@AuthenticationPrincipal UserDetails userDetails,
-                                              @RequestBody SystemConfigRequest configRequest) {
-        return superAdminService.updateSystemConfig(userDetails.getUsername(), configRequest);
-    }
-
-    @PostMapping("/system/maintenance")
-    public ResponseMessage toggleMaintenanceMode(@AuthenticationPrincipal UserDetails userDetails,
-                                                 @RequestParam boolean enabled,
-                                                 @RequestParam(required = false) String reason) {
-        return superAdminService.toggleMaintenanceMode(userDetails.getUsername(), enabled, reason);
-    }
-
-    @PostMapping("/system/cache/clear")
-    public ResponseMessage clearSystemCache(@AuthenticationPrincipal UserDetails userDetails,
-                                            @RequestParam String cacheType) {
-        return superAdminService.clearSystemCache(userDetails.getUsername(), cacheType);
-    }
-
-    @PostMapping("/system/backup")
-    public ResponseMessage triggerDatabaseBackup(@AuthenticationPrincipal UserDetails userDetails) {
-        return superAdminService.triggerDatabaseBackup(userDetails.getUsername());
-    }
-
-    @GetMapping("/system/health")
-    public DataResponseMessage<Map<String, Object>> getSystemHealth(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        return superAdminService.getSystemHealth(userDetails.getUsername());
-    }
-
-    @GetMapping("/system/performance")
-    public DataResponseMessage<Map<String, Object>> getPerformanceMetrics(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam(defaultValue = "24h") String timeframe) {
-        return superAdminService.getPerformanceMetrics(userDetails.getUsername(), timeframe);
-    }
-
-
-
-
-    @GetMapping("/reports/admin-activity/{adminId}")
-    public DataResponseMessage<List<Object>> getAdminActivityReport(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long adminId,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return superAdminService.getAdminActivityReport(userDetails.getUsername(), adminId, startDate, endDate);
-    }
-
-    @GetMapping("/reports/revenue")
-    public DataResponseMessage<Map<String, Object>> getRevenueAnalysis(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam String period,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return superAdminService.getRevenueAnalysis(userDetails.getUsername(), period, startDate, endDate);
-    }
-
-    @GetMapping("/analytics/user-behavior")
-    public DataResponseMessage<Map<String, Object>> getUserBehaviorAnalysis(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam(defaultValue = "30d") String timeframe) {
-        return superAdminService.getUserBehaviorAnalysis(userDetails.getUsername(), timeframe);
-    }
-
-    @GetMapping("/analytics/capacity")
-    public DataResponseMessage<Map<String, Object>> getCapacityAnalysis(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        return superAdminService.getCapacityAnalysis(userDetails.getUsername());
-    }
-
-    // ===== GÜVENLİK YÖNETİMİ =====
-
-    @GetMapping("/security/logs")
-    public DataResponseMessage<List<Object>> getSecurityLogs(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam(required = false) String severity,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @PageableDefault(size = 50) Pageable pageable) {
-        return superAdminService.getSecurityLogs(userDetails.getUsername(), severity, startDate, endDate, pageable);
-    }
-
-    @GetMapping("/security/suspicious-activities")
-    public DataResponseMessage<List<Object>> getSuspiciousActivities(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PageableDefault(size = 20) Pageable pageable) {
-        return superAdminService.getSuspiciousActivities(userDetails.getUsername(), pageable);
-    }
-
-    @PostMapping("/security/alerts/configure")
-    public ResponseMessage configureSecurityAlerts(@AuthenticationPrincipal UserDetails userDetails,
-                                                   @RequestBody Map<String, Object> alertConfig) {
-        return superAdminService.configureSecurityAlerts(userDetails.getUsername(), alertConfig);
-    }
-
-    @GetMapping("/logs/errors")
-    public DataResponseMessage<List<Object>> analyzeErrorLogs(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false) String severity) {
-        return superAdminService.analyzeErrorLogs(userDetails.getUsername(), startDate, endDate, severity);
-    }
-
-
  */
+
+
 
 }
 
