@@ -3,6 +3,7 @@ package akin.city_card.admin.controller;
 import akin.city_card.admin.core.request.CreateAdminRequest;
 import akin.city_card.admin.core.request.UpdateDeviceInfoRequest;
 import akin.city_card.admin.core.request.UpdateLocationRequest;
+import akin.city_card.admin.core.response.AdminDTO;
 import akin.city_card.admin.core.response.LoginHistoryDTO;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.service.abstracts.AdminService;
@@ -16,7 +17,6 @@ import akin.city_card.user.exceptions.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +43,10 @@ public class AdminController {
         return adminService.changePassword(request, userDetails.getUsername());
     }
 
+    @GetMapping("/profile")
+    public DataResponseMessage<AdminDTO> getProfile(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundException {
+        return adminService.getProfile(userDetails.getUsername());
+    }
 
     @PutMapping("/update-profile")
     public ResponseMessage updateProfile(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody UpdateProfileRequest request) throws AdminNotFoundException {

@@ -11,10 +11,10 @@ import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.wallet.core.request.TopUpBalanceRequest;
 import akin.city_card.wallet.exceptions.WalletNotActiveException;
 import akin.city_card.wallet.exceptions.WalletNotFoundException;
-import com.iyzipay.request.DeleteCardRequest;
-import io.craftgate.request.UpdateCardRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
@@ -47,15 +47,15 @@ public interface BusCardService {
 
     List<BusCardDTO> getBlockedCards(String username);
 
-    BusCardDTO topUpBalance(String username, TopUpBalanceCardRequest request) throws TransactionCounterException, BusCardNotFoundException, BusCardNotActiveException;
+    BusCardDTO topUpBalance(String username, TopUpBalanceCardRequest request) throws TransactionCounterException, BusCardNotFoundException, BusCardNotActiveException, AdminNotFoundException;
 
-    BusCardDTO editCard(String username, UpdateCardRequest updateCardRequest);
+    BusCardDTO editCard(String username, UpdateBusCardRequest updateCardRequest) throws BusCardNotFoundException;
 
-    ResponseMessage deleteCard(String username, DeleteCardRequest deleteCardRequest);
+    ResponseMessage deleteCard(String username, ReadCardRequest deleteCardRequest) throws AdminNotFoundException, BusCardNotFoundException;
 
     BusCardDTO abonmanOluştur(CreateSubscriptionRequest createSubscriptionRequest, String username) throws BusCardNotFoundException, AdminNotFoundException;
 
-    List<BusCardDTO> getAllCards(String username);
+    Page<BusCardDTO> getAllCards(String username, Pageable pageable) throws AdminNotFoundException;
 
     boolean qrStatus(String token);
 

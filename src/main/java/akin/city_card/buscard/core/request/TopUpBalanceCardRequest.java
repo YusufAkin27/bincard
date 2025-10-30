@@ -8,5 +8,4 @@ import java.math.BigDecimal;
 public class TopUpBalanceCardRequest {
 private String uid;
 private BigDecimal amount;
-private Integer tsxCounter;
 }

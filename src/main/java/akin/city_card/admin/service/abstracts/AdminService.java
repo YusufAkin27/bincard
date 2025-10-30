@@ -3,6 +3,7 @@ package akin.city_card.admin.service.abstracts;
 import akin.city_card.admin.core.request.CreateAdminRequest;
 import akin.city_card.admin.core.request.UpdateDeviceInfoRequest;
 import akin.city_card.admin.core.request.UpdateLocationRequest;
+import akin.city_card.admin.core.response.AdminDTO;
 import akin.city_card.admin.core.response.LoginHistoryDTO;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.location.core.response.LocationDTO;
@@ -33,4 +34,5 @@ public interface AdminService {
 
     DataResponseMessage<List<LoginHistoryDTO>> getLoginHistory(String username) throws AdminNotFoundException;
 
+    DataResponseMessage<AdminDTO> getProfile(String username) throws AdminNotFoundException;
 }

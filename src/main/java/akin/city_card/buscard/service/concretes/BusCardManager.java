@@ -34,6 +34,7 @@ import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.entity.DeviceInfo;
 import akin.city_card.security.entity.SecurityUser;
 import akin.city_card.security.exception.UserNotFoundException;
+import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.user.model.User;
 import akin.city_card.user.model.UserStatus;
 import akin.city_card.user.repository.UserRepository;
@@ -58,13 +59,12 @@ import com.iyzipay.model.*;
 import com.iyzipay.model.Currency;
 import com.iyzipay.model.Locale;
 import com.iyzipay.request.CreatePaymentRequest;
-import com.iyzipay.request.DeleteCardRequest;
 import com.iyzipay.request.RetrievePaymentRequest;
-import com.twilio.rest.taskrouter.v1.workspace.Activity;
-import io.craftgate.request.UpdateCardRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -98,6 +98,7 @@ public class BusCardManager implements BusCardService {
     private final QRTokenRepository qrTokenRepository;
     private final WalletActivityRepository walletActivityRepository;
     private final FCMService fcmService;
+    private final SecurityUserRepository securityUserRepository;
     private final BusRideRepository busRideRepository;
     private final GeoIpService geoIpService;
     private final UserManager userManager;
@@ -678,11 +679,11 @@ public class BusCardManager implements BusCardService {
     @Override
     @Transactional
     public BusCardDTO topUpBalance(String username, TopUpBalanceCardRequest request)
-            throws BusCardNotFoundException, BusCardNotActiveException, TransactionCounterException {
+            throws BusCardNotFoundException, BusCardNotActiveException, TransactionCounterException, AdminNotFoundException {
 
-        Admin admin = adminRepository.findByUserNumber(username);
-        if (admin == null) {
-            throw new IllegalArgumentException("Admin not found for username: " + username);
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(username).orElseThrow(AdminNotFoundException::new);
+        if (securityUser == null) {
+            throw new AdminNotFoundException();
         }
 
         BusCard busCard = busCardRepository.findByCardNumber(request.getUid())
@@ -692,9 +693,6 @@ public class BusCardManager implements BusCardService {
             throw new BusCardNotActiveException();
         }
 
-        if (!busCard.getTxCounter().equals(request.getTsxCounter())) {
-            throw new TransactionCounterException();
-        }
 
         BigDecimal oldBalance = busCard.getBalance() != null ? busCard.getBalance() : BigDecimal.ZERO;
         BigDecimal newBalance = oldBalance.add(request.getAmount());
@@ -710,14 +708,57 @@ public class BusCardManager implements BusCardService {
     }
 
     @Override
-    public BusCardDTO editCard(String username, UpdateCardRequest updateCardRequest) {
-        return null;
+    @Transactional
+    public BusCardDTO editCard(String username, UpdateBusCardRequest updateCardRequest) throws BusCardNotFoundException {
+        BusCard busCard = busCardRepository.findByCardNumber(updateCardRequest.getUid())
+                .orElseThrow(BusCardNotFoundException::new);
+
+        if (updateCardRequest.getFullName() != null)
+            busCard.setFullName(updateCardRequest.getFullName());
+
+        if (updateCardRequest.getStatus() != null)
+            busCard.setStatus(updateCardRequest.getStatus());
+
+        if (updateCardRequest.getActive() != null)
+            busCard.setActive(updateCardRequest.getActive());
+
+        if (updateCardRequest.getExpiryDate() != null)
+            busCard.setExpiryDate(updateCardRequest.getExpiryDate());
+
+        BusCard saved = busCardRepository.save(busCard);
+
+
+        return busCardConverter.BusCardToBusCardDTO(saved);
     }
 
     @Override
-    public ResponseMessage deleteCard(String username, DeleteCardRequest deleteCardRequest) {
-        return null;
+    @Transactional
+    public ResponseMessage deleteCard(String username, ReadCardRequest deleteCardRequest) throws AdminNotFoundException, BusCardNotFoundException {
+        // 1. Kartı bul
+        BusCard busCard = busCardRepository.findByCardNumber(deleteCardRequest.getUid())
+                .orElseThrow(BusCardNotFoundException::new);
+
+        // 2. Kullanıcı yetkisi kontrolü (isteğe bağlı)
+        SecurityUser user = securityUserRepository.findByUserNumber(username)
+                .orElseThrow(AdminNotFoundException::new);
+
+
+
+        // 3. Kart zaten pasif mi kontrol et
+        if (!busCard.isActive()) {
+            return new ResponseMessage("Kart zaten pasif durumda.",false);
+        }
+
+        // 4. Kartı pasif hale getir
+        busCard.setActive(false);
+        busCard.setStatus(CardStatus.INACTIVE);
+
+        busCardRepository.save(busCard);
+
+        // 5. Geri bildirim döndür
+        return new  ResponseMessage("Kart başarıyla pasif hale getirildi: " + busCard.getCardNumber(),true);
     }
+
 
     @Override
     @Transactional
@@ -756,9 +797,15 @@ public class BusCardManager implements BusCardService {
     }
 
     @Override
-    public List<BusCardDTO> getAllCards(String username) {
-        return List.of();
+    public Page<BusCardDTO> getAllCards(String username, Pageable pageable) throws AdminNotFoundException {
+        SecurityUser admin = securityUserRepository.findByUserNumber(username)
+                .orElseThrow(() -> new AdminNotFoundException());
+
+        Page<BusCard> cards = busCardRepository.findAll(pageable);
+
+        return cards.map(busCardConverter::BusCardToBusCardDTO);
     }
+
 
     @Override
     public boolean qrStatus(String token) {

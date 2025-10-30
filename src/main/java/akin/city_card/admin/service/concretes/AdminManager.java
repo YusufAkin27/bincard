@@ -3,6 +3,7 @@ package akin.city_card.admin.service.concretes;
 import akin.city_card.admin.core.request.CreateAdminRequest;
 import akin.city_card.admin.core.request.UpdateDeviceInfoRequest;
 import akin.city_card.admin.core.request.UpdateLocationRequest;
+import akin.city_card.admin.core.response.AdminDTO;
 import akin.city_card.admin.core.response.LoginHistoryDTO;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.*;
@@ -320,6 +321,22 @@ public class AdminManager implements AdminService {
                 .toList();
 
         return new DataResponseMessage<>("Giriş geçmişi başarıyla getirildi.", true, responseList);
+    }
+
+    @Override
+    public DataResponseMessage<AdminDTO> getProfile(String username) throws AdminNotFoundException {
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(username).orElseThrow(AdminNotFoundException::new);
+        AdminDTO adminDTO = AdminDTO.builder()
+                .roles(securityUser.getRoles())
+                .phoneNumber(securityUser.getUserNumber())
+                .phoneNumberVerified(securityUser.isPhoneVerified())
+                .email(securityUser.getProfileInfo().getEmail())
+                .emailVerified(securityUser.isEmailVerified())
+                .name(securityUser.getProfileInfo().getName())
+                .surname(securityUser.getProfileInfo().getSurname())
+                .status(securityUser.getStatus())
+                .build();
+        return new DataResponseMessage<>("Kullanıcı bilgileri başarıyla getirildi.", true, adminDTO);
     }
 
 

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 
 @Data
@@ -18,6 +19,5 @@ public class RegisterCardRequest {
     private String fullName;
     private CardStatus status;
     private CardType kartTipi;               // Kart tipi: ÖRNEK: STUDENT, SUBSCRIBER, NORMAL
-    private Long kartVizeBitisTarihi;        // Kartın vizesi ne zaman doluyor (Unix epoch)
     private BigDecimal bakiye;               // Kart bakiyesi (TL veya kuruş)
 }

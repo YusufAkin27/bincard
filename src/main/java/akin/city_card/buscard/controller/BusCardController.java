@@ -13,11 +13,11 @@ import akin.city_card.security.exception.UserNotFoundException;
 import akin.city_card.wallet.core.request.TopUpBalanceRequest;
 import akin.city_card.wallet.exceptions.WalletNotActiveException;
 import akin.city_card.wallet.exceptions.WalletNotFoundException;
-import com.iyzipay.request.DeleteCardRequest;
-import io.craftgate.request.UpdateCardRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -65,9 +65,14 @@ public class BusCardController {
 
     @GetMapping("/all")
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
-    public List<BusCardDTO> getAllCards(@AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, AdminNotFoundException {
-        return busCardService.getAllCards(userDetails.getUsername());
+    public ResponseEntity<Page<BusCardDTO>> getAllCards(
+            @AuthenticationPrincipal UserDetails userDetails,
+            Pageable pageable
+    ) throws BusCardNotActiveException, BusCardNotFoundException, AdminNotFoundException {
+        Page<BusCardDTO> result = busCardService.getAllCards(userDetails.getUsername(), pageable);
+        return ResponseEntity.ok(result);
     }
+
 
     //bakiye yükleme
     @PostMapping("/top-up")
@@ -139,13 +144,13 @@ public class BusCardController {
 
     @PutMapping("/edit-card")
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
-    public BusCardDTO editCard(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdateCardRequest updateCardRequest) {
+    public BusCardDTO editCard(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdateBusCardRequest updateCardRequest) throws BusCardNotFoundException {
         return busCardService.editCard(userDetails.getUsername(), updateCardRequest);
     }
 
     @DeleteMapping("/delete-card")
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
-    public ResponseMessage deleteCard(@AuthenticationPrincipal UserDetails userDetails, @RequestBody DeleteCardRequest deleteCardRequest) {
+    public ResponseMessage deleteCard(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ReadCardRequest deleteCardRequest) throws BusCardNotFoundException, AdminNotFoundException {
         return busCardService.deleteCard(userDetails.getUsername(), deleteCardRequest);
     }
 

@@ -7,6 +7,7 @@ import java.time.LocalDate;
 
 @Data
 public class UpdateBusCardRequest {
+    private String uid;
     private String fullName;
     private CardStatus status;
     private Boolean active;
