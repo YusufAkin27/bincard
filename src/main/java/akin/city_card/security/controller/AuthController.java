@@ -98,9 +98,6 @@ public class AuthController {
                     .body(new ResponseMessage("Token bulunamadı", false));
         }
     }
-    @GetMapping("/role")
-    public Set<Role> roles(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
-        return authService.getRoles(userDetails);
-    }
+
 
 }

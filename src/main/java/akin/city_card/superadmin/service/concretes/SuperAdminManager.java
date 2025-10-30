@@ -19,6 +19,7 @@ import akin.city_card.security.exception.SuperAdminNotFoundException;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.superadmin.core.request.AddRoleAdminRequest;
 import akin.city_card.superadmin.core.request.UpdateAdminRequest;
+import akin.city_card.superadmin.core.response.AdminDetailsResponse;
 import akin.city_card.superadmin.exceptions.AdminApprovalRequestNotFoundException;
 import akin.city_card.superadmin.exceptions.AdminNotActiveException;
 import akin.city_card.superadmin.exceptions.RequestAlreadyProcessedException;
@@ -27,6 +28,7 @@ import akin.city_card.superadmin.model.SuperAdmin;
 import akin.city_card.superadmin.repository.SuperAdminRepository;
 import akin.city_card.superadmin.service.abstracts.SuperAdminService;
 import akin.city_card.user.exceptions.EmailAlreadyExistsException;
+import akin.city_card.user.model.LoginHistory;
 import akin.city_card.user.model.UserStatus;
 import akin.city_card.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -537,6 +539,223 @@ public class SuperAdminManager implements SuperAdminService {
 
         return new ResponseMessage("Admin status changed to " + newStatus.name(), true);
     }
+
+    @Override
+    public DataResponseMessage<AdminDetailsResponse> getAdminDetails(String username, Long adminId) throws AdminNotFoundException {
+
+        Admin admin = adminRepository.findById(adminId)
+                .orElseThrow(AdminNotFoundException::new);
+
+        AdminDetailsResponse response = new AdminDetailsResponse();
+        response.setId(admin.getId());
+        response.setName(admin.getProfileInfo().getName());
+        response.setEmail(admin.getProfileInfo().getEmail());
+        response.setTelephone(admin.getUsername());
+        response.setStatus(admin.getStatus().name());
+        response.setRole(admin.getRoles().stream().map(Role::name).toList());
+        response.setSuperAdminApproved(admin.isSuperAdminApproved());
+        response.setApprovedAt(admin.getApprovedAt());
+        response.setRegisteredAt(admin.getRegisteredAt());
+
+        List<LoginHistory> history = admin.getLoginHistory();
+        if (history != null && !history.isEmpty()) {
+            LoginHistory lastLogin = history.stream()
+                    .max(Comparator.comparing(LoginHistory::getLoginAt))
+                    .orElse(null);
+
+            if (lastLogin != null) {
+                response.setLastLoginIp(lastLogin.getIpAddress());
+                response.setLastLoginAt(lastLogin.getLoginAt());
+            }
+
+            response.setTotalLogins(history.size());
+        } else {
+            response.setLastLoginIp(null);
+            response.setLastLoginAt(null);
+            response.setTotalLogins(0);
+        }
+
+
+        response.setUpdatedAt(admin.getUpdatedAt());
+
+        response.setEmailVerified(admin.isEmailVerified());
+        response.setPhoneVerified(admin.isPhoneVerified());
+
+
+        return new DataResponseMessage<>("Admin detayları başarıyla getirildi.", true,response);
+    }
+
+    @Override
+    public DataResponseMessage<List<AdminDetailsResponse>> getAllAdmins(String username, String status, String role, String searchTerm, Pageable pageable) {
+
+        Page<Admin> adminsPage;
+
+        // Filtreleri uygula (status, role, searchTerm)
+        if (searchTerm != null && !searchTerm.isEmpty()) {
+            adminsPage = adminRepository.findByProfileInfo_NameContainingIgnoreCaseOrProfileInfo_EmailContainingIgnoreCaseOrUserNumberContainingIgnoreCase(
+                    searchTerm, searchTerm, searchTerm, pageable);
+        } else if (status != null && role != null) {
+            adminsPage = adminRepository.findByStatusAndRoles(status, role, pageable);
+        } else if (status != null) {
+            adminsPage = adminRepository.findByStatus(status, pageable);
+        } else if (role != null) {
+            adminsPage = adminRepository.findByRoles(role, pageable);
+        } else {
+            adminsPage = adminRepository.findAll(pageable);
+        }
+
+        // Dönüştürme işlemi (Entity -> DTO)
+        List<AdminDetailsResponse> responses = adminsPage.getContent().stream()
+                .map(admin -> {
+                    AdminDetailsResponse dto = new AdminDetailsResponse();
+                    dto.setId(admin.getId());
+                    dto.setName(admin.getProfileInfo().getName());
+                    dto.setEmail(admin.getProfileInfo().getEmail());
+                    dto.setTelephone(admin.getUserNumber());
+                    dto.setStatus(admin.getStatus().name());
+                    dto.setRole(admin.getRoles().stream().map(Role::name).toList());
+                    dto.setSuperAdminApproved(admin.isSuperAdminApproved());
+                    dto.setApprovedAt(admin.getApprovedAt());
+                    dto.setRegisteredAt(admin.getRegisteredAt());
+
+                    // Son giriş bilgileri
+                    List<LoginHistory> history = admin.getLoginHistory();
+                    if (history != null && !history.isEmpty()) {
+                        LoginHistory lastLogin = history.stream()
+                                .max(Comparator.comparing(LoginHistory::getLoginAt))
+                                .orElse(null);
+                        if (lastLogin != null) {
+                            dto.setLastLoginIp(lastLogin.getIpAddress());
+                            dto.setLastLoginAt(lastLogin.getLoginAt());
+                        }
+                        dto.setTotalLogins(history.size());
+                    } else {
+                        dto.setTotalLogins(0);
+                    }
+
+                    return dto;
+                })
+                .toList();
+
+        return new  DataResponseMessage("Admin listesi başarıyla getirildi.",true, responses);
+    }
+
+    /*
+    @Override
+    public ResponseMessage resetAdminPassword(String username, Long adminId) {
+
+        Admin admin = adminRepository.findById(adminId)
+                .orElseThrow(AdminNotFoundException::new);
+
+        String newPassword = UUID.randomUUID().toString().substring(0, 8); // 8 karakterlik random şifre
+        admin.setPassword(passwordEncoder.encode(newPassword));
+        adminRepository.save(admin);
+
+        // audit kaydı (isteğe bağlı)
+        auditLogService.logAction(username, "RESET_ADMIN_PASSWORD", "Admin: " + admin.getEmail());
+
+        return ResponseMessage.success("Şifre başarıyla sıfırlandı. Yeni şifre: " + newPassword);
+    }
+
+    // ==============================================================
+    // 2. OTURUM SONLANDIRMA
+    // ==============================================================
+    @Override
+    public ResponseMessage terminateAdminSessions(String username, Long adminId) {
+
+        Admin admin = adminRepository.findById(adminId)
+                .orElseThrow(AdminNotFoundException::new);
+
+        sessionManager.terminateSessionsForUser(admin.getEmail()); // aktif tokenları iptal et
+
+        auditLogService.logAction(username, "TERMINATE_ADMIN_SESSIONS", "Admin: " + admin.getEmail());
+
+        return ResponseMessage.success("Adminin aktif oturumları başarıyla sonlandırıldı.");
+    }
+
+
+    @Override
+    public ResponseMessage createBulkAdmins(String username, List<CreateAdminRequest> createRequests) {
+
+        List<Admin> newAdmins = new ArrayList<>();
+
+        for (CreateAdminRequest request : createRequests) {
+            Admin admin = Admin.builder()
+                    .profileInfo(ProfileInfo.builder()
+                            .name(request.getName())
+                            .surname(request.getSurname())
+                            .email(request.getEmail())
+                            .build())
+                    .userNumber(request.getTelephone())
+                    .password(passwordEncoder.encode(request.getPassword()))
+                    .roles(Collections.singleton(Role.ROLE_EMPTY))
+                    .status(UserStatus.ACTIVE)
+                    .superAdminApproved(true)
+                    .registeredAt(LocalDateTime.now())
+                    .build();
+
+            newAdmins.add(admin);
+        }
+
+        adminRepository.saveAll(newAdmins);
+        auditLogService.logAction(username, "BULK_CREATE_ADMINS", "Toplam " + newAdmins.size() + " admin eklendi.");
+
+        return ResponseMessage.success(newAdmins.size() + " yeni admin başarıyla oluşturuldu.");
+    }
+
+
+    @Override
+    public ResponseMessage deactivateMultipleAdmins(String username, List<Long> adminIds) {
+
+        List<Admin> admins = adminRepository.findAllById(adminIds);
+
+        for (Admin admin : admins) {
+            admin.setStatus(AccountStatus.SUSPENDED);
+        }
+
+        adminRepository.saveAll(admins);
+        auditLogService.logAction(username, "BULK_DEACTIVATE_ADMINS", "Devre dışı bırakılan: " + adminIds);
+
+        return ResponseMessage.success(admins.size() + " admin devre dışı bırakıldı.");
+    }
+
+
+    @Override
+    public ResponseMessage activateMultipleAdmins(String username, List<Long> adminIds) {
+
+        List<Admin> admins = adminRepository.findAllById(adminIds);
+
+        for (Admin admin : admins) {
+            admin.setStatus(AccountStatus.ACTIVE);
+        }
+
+        adminRepository.saveAll(admins);
+        auditLogService.logAction(username, "BULK_ACTIVATE_ADMINS", "Aktifleştirilen: " + adminIds);
+
+        return ResponseMessage.success(admins.size() + " admin yeniden aktifleştirildi.");
+    }
+
+
+    @Override
+    public ResponseMessage assignRolesToMultipleAdmins(String username, Long adminId, List<String> roles) {
+
+        Admin admin = adminRepository.findById(adminId)
+                .orElseThrow(AdminNotFoundException::new);
+
+        // Enum’a uygun hale getir
+        List<Role> assignedRoles = roles.stream()
+                .map(r -> Role.valueOf(r.toUpperCase()))
+                .toList();
+
+        admin.setRoles(new HashSet<>(assignedRoles)); // eğer @ElementCollection varsa
+        adminRepository.save(admin);
+
+        auditLogService.logAction(username, "ASSIGN_ROLES_TO_ADMIN", "Admin: " + admin.getEmail() + " - Roles: " + roles);
+
+        return ResponseMessage.success("Admin rolleri başarıyla güncellendi: " + roles);
+    }
+
+     */
 
 
 }

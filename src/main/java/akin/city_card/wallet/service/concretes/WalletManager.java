@@ -1066,14 +1066,10 @@ public class WalletManager implements WalletService {
             String baseUrl;
             System.out.println(topUpBalanceRequest.getPlatformType());
             if (topUpBalanceRequest.getPlatformType() == PlatformType.MOBILE) {
-                baseUrl = "http://192.168.174.214:8080";
-            } else if (topUpBalanceRequest.getPlatformType() == PlatformType.WEB) {
-                baseUrl = "http://localhost:8080";
-            } else {
-                baseUrl = "http://localhost:8080";
+                baseUrl = "http://192.168.1.112:8080";
             }
 
-            request.setCallbackUrl(baseUrl + "/v1/api/wallet/payment/3d-callback");
+            request.setCallbackUrl("http://192.168.1.112:8080" + "/v1/api/wallet/payment/3d-callback");
 
             request.setConversationId(conversationId);
 

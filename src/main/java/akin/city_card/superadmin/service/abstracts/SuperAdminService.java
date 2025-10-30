@@ -8,7 +8,10 @@ import akin.city_card.response.DataResponseMessage;
 import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.SuperAdminNotFoundException;
 import akin.city_card.superadmin.core.request.AddRoleAdminRequest;
+import akin.city_card.superadmin.core.request.SystemConfigRequest;
 import akin.city_card.superadmin.core.request.UpdateAdminRequest;
+import akin.city_card.superadmin.core.response.AdminDetailsResponse;
+import akin.city_card.superadmin.core.response.SystemStatsResponse;
 import akin.city_card.superadmin.exceptions.AdminApprovalRequestNotFoundException;
 import akin.city_card.superadmin.exceptions.AdminNotActiveException;
 import akin.city_card.superadmin.exceptions.RequestAlreadyProcessedException;
@@ -53,4 +56,23 @@ public interface SuperAdminService {
     ResponseMessage deleteAdmin(String username, Long adminId) throws AdminNotFoundException;
 
     ResponseMessage toggleAdminStatus(String username, Long adminId) throws AdminNotFoundException;
+
+    DataResponseMessage<AdminDetailsResponse> getAdminDetails(String username, Long adminId) throws AdminNotFoundException;
+
+    DataResponseMessage<List<AdminDetailsResponse>> getAllAdmins(String username, String status, String role, String searchTerm, Pageable pageable);
+
+    /*
+    ResponseMessage resetAdminPassword(String username, Long adminId);
+
+    ResponseMessage terminateAdminSessions(String username, Long adminId);
+
+    ResponseMessage createBulkAdmins(String username, List<CreateAdminRequest> createRequests);
+
+    ResponseMessage deactivateMultipleAdmins(String username, List<Long> adminIds);
+
+    ResponseMessage activateMultipleAdmins(String username, List<Long> adminIds);
+
+    ResponseMessage assignRolesToMultipleAdmins(String username, Long adminId, List<String> roles);
+
+     */
 }

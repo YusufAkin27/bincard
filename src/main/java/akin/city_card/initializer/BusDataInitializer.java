@@ -51,7 +51,6 @@ public class BusDataInitializer implements ApplicationRunner {
             if (usedDriverIndexes.contains(driverIndex)) continue;
 
             usedDriverIndexes.add(driverIndex);
-            Driver driver = drivers.get(driverIndex);
             Route route = routes.get(random.nextInt(routes.size()));
             Station startStation = stations.get(random.nextInt(stations.size()));
 

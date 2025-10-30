@@ -76,7 +76,7 @@ public class DriverDataInitializer implements ApplicationRunner {
                 .emailVerified(true)
                 .phoneVerified(true)
                 .status(UserStatus.ACTIVE)
-                .cardUid(String.valueOf(random.nextInt(1000000000)))
+                .cardUid(String.valueOf(53327706)+i)
                 .active(true)
                 .assignedBus(null)
                 .profileInfo(ProfileInfo.builder()

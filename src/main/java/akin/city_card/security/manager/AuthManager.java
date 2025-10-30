@@ -46,7 +46,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -750,8 +749,8 @@ public class AuthManager implements AuthService {
     }
 
     @Override
-    public Set<Role> getRoles(UserDetails userDetails) throws UserNotFoundException {
-        SecurityUser securityUser = securityUserRepository.findByUserNumber(userDetails.getUsername()).orElseThrow(UserNotFoundException::new);
+    public Set<Role> getRoles(String username) throws UserNotFoundException {
+        SecurityUser securityUser = securityUserRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
         return securityUser.getRoles();
 
     }
