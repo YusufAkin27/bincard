@@ -595,11 +595,11 @@ public class SuperAdminManager implements SuperAdminService {
             adminsPage = adminRepository.findByProfileInfo_NameContainingIgnoreCaseOrProfileInfo_EmailContainingIgnoreCaseOrUserNumberContainingIgnoreCase(
                     searchTerm, searchTerm, searchTerm, pageable);
         } else if (status != null && role != null) {
-            adminsPage = adminRepository.findByStatusAndRole(status, role, pageable);
+            adminsPage = adminRepository.findByStatusAndRoles(status, role, pageable);
         } else if (status != null) {
             adminsPage = adminRepository.findByStatus(status, pageable);
         } else if (role != null) {
-            adminsPage = adminRepository.findByRole(role, pageable);
+            adminsPage = adminRepository.findByRoles(role, pageable);
         } else {
             adminsPage = adminRepository.findAll(pageable);
         }
