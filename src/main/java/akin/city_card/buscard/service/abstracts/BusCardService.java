@@ -69,4 +69,5 @@ public interface BusCardService {
     BusCardDTO balanceInquiry(String cardNumber) throws BusCardNotFoundException;
 
     ResponseMessage topUpUsingWallet(String username, @Valid TopUpCardRequest topUpCardRequest, HttpServletRequest httpServletRequest) throws BusCardIsBlockedException, BusCardNotActiveException, MinumumTopUpAmountException, InsufficientBalanceException, UserNotFoundException, BusCardNotFoundException, WalletNotFoundException;
+    //aa
 }

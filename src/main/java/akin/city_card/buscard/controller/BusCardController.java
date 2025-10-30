@@ -182,7 +182,7 @@ public class BusCardController {
         if (userDetails != null){
             return busCardService.topUp(userDetails.getUsername(),cardNumber,topUpBalanceRequest);
         }
-        // Giriş yapılmamışsa misafir olarak karta yükleme başlat
+        // Giriş yapılmamışsa misafir olarak karta yükleme başlatt
         return busCardService.topUpAsGuest(cardNumber, topUpBalanceRequest);
 
     }

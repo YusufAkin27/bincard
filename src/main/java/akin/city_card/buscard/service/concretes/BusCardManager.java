@@ -902,7 +902,7 @@ public class BusCardManager implements BusCardService {
             return ResponseEntity.internalServerError().body("Hata: " + e.getMessage());
         }
     }
-
+        //ass
 
     @Override
     @Transactional
