@@ -23,7 +23,6 @@ import akin.city_card.security.exception.*;
 import akin.city_card.security.filter.SecurityAuditService;
 import akin.city_card.security.repository.SecurityUserRepository;
 import akin.city_card.security.repository.TokenRepository;
-import akin.city_card.security.service.BruteForceProtectionService;
 import akin.city_card.security.service.JwtService;
 import akin.city_card.sms.SmsService;
 import akin.city_card.superadmin.model.SuperAdmin;
@@ -77,7 +76,6 @@ public class AuthManager implements AuthService {
     private final MailService mailService;
     private final GeoIpService geoIpService;
     private final SecurityAuditService auditService;
-    private final BruteForceProtectionService bruteForceService;
 
     @Override
     @Transactional
@@ -183,8 +181,6 @@ public class AuthManager implements AuthService {
             applyLoginMetadataToUser(user, metadata);
             securityUserRepository.save(user);
 
-            // Brute force protection - başarılı giriş
-            bruteForceService.recordSuccessfulLogin(user.getUsername());
 
             // Audit log
             auditService.logLoginSuccess(user.getUsername(), httpServletRequest);
@@ -211,25 +207,17 @@ public class AuthManager implements AuthService {
         String clientIp = extractClientIp(request);
 
         try {
-            // Brute force kontrolü
-            if (bruteForceService.isAccountLocked(normalizedPhone)) {
-                long remainingMinutes = bruteForceService.getRemainingLockTimeMinutes(normalizedPhone);
-                auditService.logSecurityEvent(SecurityEventType.ACCOUNT_LOCKED, normalizedPhone, request,
-                        "Admin login attempt on locked account");
-                throw new AccountFrozenException();
-            }
+
 
             loginRequestDTO.setTelephone(normalizedPhone);
 
             Admin admin = adminRepository.findByUserNumber(normalizedPhone);
             if (admin == null) {
-                bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
                 auditService.logLoginFailure(normalizedPhone, request, "Admin not found");
                 throw new AdminNotFoundException();
             }
 
             if (!passwordEncoder.matches(loginRequestDTO.getPassword(), admin.getPassword())) {
-                bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
                 auditService.logLoginFailure(normalizedPhone, request, "Incorrect password");
                 throw new IncorrectPasswordException();
             }
@@ -284,24 +272,16 @@ public class AuthManager implements AuthService {
 
         try {
             // Brute force kontrolü
-            if (bruteForceService.isAccountLocked(normalizedPhone)) {
-                long remainingMinutes = bruteForceService.getRemainingLockTimeMinutes(normalizedPhone);
-                auditService.logSecurityEvent(SecurityEventType.ACCOUNT_LOCKED, normalizedPhone, request,
-                        "SuperAdmin login attempt on locked account");
-                throw new AccountFrozenException();
-            }
 
             loginRequestDTO.setTelephone(normalizedPhone);
 
             SuperAdmin superAdmin = superAdminRepository.findByUserNumber(normalizedPhone);
             if (superAdmin == null) {
-                bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
                 auditService.logLoginFailure(normalizedPhone, request, "SuperAdmin not found");
                 throw new SuperAdminNotFoundException();
             }
 
             if (!passwordEncoder.matches(loginRequestDTO.getPassword(), superAdmin.getPassword())) {
-                bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
                 auditService.logLoginFailure(normalizedPhone, request, "Incorrect password");
                 throw new IncorrectPasswordException();
             }
@@ -418,20 +398,13 @@ public class AuthManager implements AuthService {
         String clientIp = extractClientIp(request);
 
         try {
-            // Brute force kontrolü
-            long remainingMinutes = bruteForceService.getRemainingLockTimeMinutes(normalizedPhone);
-            if (bruteForceService.isAccountLocked(normalizedPhone)) {
-                auditService.logSecurityEvent(SecurityEventType.ACCOUNT_LOCKED, normalizedPhone, request,
-                        "Login attempt on locked account");
-                throw new AccountFrozenException();
-            }
+
 
             loginRequestDTO.setTelephone(normalizedPhone);
 
             // SADECE MEVCUT KULLANICILARI BUL - YENİ OLUŞTURMA!
             SecurityUser securityUser = securityUserRepository.findByUserNumber(normalizedPhone)
                     .orElseThrow(() -> {
-                        bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
                         auditService.logLoginFailure(normalizedPhone, request, "User not found");
                         return new NotFoundUserException();
                     });
@@ -453,7 +426,6 @@ public class AuthManager implements AuthService {
             }
 
             if (!passwordEncoder.matches(loginRequestDTO.getPassword(), securityUser.getPassword())) {
-                bruteForceService.recordFailedLogin(normalizedPhone, clientIp, request.getHeader("User-Agent"));
                 auditService.logLoginFailure(normalizedPhone, request, "Incorrect password");
                 throw new IncorrectPasswordException();
             }
@@ -505,8 +477,6 @@ public class AuthManager implements AuthService {
                 applyLoginMetadataToUser(user, metadata);
                 securityUserRepository.save(user); // Bu save işlemi update olacak, insert değil
 
-                // Brute force protection - başarılı giriş
-                bruteForceService.recordSuccessfulLogin(normalizedPhone);
 
                 // Audit log
                 auditService.logLoginSuccess(normalizedPhone, request);
@@ -708,7 +678,6 @@ public class AuthManager implements AuthService {
 
 
         if (driver == null) {
-            bruteForceService.recordFailedLogin(driver.getUserNumber(), clientIp, request.getHeader("User-Agent"));
             throw new DriverNotFoundException();
         }
 
@@ -742,7 +711,6 @@ public class AuthManager implements AuthService {
 
         driverRepository.save(driver);
 
-        bruteForceService.recordSuccessfulLogin(driver.getUserNumber());
         auditService.logLoginSuccess(driver.getUserNumber(), request);
 
         return tokenResponseDTO;
