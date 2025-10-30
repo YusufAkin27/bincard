@@ -7,7 +7,9 @@ import akin.city_card.buscard.core.response.FavoriteBusCardDTO;
 import akin.city_card.buscard.exceptions.BusCardNotFoundException;
 import akin.city_card.notification.core.request.NotificationPreferencesDTO;
 import akin.city_card.response.ResponseMessage;
+import akin.city_card.security.entity.Role;
 import akin.city_card.security.exception.*;
+import akin.city_card.security.manager.AuthService;
 import akin.city_card.user.core.request.*;
 import akin.city_card.user.core.response.CacheUserDTO;
 import akin.city_card.user.core.response.SearchHistoryDTO;
@@ -30,6 +32,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/v1/api/user")
@@ -37,6 +40,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final AuthService authService;
 
     @PostMapping("/sign-up")
     public ResponseMessage signUp(@Valid @RequestBody CreateUserRequest createUserRequest, HttpServletRequest request) throws PhoneNumberRequiredException, PhoneNumberAlreadyExistsException, InvalidPhoneNumberFormatException, VerificationCodeStillValidException {
@@ -202,7 +206,10 @@ public class UserController {
     ) throws UserNotFoundException {
         return userService.getUserActivityLog(userDetails.getUsername(), pageable);
     }
-
+    @GetMapping("/role")
+    public Set<Role> roles(@AuthenticationPrincipal UserDetails userDetails) throws UserNotFoundException {
+        return authService.getRoles(userDetails.getUsername());
+    }
 
 }
 
