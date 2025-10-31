@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public interface LoginHistoryRepository extends JpaRepository<LoginHistory, Long> {
-    List<LoginHistory> findAllByUserOrderByLoginAtDesc(Admin admin);
+    Page<LoginHistory> findAllByUserOrderByLoginAtDesc(Admin admin, Pageable pageable);
+
 
     Page<LoginHistory> findByUserAndLoginAtBetweenOrderByLoginAtDesc(User user, LocalDateTime start, LocalDateTime end, Pageable pageable);
 

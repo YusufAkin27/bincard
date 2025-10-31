@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -46,7 +47,7 @@ public class AuditLog {
 
     private String targetEntityType;
 
-    private Double amount;
+    private BigDecimal amount;
 
     @Column(length = 2000)
     private String metadata;

@@ -241,7 +241,7 @@ public class UserManager implements UserService {
             GeoIpService geoIpService,
             ActionType action,
             String description,
-            Double amount,
+            BigDecimal amount,
             String metadata
     ) {
         DeviceInfo deviceInfo = buildDeviceInfoFromRequest(httpRequest, geoIpService);
@@ -337,7 +337,7 @@ public class UserManager implements UserService {
                                DeviceInfo deviceInfo,
                                Long targetEntityId,
                                String targetEntityType,
-                               Double amount,
+                               BigDecimal amount,
                                String metadata,
                                String referer) {
 
@@ -864,7 +864,7 @@ public class UserManager implements UserService {
     public ResponseMessage addFavoriteCard(String username, FavoriteCardRequest request) throws UserNotFoundException, BusCardNotFoundException {
         User user = userRepository.findByUserNumber(username).orElseThrow(UserNotFoundException::new);
 
-        BusCard busCard = busCardRepository.findByCardNumber(request.getCardNumber())
+        BusCard busCard = busCardRepository.findByCardNumberNative(request.getCardNumber())
                 .orElseThrow(BusCardNotFoundException::new);
 
         boolean alreadyFavorited = user.getFavoriteCards().stream()

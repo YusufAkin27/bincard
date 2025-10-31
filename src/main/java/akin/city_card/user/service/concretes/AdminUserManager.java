@@ -154,7 +154,7 @@ public class AdminUserManager implements AdminUserService {
             GeoIpService geoIpService,
             ActionType action,
             String description,
-            Double amount,
+            BigDecimal amount,
             String metadata
     ) {
         DeviceInfo deviceInfo = buildDeviceInfoFromRequest(httpRequest, geoIpService);
@@ -184,7 +184,7 @@ public class AdminUserManager implements AdminUserService {
                                DeviceInfo deviceInfo,
                                Long targetEntityId,
                                String targetEntityType,
-                               Double amount,
+                               BigDecimal amount,
                                String metadata,
                                String referer) {
 

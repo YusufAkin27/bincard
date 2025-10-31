@@ -697,26 +697,54 @@ public class DriverManager implements DriverService {
     public ResponseMessage assignDriverToBus(Long busId, String username) throws BusNotFoundException {
 
         Driver driver = driverRepository.findByUserNumber(username);
-        Bus bus = busRepository.findById(busId).orElseThrow(() -> new BusNotFoundException(busId));
-        if (bus.getDriver() == null) {
-            driver.setAssignedBus(bus);
-            driver.setUpdateDate(LocalDateTime.now());
-            driverRepository.save(driver);
-            return new ResponseMessage("Süreniz başarıyla başlatıldı", true);
+        Bus newBus = busRepository.findById(busId)
+                .orElseThrow(() -> new BusNotFoundException(busId));
 
+        // Eğer sürücünün hali hazırda bir otobüs ataması varsa, eski atamayı kaldır
+        Bus oldBus = driver.getAssignedBus();
+        if (oldBus != null) {
+            oldBus.setDriver(null);
+            busRepository.save(oldBus);
         }
-        return new ResponseMessage("otobüs başka şöfore tanımlı", true);
 
+        // Eğer yeni otobüsün de bir sürücüsü varsa, o sürücünün atamasını kaldır
+        if (newBus.getDriver() != null) {
+            Driver oldDriver = newBus.getDriver();
+            oldDriver.setAssignedBus(null);
+            driverRepository.save(oldDriver);
+        }
 
+        // Yeni atamayı gerçekleştir
+        driver.setAssignedBus(newBus);
+        newBus.setDriver(driver);
+        driver.setUpdateDate(LocalDateTime.now());
+
+        driverRepository.save(driver);
+        busRepository.save(newBus);
+
+        return new ResponseMessage("Yeni otobüs başarıyla atandı", true);
     }
 
     @Override
     @Transactional
     public ResponseMessage unassignDriverFromBus(String username) {
         Driver driver = driverRepository.findByUserNumber(username);
+
+        if (driver == null) {
+            return new ResponseMessage("Sürücü bulunamadı", false);
+        }
+
         Bus bus = driver.getAssignedBus();
+
+        if (bus != null) {
+            bus.setDriver(null);
+            busRepository.save(bus);
+        }
+
         driver.setAssignedBus(null);
-        bus.setDriver(null);
-        return new ResponseMessage("başarılı",true);
+        driverRepository.save(driver);
+
+        return new ResponseMessage("Atama başarıyla kaldırıldı", true);
     }
+
 }

@@ -63,6 +63,7 @@ import com.iyzipay.request.RetrievePaymentRequest;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.Hibernate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
@@ -78,6 +79,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+
+import static akin.city_card.buscard.model.CardType.TAM;
+import static akin.city_card.buscard.model.CardType.ÖĞRENCİ;
 
 @Service
 @Slf4j
@@ -124,24 +128,31 @@ public class BusCardManager implements BusCardService {
         Admin admin = adminRepository.findByUserNumber(username);
         createAuditLog(admin, ActionType.READ_CARD, "Kart okundu", admin.getCurrentDeviceInfo(), admin.getId(), admin.getRoles().toString(), null, null, null);
 
-        return busCardConverter.BusCardToBusCardDTO(busCardRepository.findByCardNumber(reqUid).orElseThrow(BusCardNotFoundException::new));
+        return busCardConverter.BusCardToBusCardDTO(busCardRepository.findByCardNumberNative(reqUid).orElseThrow(BusCardNotFoundException::new));
     }
 
 
     @Override
     @Transactional
-    public BusCardDTO getOn(GetOnBusRequest request) throws BusCardNotFoundException, CardInactiveException, CardPricingNotFoundException, CorruptedDataException, SubscriptionNotFoundException, SubscriptionExpiredException, InsufficientBalanceException {
+    public BusCardDTO getOn(GetOnBusRequest request)
+            throws CardInactiveException, CardPricingNotFoundException,
+            CorruptedDataException, SubscriptionNotFoundException, SubscriptionExpiredException,
+            InsufficientBalanceException, BusNotFoundException {
 
         String uid = request.getUid();
+        uid = uid == null ? "" : uid.replaceAll("[^\\p{Print}]", "").trim();
         String validatorId = request.getValidatorId();
 
-        BusCard busCard = busCardRepository.findByCardNumber(uid)
-                .orElseThrow(BusCardNotFoundException::new);
+
+        // 1. Kartı bul
+        Optional<BusCard> optCard = busCardRepository.findByCardNumberNative(uid);
+        BusCard busCard = optCard.orElse(null);
 
         if (!busCard.isActive() || busCard.getStatus() != CardStatus.ACTIVE) {
             throw new CardInactiveException();
         }
 
+        // 2. Fiyatlandırma getir
         CardPricing pricing = cardPricingRepository.findByCardType(busCard.getType())
                 .orElseThrow(CardPricingNotFoundException::new);
 
@@ -149,6 +160,7 @@ public class BusCardManager implements BusCardService {
             throw new CorruptedDataException();
         }
 
+        // 3. Son aktiviteyi bul
         BusCardActivity lastBusCardActivity = getLastActivity(busCard);
         LocalDateTime now = LocalDateTime.now();
 
@@ -157,7 +169,6 @@ public class BusCardManager implements BusCardService {
 
         if (lastBusCardActivity != null) {
             long minutesSinceLast = java.time.Duration.between(lastBusCardActivity.getUseDateTime(), now).toMinutes();
-
             if (minutesSinceLast <= 45) {
                 if (lastBusCardActivity.getValidatorId().equals(validatorId)) {
                     sameValidator = true;
@@ -167,38 +178,44 @@ public class BusCardManager implements BusCardService {
             }
         }
 
+        // 4. Abonman (subscription) kontrolü
         if (busCard.getSubscriptionInfo() != null) {
             SubscriptionInfo sub = busCard.getSubscriptionInfo();
 
             if (sub == null) throw new SubscriptionNotFoundException();
-
             if (sub.getEndDate() != null && sub.getEndDate().isBefore(LocalDate.now())) {
-                busCard.setSubscriptionInfo(null);
+                throw new SubscriptionExpiredException();
             }
-
             if (sub.getRemainingUses() <= 0) {
-                busCard.setSubscriptionInfo(null);
+                throw new SubscriptionExpiredException();
             }
 
+            // Kullanım hakkını azalt
             sub.setRemainingUses(sub.getRemainingUses() - 1);
-            busCard.setTxCounter(busCard.getTxCounter() + 1);
 
+            busCard.setTxCounter(busCard.getTxCounter() + 1);
+            busCard.setLastTransactionDate(LocalDate.now());
+            busCard.setLastTransactionAmount(BigDecimal.ZERO);
+
+            // Aktivite oluştur
             BusCardActivity busCardActivity = createActivity(busCard, request, BigDecimal.ZERO, false, now);
-            activityRepository.save(busCardActivity);
+            busCardActivity.setBusCard(busCard); // ilişkiyi kur
+            activityRepository.save(busCardActivity); // veritabanına yaz
 
             busCard.getActivities().add(busCardActivity);
             busCardRepository.save(busCard);
 
+            Hibernate.initialize(busCard.getActivities());
+            Hibernate.initialize(busCard.getSubscriptionInfo());
+
             return busCardConverter.BusCardToBusCardDTO(busCard);
         }
 
-
+        // 5. Ücret belirleme (transfer kontrolü)
         BigDecimal fare;
-
         if (sameValidator) {
             fare = pricing.getPrice();
             isTransfer = false;
-
         } else if (isTransfer) {
             CardType transferType = switch (busCard.getType()) {
                 case TAM -> CardType.TAM_AKTARMA;
@@ -213,40 +230,50 @@ public class BusCardManager implements BusCardService {
             } else {
                 fare = pricing.getPrice();
             }
-
         } else {
             fare = pricing.getPrice();
         }
 
+        // 6. Bakiye kontrolü
         if (busCard.getBalance().compareTo(fare) < 0) {
             throw new InsufficientBalanceException();
         }
 
+        // 7. Bakiye düşürme ve sayaç güncelleme
         busCard.setBalance(busCard.getBalance().subtract(fare));
         busCard.setLastTransactionAmount(fare);
         busCard.setLastTransactionDate(LocalDate.now());
         busCard.setTxCounter(busCard.getTxCounter() + 1);
 
+        // 8. Aktivite kaydı
         BusCardActivity busCardActivity = createActivity(busCard, request, fare, isTransfer, now);
+        busCardActivity.setBusCard(busCard);
         activityRepository.save(busCardActivity);
         busCard.getActivities().add(busCardActivity);
 
+        // 9. Otobüs bilgisi ve BusRide kaydı
+        Bus bus = busRepository.findByValidatorId(validatorId)
+                .orElse(null);
 
-        Bus bus = busRepository.findByValidatorId(validatorId).orElseThrow(BusCardNotFoundException::new);
         BusRide busRide = new BusRide();
         busRide.setBus(bus);
         busRide.setBusCard(busCard);
         busRide.setStatus(RideStatus.SUCCESS);
         busRide.setBoardingTime(LocalDateTime.now());
         busRide.setFareCharged(fare);
-        bus.getRides().add(busRide);
-        busCardRepository.save(busCard);
-        busRideRepository.save(busRide);
 
+        bus.getRides().add(busRide);
+        busRideRepository.save(busRide);
+        busRepository.save(bus);
         busCardRepository.save(busCard);
+
+        // 10. Lazy alanları yüklemeden önce initialize et
+        Hibernate.initialize(busCard.getActivities());
+        Hibernate.initialize(busCard.getSubscriptionInfo());
 
         return busCardConverter.BusCardToBusCardDTO(busCard);
     }
+
 
     private BusCardActivity getLastActivity(BusCard card) {
         if (card.getActivities() == null || card.getActivities().isEmpty())
@@ -272,17 +299,34 @@ public class BusCardManager implements BusCardService {
 
     @Override
     @Transactional
-    public ResponseMessage createCardPricing(CreateCardPricingRequest createCardPricingRequest, String username) throws AdminNotFoundException {
-        Admin yusuf = adminRepository.findByUserNumber(username);
-        if (yusuf == null) {
+    public ResponseMessage createCardPricing(CreateCardPricingRequest createCardPricingRequest, String username)
+            throws AdminNotFoundException {
+
+        Admin admin = adminRepository.findByUserNumber(username);
+        if (admin == null) {
             throw new AdminNotFoundException();
         }
+
         CardPricing cardPricing = new CardPricing();
         cardPricing.setCardType(createCardPricingRequest.getCardType());
         cardPricing.setPrice(createCardPricingRequest.getPrice());
         cardPricing.setCreatedAt(LocalDateTime.now());
         cardPricing.setUpdatedAt(LocalDateTime.now());
         cardPricingRepository.save(cardPricing);
+
+        // Audit log kaydı
+        createAuditLog(
+                admin,
+                ActionType.CREATE_CARD_PRICING,
+                "Yeni kart fiyatlandırması oluşturuldu: " + createCardPricingRequest.getCardType(),
+                admin.getCurrentDeviceInfo(),
+                cardPricing.getId(),
+                "CardPricing",
+                createCardPricingRequest.getPrice(),
+                null,
+                null
+        );
+
         return new ResponseMessage("Kart fiyatlandırma başarılı", true);
     }
 
@@ -297,14 +341,14 @@ public class BusCardManager implements BusCardService {
             throw new AdminNotFoundException();
         }
 
-        BusCard busCard = busCardRepository.findByCardNumber(request.getUid())
+        BusCard busCard = busCardRepository.findByCardNumberNative(request.getUid())
                 .orElseThrow(BusCardNotFoundException::new);
 
         if (!busCard.getStatus().equals(CardStatus.ACTIVE) || !busCard.isActive()) {
             throw new BusCardNotActiveException();
         }
 
-        if (!busCard.getType().equals(CardType.ÖĞRENCİ)) {
+        if (!busCard.getType().equals(ÖĞRENCİ)) {
             throw new BusCardNotStudentException();
         }
 
@@ -326,7 +370,7 @@ public class BusCardManager implements BusCardService {
         Admin admin = adminRepository.findByUserNumber(username);
         if (admin == null) throw new AdminNotFoundException();
 
-        BusCard busCard = busCardRepository.findByCardNumber(request.getUid()).orElseThrow(BusCardNotFoundException::new);
+        BusCard busCard = busCardRepository.findByCardNumberNative(request.getUid()).orElseThrow(BusCardNotFoundException::new);
         if (!busCard.isActive()) throw new BusCardNotActiveException();
         if (busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardAlreadyIsBlockedException();
 
@@ -379,35 +423,6 @@ public class BusCardManager implements BusCardService {
                 .build();
     }
 
-    public void updateDeviceInfoAndCreateAuditLog(
-            SecurityUser user,
-            HttpServletRequest httpRequest,
-            GeoIpService geoIpService,
-            ActionType action,
-            String description,
-            Double amount,
-            String metadata
-    ) {
-        DeviceInfo deviceInfo = buildDeviceInfoFromRequest(httpRequest, geoIpService);
-
-        String referer = httpRequest.getHeader("Referer");
-        String fullMetadata = (metadata == null ? "" : metadata + ", ") + (referer != null ? "Referer: " + referer : "");
-
-        user.setCurrentDeviceInfo(deviceInfo);
-
-        createAuditLog(
-                user,
-                action,
-                description,
-                deviceInfo,
-                user.getId(),
-                user.getRoles().toString(),
-                amount,
-                fullMetadata,
-                referer
-
-        );
-    }
 
     public void createAuditLog(SecurityUser user,
                                ActionType action,
@@ -415,7 +430,7 @@ public class BusCardManager implements BusCardService {
                                DeviceInfo deviceInfo,
                                Long targetEntityId,
                                String targetEntityType,
-                               Double amount,
+                               BigDecimal amount,
                                String metadata,
                                String referer) {
 
@@ -434,30 +449,6 @@ public class BusCardManager implements BusCardService {
         auditLogRepository.save(auditLog);
     }
 
-    public void createAuditLog(Admin admin,
-                               ActionType action,
-                               String description,
-                               DeviceInfo deviceInfo,
-                               Long targetEntityId,
-                               String targetEntityType,
-                               Double amount,
-                               String metadata,
-                               String referer) {
-
-        AuditLog auditLog = new AuditLog();
-        auditLog.setAdmin(admin);
-        auditLog.setAction(action);
-        auditLog.setDescription(description);
-        auditLog.setTimestamp(LocalDateTime.now());
-        auditLog.setDeviceInfo(deviceInfo);
-        auditLog.setTargetEntityId(targetEntityId);
-        auditLog.setTargetEntityType(targetEntityType);
-        auditLog.setAmount(amount);
-        auditLog.setMetadata(metadata);
-        auditLog.setReferer(referer);
-
-        auditLogRepository.save(auditLog);
-    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -469,7 +460,7 @@ public class BusCardManager implements BusCardService {
                 .orElseThrow(UserNotFoundException::new);
         Wallet wallet = walletRepository.findByUser(user)
                 .orElseThrow(WalletNotFoundException::new);
-        CardPricing cardPricing = cardPricingRepository.findByCardType(CardType.TAM)
+        CardPricing cardPricing = cardPricingRepository.findByCardType(TAM)
                 .orElseThrow(CardPricingNotFoundException::new);
 
         if (!WalletStatus.ACTIVE.equals(wallet.getStatus())) {
@@ -656,7 +647,7 @@ public class BusCardManager implements BusCardService {
             throw new AdminNotFoundException();
         }
 
-        BusCard busCard = busCardRepository.findByCardNumber(request.getUid()).orElseThrow(BusCardNotFoundException::new);
+        BusCard busCard = busCardRepository.findByCardNumberNative(request.getUid()).orElseThrow(BusCardNotFoundException::new);
         if (!busCard.isActive()) throw new BusCardNotActiveException();
         if (!busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardNotBlockedException();
 
@@ -686,7 +677,7 @@ public class BusCardManager implements BusCardService {
             throw new AdminNotFoundException();
         }
 
-        BusCard busCard = busCardRepository.findByCardNumber(request.getUid())
+        BusCard busCard = busCardRepository.findByCardNumberNative(request.getUid())
                 .orElseThrow(BusCardNotFoundException::new);
 
         if (!busCard.getStatus().equals(CardStatus.ACTIVE) || !busCard.isActive()) {
@@ -710,7 +701,7 @@ public class BusCardManager implements BusCardService {
     @Override
     @Transactional
     public BusCardDTO editCard(String username, UpdateBusCardRequest updateCardRequest) throws BusCardNotFoundException {
-        BusCard busCard = busCardRepository.findByCardNumber(updateCardRequest.getUid())
+        BusCard busCard = busCardRepository.findByCardNumberNative(updateCardRequest.getUid())
                 .orElseThrow(BusCardNotFoundException::new);
 
         if (updateCardRequest.getFullName() != null)
@@ -735,7 +726,7 @@ public class BusCardManager implements BusCardService {
     @Transactional
     public ResponseMessage deleteCard(String username, ReadCardRequest deleteCardRequest) throws AdminNotFoundException, BusCardNotFoundException {
         // 1. Kartı bul
-        BusCard busCard = busCardRepository.findByCardNumber(deleteCardRequest.getUid())
+        BusCard busCard = busCardRepository.findByCardNumberNative(deleteCardRequest.getUid())
                 .orElseThrow(BusCardNotFoundException::new);
 
         // 2. Kullanıcı yetkisi kontrolü (isteğe bağlı)
@@ -768,7 +759,7 @@ public class BusCardManager implements BusCardService {
             throw new AdminNotFoundException();
         }
 
-        BusCard busCard = busCardRepository.findByCardNumber(createSubscriptionRequest.getUid())
+        BusCard busCard = busCardRepository.findByCardNumberNative(createSubscriptionRequest.getUid())
                 .orElseThrow(BusCardNotFoundException::new);
 
         // Abonman bilgilerini oluştur
@@ -784,7 +775,7 @@ public class BusCardManager implements BusCardService {
 
         // Kartı abonman kartına dönüştür
         busCard.setSubscriptionInfo(subscriptionInfo);
-        busCard.setType(CardType.TAM); // Abonman kartı genellikle tam kart olur
+        busCard.setType(TAM); // Abonman kartı genellikle tam kart olur
 
         // Audit log oluştur
         createAuditLog(admin, ActionType.BUS_CARD_TOP_UP, "Abonman oluşturuldu: " + createSubscriptionRequest.getUid(),
@@ -862,7 +853,7 @@ public class BusCardManager implements BusCardService {
                 }
 
                 // BusCard'ı bul
-                BusCard busCard = busCardRepository.findByCardNumber(cardNumber)
+                BusCard busCard = busCardRepository.findByCardNumberNative(cardNumber)
                         .orElse(null);
                 if (busCard == null) {
                     log.warn("BusCard bulunamadı. cardNumber: {}", cardNumber);
@@ -966,7 +957,7 @@ public class BusCardManager implements BusCardService {
                 || topUpBalanceRequest.getAmount().compareTo(BigDecimal.valueOf(20)) < 0) {
             throw new MinumumTopUpAmountException();
         }
-        BusCard busCard = busCardRepository.findByCardNumber(cardNumber).orElseThrow(BusCardNotFoundException::new);
+        BusCard busCard = busCardRepository.findByCardNumberNative(cardNumber).orElseThrow(BusCardNotFoundException::new);
 
 
         if (!busCard.getStatus().equals(CardStatus.ACTIVE)) throw new BusCardNotActiveException();
@@ -1084,7 +1075,7 @@ public class BusCardManager implements BusCardService {
             throw new MinumumTopUpAmountException();
         }
 
-        BusCard busCard = busCardRepository.findByCardNumber(cardNumber).orElseThrow(BusCardNotFoundException::new);
+        BusCard busCard = busCardRepository.findByCardNumberNative(cardNumber).orElseThrow(BusCardNotFoundException::new);
 
         if (!busCard.getStatus().equals(CardStatus.ACTIVE)) throw new BusCardNotActiveException();
         if (busCard.getStatus().equals(CardStatus.BLOCKED)) throw new BusCardIsBlockedException();
@@ -1182,7 +1173,7 @@ public class BusCardManager implements BusCardService {
 
     @Override
     public BusCardDTO balanceInquiry(String cardNumber) throws BusCardNotFoundException {
-        return busCardConverter.BusCardToBusCardDTO(busCardRepository.findByCardNumber(cardNumber).orElseThrow(BusCardNotFoundException::new));
+        return busCardConverter.BusCardToBusCardDTO(busCardRepository.findByCardNumberNative(cardNumber).orElseThrow(BusCardNotFoundException::new));
     }
 
     @Override
@@ -1192,7 +1183,7 @@ public class BusCardManager implements BusCardService {
         User user = userRepository.findByUserNumber(username)
                 .orElseThrow(UserNotFoundException::new);
 
-        BusCard busCard = busCardRepository.findByCardNumber(topUpCardRequest.getCardNumber())
+        BusCard busCard = busCardRepository.findByCardNumberNative(topUpCardRequest.getCardNumber())
                 .orElseThrow(BusCardNotFoundException::new);
 
         Wallet wallet = walletRepository.findByUser(user)
@@ -1263,7 +1254,7 @@ public class BusCardManager implements BusCardService {
                 geoIpService,
                 ActionType.CARD_TOPUP_SUCCESS,
                 String.format("Kart %s için %s TL yüklendi (cüzdandan).", busCard.getCardNumber(), amount),
-                amount.doubleValue(),
+                amount,
                 metadata
         );
 
@@ -1287,7 +1278,7 @@ public class BusCardManager implements BusCardService {
     @Transactional
     public ResponseMessage handleSuccessfulTopUp(User user, BigDecimal amount, String paymentId, String cardNumber,HttpServletRequest httpServletRequest) throws BusCardIsBlockedException, BusCardNotActiveException, BusCardNotFoundException {
 
-        BusCard busCard = busCardRepository.findByCardNumber(cardNumber)
+        BusCard busCard = busCardRepository.findByCardNumberNative(cardNumber)
                 .orElseThrow(BusCardNotFoundException::new);
 
         if (busCard.getStatus() == CardStatus.BLOCKED) {
@@ -1329,7 +1320,7 @@ public class BusCardManager implements BusCardService {
                 geoIpService,
                 ActionType.CARD_TOPUP_SUCCESS,
                 String.format("Kart %s için %s TL yüklendi.", busCard.getCardNumber(), amount),
-                amount.doubleValue(),
+                amount,
                 metadata
         );
 

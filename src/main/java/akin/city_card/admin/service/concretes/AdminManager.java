@@ -1,9 +1,11 @@
 package akin.city_card.admin.service.concretes;
 
+import akin.city_card.admin.core.converter.AuditLogConverter;
 import akin.city_card.admin.core.request.CreateAdminRequest;
 import akin.city_card.admin.core.request.UpdateDeviceInfoRequest;
 import akin.city_card.admin.core.request.UpdateLocationRequest;
 import akin.city_card.admin.core.response.AdminDTO;
+import akin.city_card.admin.core.response.AuditLogDTO;
 import akin.city_card.admin.core.response.LoginHistoryDTO;
 import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.admin.model.*;
@@ -33,10 +35,17 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -50,6 +59,7 @@ public class AdminManager implements AdminService {
     private final LoginHistoryRepository loginHistoryRepository;
     private final AdminApprovalRequestRepository adminApprovalRequestRepository;
     private final AuditLogRepository auditLogRepository;
+    private final AuditLogConverter auditLogConverter;
     private final ContractService contractService;
 
     @Override
@@ -146,7 +156,7 @@ public class AdminManager implements AdminService {
                                DeviceInfo deviceInfo,
                                Long targetEntityId,
                                String targetEntityType,
-                               Double amount,
+                               BigDecimal amount,
                                String metadata) {
 
         AuditLog auditLog = new AuditLog();
@@ -305,23 +315,23 @@ public class AdminManager implements AdminService {
     }
 
     @Override
-    public DataResponseMessage<List<LoginHistoryDTO>> getLoginHistory(String username) throws AdminNotFoundException {
+    public DataResponseMessage<Page<LoginHistoryDTO>> getLoginHistory(String username, Pageable pageable) throws AdminNotFoundException {
         Admin admin = findByUserNumber(username);
 
-        List<LoginHistory> historyList = loginHistoryRepository.findAllByUserOrderByLoginAtDesc(admin);
+        Page<LoginHistory> historyPage = loginHistoryRepository.findAllByUserOrderByLoginAtDesc(admin, pageable);
 
-        List<LoginHistoryDTO> responseList = historyList.stream()
-                .map(login -> LoginHistoryDTO.builder()
-                        .ipAddress(login.getIpAddress())
-                        .device(login.getDevice())
-                        .platform(login.getPlatform())
-                        .appVersion(login.getAppVersion())
-                        .loginAt(login.getLoginAt())
-                        .build())
-                .toList();
+        Page<LoginHistoryDTO> dtoPage = historyPage.map(login -> LoginHistoryDTO.builder()
+                .ipAddress(login.getIpAddress())
+                .device(login.getDevice())
+                .platform(login.getPlatform())
+                .appVersion(login.getAppVersion())
+                .loginAt(login.getLoginAt())
+                .build()
+        );
 
-        return new DataResponseMessage<>("Giriş geçmişi başarıyla getirildi.", true, responseList);
+        return new DataResponseMessage<>("Giriş geçmişi başarıyla getirildi.", true, dtoPage);
     }
+
 
     @Override
     public DataResponseMessage<AdminDTO> getProfile(String username) throws AdminNotFoundException {
@@ -338,6 +348,43 @@ public class AdminManager implements AdminService {
                 .build();
         return new DataResponseMessage<>("Kullanıcı bilgileri başarıyla getirildi.", true, adminDTO);
     }
+
+    @Override
+    public DataResponseMessage<Page<AuditLogDTO>> getAuditLogs(String fromDate, String toDate, String action, String username) {
+        LocalDateTime from = (fromDate != null && !fromDate.isBlank())
+                ? LocalDate.parse(fromDate).atStartOfDay()
+                : LocalDateTime.of(2000, 1, 1, 0, 0);
+
+        LocalDateTime to = (toDate != null && !toDate.isBlank())
+                ? LocalDate.parse(toDate).atTime(LocalTime.MAX)
+                : LocalDateTime.now();
+
+        ActionType actionType = null;
+        if (action != null && !action.isBlank()) {
+            try {
+                actionType = ActionType.valueOf(action.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return new DataResponseMessage<>("Geçersiz işlem tipi.", true, Page.empty());
+            }
+        }
+
+        Admin admin = adminRepository.findByUserNumber(username);
+
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.DESC, "timestamp"));
+
+        Page<AuditLog> logs;
+
+        if (actionType != null) {
+            logs = auditLogRepository.findByAdminAndActionAndTimestampBetween(admin, actionType, from, to, pageable);
+        } else {
+            logs = auditLogRepository.findByAdminAndTimestampBetween(admin, from, to, pageable);
+        }
+
+        Page<AuditLogDTO> dtoPage = logs.map(auditLogConverter::mapToDto);
+
+        return new DataResponseMessage<>("Başarılı", true, dtoPage);
+    }
+
 
 
 }

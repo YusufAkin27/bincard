@@ -13,6 +13,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Data
+@Table(name = "bus_card_activities")
 public class BusCardActivity {
 
     @Id

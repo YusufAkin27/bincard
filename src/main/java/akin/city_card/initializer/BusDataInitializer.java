@@ -44,8 +44,8 @@ public class BusDataInitializer implements ApplicationRunner {
         if (!isInitialDataValid(drivers, routes, stations)) return;
 
         Set<Integer> usedDriverIndexes = new HashSet<>();
-
         int createdCount = 0;
+
         while (createdCount < 100 && usedDriverIndexes.size() < drivers.size()) {
             int driverIndex = random.nextInt(drivers.size());
             if (usedDriverIndexes.contains(driverIndex)) continue;
@@ -61,12 +61,20 @@ public class BusDataInitializer implements ApplicationRunner {
             bus.setLastKnownSpeed(20.0 + random.nextInt(20));
             bus.setStatus(BusStatus.CALISIYOR);
             bus.setLastSeenStation(startStation);
-            bus.setLastSeenStation(startStation);
+            bus.setActive(true);
+            bus.setDeleted(false);
             bus.setCurrentLatitude(startStation.getLocation().getLatitude());
             bus.setCurrentLongitude(startStation.getLocation().getLongitude());
             bus.setLastLocationUpdate(LocalDateTime.now());
             bus.setCreatedAt(LocalDateTime.now());
             bus.setUpdatedAt(LocalDateTime.now());
+
+
+            if (createdCount == 0) {
+                bus.setValidatorId("7bae72cce9656754");
+            } else {
+                bus.setValidatorId("validator_" + createdCount);
+            }
 
             busRepository.save(bus);
             createdCount++;

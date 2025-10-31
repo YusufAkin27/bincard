@@ -5,55 +5,66 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
+@Table(name = "bus_card")
 @Data
-@Inheritance(strategy = InheritanceType.JOINED)
 public class BusCard {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
-    private String cardNumber;//32109381204
+    // Kart numarası benzersiz olmalı
+    @Column(name = "card_number", unique = true, nullable = false)
+    private String cardNumber;
 
-    private String fullName;// Yusuf akin olmayabilir de
+    @Column(name = "full_name")
+    private String fullName;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "card_type")
+    @Column(name = "card_type", nullable = false)
     private CardType type;
 
-    private BigDecimal balance;
+    @Column(nullable = false)
+    private BigDecimal balance = BigDecimal.ZERO;
 
     @Enumerated(EnumType.STRING)
-    private CardStatus status;
+    @Column(nullable = false)
+    private CardStatus status = CardStatus.ACTIVE;
 
-    private boolean active;
+    @Column(nullable = false)
+    private boolean active = true;
 
-    private LocalDate issueDate;// verilme tarihi
-    private LocalDate expiryDate;// son kullanma tarihi
+    @Column(name = "issue_date")
+    private LocalDate issueDate;
 
+    @Column(name = "expiry_date")
+    private LocalDate expiryDate;
+
+    @Column(name = "low_balance_notified")
     private boolean lowBalanceNotified = false;
 
-    // Yeni alanlar
-    private BigDecimal lastTransactionAmount;// en son yapılan işlem tutarı
+    @Column(name = "last_transaction_amount")
+    private BigDecimal lastTransactionAmount = BigDecimal.ZERO;
 
-    private LocalDate lastTransactionDate;// en son yapılan işlem zamanı
+    @Column(name = "last_transaction_date")
+    private LocalDate lastTransactionDate;
 
-    private boolean visaCompleted;// vizesi var mı
+    @Column(name = "visa_completed")
+    private boolean visaCompleted = false;
 
     @Embedded
-    private SubscriptionInfo subscriptionInfo;// abonman kart için
+    private SubscriptionInfo subscriptionInfo;
 
-    @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<UserFavoriteCard> favoredByUsers;
+    @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<UserFavoriteCard> favoredByUsers = new ArrayList<>();
 
-    @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<BusCardActivity> activities;
+    @OneToMany(mappedBy = "busCard", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private List<BusCardActivity> activities = new ArrayList<>();
 
-    @Column(name = "tx_counter")
+    @Column(name = "tx_counter", nullable = false)
     private Integer txCounter = 0;
-
 }

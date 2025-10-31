@@ -88,7 +88,6 @@ public class SuperAdminController {
     }
 
     @GetMapping("/audit-logs")
-    @JsonView(Views.SuperAdmin.class)
     public DataResponseMessage<List<AuditLogDTO>> getAuditLogs(
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate,

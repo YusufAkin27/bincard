@@ -1,6 +1,7 @@
 package akin.city_card.admin.repository;
 
 import akin.city_card.admin.model.ActionType;
+import akin.city_card.admin.model.Admin;
 import akin.city_card.admin.model.AuditLog;
 import akin.city_card.user.model.User;
 import org.springframework.data.domain.Page;
@@ -73,4 +74,8 @@ public interface AuditLogRepository extends JpaRepository<AuditLog, Long> {
 
     @Query("SELECT a FROM AuditLog a WHERE a.user.id = :userId AND a.timestamp >= :since ORDER BY a.timestamp ASC")
     List<AuditLog> findByUserSince(@Param("userId") Long userId, @Param("since") LocalDateTime since);
+
+    Page<AuditLog> findByAdminAndActionAndTimestampBetween(Admin admin, ActionType actionType, LocalDateTime from, LocalDateTime to, Pageable pageable);
+
+    Page<AuditLog> findByAdminAndTimestampBetween(Admin admin, LocalDateTime from, LocalDateTime to, Pageable pageable);
 }

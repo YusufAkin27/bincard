@@ -117,7 +117,7 @@ public class BusCardController {
 
 
     @PostMapping("/get-on")
-    public BusCardDTO getOn(@RequestBody GetOnBusRequest request) throws BusCardNotFoundException, InsufficientBalanceException, CorruptedDataException, CardInactiveException, CardPricingNotFoundException, SubscriptionNotFoundException, SubscriptionExpiredException {
+    public BusCardDTO getOn(@RequestBody GetOnBusRequest request) throws InsufficientBalanceException, CorruptedDataException, CardInactiveException, CardPricingNotFoundException, SubscriptionNotFoundException, SubscriptionExpiredException, BusNotFoundException {
         return busCardService.getOn(request);
     }
 

@@ -25,7 +25,7 @@ public interface BusCardService {
     BusCardDTO readCard(String reqUid, String username) throws BusCardNotFoundException;
 
 
-    BusCardDTO getOn(GetOnBusRequest request) throws InsufficientBalanceException, BusCardNotFoundException, CardInactiveException, CardPricingNotFoundException, CorruptedDataException, SubscriptionNotFoundException, SubscriptionExpiredException;
+    BusCardDTO getOn(GetOnBusRequest request) throws InsufficientBalanceException, CardInactiveException, CardPricingNotFoundException, CorruptedDataException, SubscriptionNotFoundException, SubscriptionExpiredException, BusNotFoundException;
 
     ResponseMessage createCardPricing(CreateCardPricingRequest createCardPricingRequest, String username) throws AdminNotFoundException;
 
