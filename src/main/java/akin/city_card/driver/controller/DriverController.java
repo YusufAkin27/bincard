@@ -6,6 +6,7 @@ import akin.city_card.driver.core.request.CreateDriverRequest;
 import akin.city_card.driver.core.request.UpdateDriverRequest;
 import akin.city_card.driver.core.response.DriverDocumentDto;
 import akin.city_card.driver.core.response.DriverDto;
+import akin.city_card.driver.core.response.DriverEarningSummaryDto;
 import akin.city_card.driver.core.response.DriverPenaltyDto;
 import akin.city_card.driver.core.response.DriverPerformanceDto;
 import akin.city_card.driver.exceptions.*;
@@ -17,6 +18,7 @@ import akin.city_card.security.exception.UserNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -203,6 +205,27 @@ public class DriverController {
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
     public DataResponseMessage<Object> getDriverStatistics(@AuthenticationPrincipal UserDetails userDetails) {
         return driverService.getDriverStatistics(userDetails.getUsername());
+    }
+
+    @GetMapping("/earnings")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
+    public DataResponseMessage<PageDTO<DriverEarningSummaryDto>> getDriverEarnings(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @AuthenticationPrincipal UserDetails userDetails) throws InvalidDateRangeException {
+        return driverService.getDriverEarnings(startDate, endDate, page, size, userDetails.getUsername());
+    }
+
+    @GetMapping("/{id}/earnings")
+    @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('DRIVER_ADMIN') or hasAuthority('SUPERADMIN')")
+    public DataResponseMessage<DriverEarningSummaryDto> getDriverEarning(
+            @PathVariable Long id,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @AuthenticationPrincipal UserDetails userDetails) throws DriverNotFoundException, InvalidDateRangeException {
+        return driverService.getDriverEarning(id, startDate, endDate, userDetails.getUsername());
     }
 
     // Lisansı yakında dolacak sürücüler

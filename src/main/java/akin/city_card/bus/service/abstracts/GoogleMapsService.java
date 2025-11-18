@@ -34,7 +34,7 @@ public class GoogleMapsService {
 
 
     public Integer getEstimatedTimeInMinutes(double originLat, double originLng, double destLat, double destLng) {
-        String url = UriComponentsBuilder.fromHttpUrl(directionsApiUrl)
+        String url = UriComponentsBuilder.fromUriString(directionsApiUrl)
                 .queryParam("origin", originLat + "," + originLng)
                 .queryParam("destination", destLat + "," + destLng)
                 .queryParam("key", apiKey)
@@ -58,21 +58,14 @@ public class GoogleMapsService {
 
 
     public boolean isNear(double lat1, double lng1, double lat2, double lng2, double maxDistanceMeters) {
-        double earthRadius = 6371000;
-        double dLat = Math.toRadians(lat2 - lat1);
-        double dLng = Math.toRadians(lng2 - lng1);
-        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
-                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
-                + Math.sin(dLng / 2) * Math.sin(dLng / 2);
-        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        double distance = earthRadius * c;
+        double distance = haversineMeters(lat1, lng1, lat2, lng2);
         return distance <= maxDistanceMeters;
     }
 
 
     public LatLng getCoordinatesFromAddress(String address) {
         try {
-            String url = UriComponentsBuilder.fromHttpUrl(geocodeApiUrl)
+            String url = UriComponentsBuilder.fromUriString(geocodeApiUrl)
                     .queryParam("address", address)
                     .queryParam("key", apiKey)
                     .build()
@@ -97,6 +90,37 @@ public class GoogleMapsService {
             log.error("Error during Google Maps Geocoding API call", e);
             return null;
         }
+    }
+
+    public Double getDrivingDistanceInKilometers(double originLat, double originLng, double destLat, double destLng) {
+        if (Double.compare(originLat, destLat) == 0 && Double.compare(originLng, destLng) == 0) {
+            return 0d;
+        }
+
+        String url = UriComponentsBuilder.fromUriString(directionsApiUrl)
+                .queryParam("origin", originLat + "," + originLng)
+                .queryParam("destination", destLat + "," + destLng)
+                .queryParam("mode", "driving")
+                .queryParam("key", apiKey)
+                .toUriString();
+
+        try {
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            JsonNode root = objectMapper.readTree(response.getBody());
+
+            JsonNode distanceNode = root.path("routes").path(0)
+                    .path("legs").path(0)
+                    .path("distance")
+                    .path("value");
+
+            if (!distanceNode.isMissingNode()) {
+                return distanceNode.asDouble() / 1000d;
+            }
+        } catch (Exception e) {
+            log.error("Google driving distance calculation failed", e);
+        }
+
+        return haversineMeters(originLat, originLng, destLat, destLng) / 1000d;
     }
 
     public record LatLng(double lat, double lng) {
@@ -130,5 +154,14 @@ public class GoogleMapsService {
         private int value; // metre cinsinden
     }
 
-
+    private double haversineMeters(double lat1, double lng1, double lat2, double lng2) {
+        double earthRadius = 6371000d;
+        double dLat = Math.toRadians(lat2 - lat1);
+        double dLng = Math.toRadians(lng2 - lng1);
+        double a = Math.sin(dLat / 2) * Math.sin(dLat / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(dLng / 2) * Math.sin(dLng / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return earthRadius * c;
+    }
 }

@@ -6,6 +6,7 @@ import akin.city_card.driver.core.request.CreateDriverRequest;
 import akin.city_card.driver.core.request.UpdateDriverRequest;
 import akin.city_card.driver.core.response.DriverDocumentDto;
 import akin.city_card.driver.core.response.DriverDto;
+import akin.city_card.driver.core.response.DriverEarningSummaryDto;
 import akin.city_card.driver.core.response.DriverPenaltyDto;
 import akin.city_card.driver.core.response.DriverPerformanceDto;
 import akin.city_card.driver.exceptions.*;
@@ -69,6 +70,10 @@ public interface DriverService {
     DataResponseMessage<PageDTO<DriverDto>> getDriversWithPenalties(int page, int size, String username);
 
     DriverDto getDriverProfile(String username);
+
+    DataResponseMessage<PageDTO<DriverEarningSummaryDto>> getDriverEarnings(LocalDate startDate, LocalDate endDate, int page, int size, String username) throws InvalidDateRangeException;
+
+    DataResponseMessage<DriverEarningSummaryDto> getDriverEarning(Long driverId, LocalDate startDate, LocalDate endDate, String username) throws DriverNotFoundException, InvalidDateRangeException;
 
     ResponseMessage assignDriverToBus(Long busId, String username) throws BusNotFoundException;
 

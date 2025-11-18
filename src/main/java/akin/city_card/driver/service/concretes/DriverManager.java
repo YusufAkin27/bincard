@@ -3,13 +3,20 @@ package akin.city_card.driver.service.concretes;
 import akin.city_card.bus.exceptions.BusNotFoundException;
 import akin.city_card.bus.exceptions.DriverNotFoundException;
 import akin.city_card.bus.model.Bus;
+import akin.city_card.bus.model.BusLocation;
+import akin.city_card.bus.model.BusRide;
+import akin.city_card.bus.model.RideStatus;
+import akin.city_card.bus.repository.BusLocationRepository;
 import akin.city_card.bus.repository.BusRepository;
+import akin.city_card.bus.repository.BusRideRepository;
+import akin.city_card.bus.service.abstracts.GoogleMapsService;
 import akin.city_card.contract.service.abstacts.ContractService;
 import akin.city_card.driver.core.converter.DriverConverter;
 import akin.city_card.driver.core.request.CreateDriverRequest;
 import akin.city_card.driver.core.request.UpdateDriverRequest;
 import akin.city_card.driver.core.response.DriverDocumentDto;
 import akin.city_card.driver.core.response.DriverDto;
+import akin.city_card.driver.core.response.DriverEarningSummaryDto;
 import akin.city_card.driver.core.response.DriverPenaltyDto;
 import akin.city_card.driver.core.response.DriverPerformanceDto;
 import akin.city_card.driver.exceptions.*;
@@ -40,11 +47,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -60,6 +72,9 @@ public class DriverManager implements DriverService {
     private final DriverConverter driverConverter;
     private final ContractService contractService;
     private final BusRepository busRepository;
+    private final BusRideRepository busRideRepository;
+    private final BusLocationRepository busLocationRepository;
+    private final GoogleMapsService googleMapsService;
 
     // Helper method to find user by username
     private SecurityUser findUserByUsername(String username) throws UserNotFoundException {
@@ -687,6 +702,34 @@ public class DriverManager implements DriverService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public DataResponseMessage<PageDTO<DriverEarningSummaryDto>> getDriverEarnings(LocalDate startDate, LocalDate endDate, int page, int size, String username) throws InvalidDateRangeException {
+        log.info("Getting driver earnings between {} and {} page: {}, size: {} by user: {}", startDate, endDate, page, size, username);
+
+        DateRange range = resolveDateRange(startDate, endDate);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").ascending());
+        Page<Driver> driverPage = driverRepository.findAllByDeleteDateIsNull(pageable);
+
+        List<DriverEarningSummaryDto> summaries = driverPage.getContent().stream()
+                .map(driver -> buildDriverEarningSummary(driver, range))
+                .collect(Collectors.toList());
+
+        PageDTO<DriverEarningSummaryDto> pageDTO = createPageDTO(driverPage, summaries);
+        return new DataResponseMessage<>("Sürücü kazançları başarıyla getirildi", true, pageDTO);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DataResponseMessage<DriverEarningSummaryDto> getDriverEarning(Long driverId, LocalDate startDate, LocalDate endDate, String username) throws DriverNotFoundException, InvalidDateRangeException {
+        log.info("Getting driver earning for id: {} between {} and {} by user: {}", driverId, startDate, endDate, username);
+
+        DateRange range = resolveDateRange(startDate, endDate);
+        Driver driver = findDriverById(driverId);
+        DriverEarningSummaryDto summary = buildDriverEarningSummary(driver, range);
+        return new DataResponseMessage<>("Sürücü kazancı başarıyla getirildi", true, summary);
+    }
+
+    @Override
     public DriverDto getDriverProfile(String username) {
         Driver driver = driverRepository.findByUserNumber(username);
         return driverConverter.toDto(driver);
@@ -747,4 +790,151 @@ public class DriverManager implements DriverService {
         return new ResponseMessage("Atama başarıyla kaldırıldı", true);
     }
 
+    private DriverEarningSummaryDto buildDriverEarningSummary(Driver driver, DateRange range) {
+        List<BusRide> rides = busRideRepository.findByDriverIdAndBoardingTimeBetweenAndStatus(
+                driver.getId(),
+                range.startDateTime(),
+                range.endDateTime(),
+                RideStatus.SUCCESS
+        );
+
+        BigDecimal totalRevenue = rides.stream()
+                .map(BusRide::getFareCharged)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        int totalTrips = rides.size();
+        BigDecimal averageFare = totalTrips > 0
+                ? totalRevenue.divide(BigDecimal.valueOf(totalTrips), 2, RoundingMode.HALF_UP)
+                : BigDecimal.ZERO;
+
+        double totalDistanceKm = calculateDrivenDistance(driver, rides, range.startDateTime(), range.endDateTime());
+        Double averageDistancePerTrip = totalTrips > 0 ? roundDouble(totalDistanceKm / totalTrips) : 0d;
+
+        return DriverEarningSummaryDto.builder()
+                .driverId(driver.getId())
+                .driverUserNumber(driver.getUserNumber())
+                .fullName(getDriverFullName(driver))
+                .busNumberPlate(driver.getAssignedBus() != null ? driver.getAssignedBus().getNumberPlate() : null)
+                .totalTrips(totalTrips)
+                .totalRevenue(totalRevenue)
+                .averageFare(averageFare)
+                .totalDistanceKm(roundDouble(totalDistanceKm))
+                .averageDistancePerTripKm(averageDistancePerTrip)
+                .startDate(range.startDate())
+                .endDate(range.endDate())
+                .build();
+    }
+
+    private double calculateDrivenDistance(Driver driver, List<BusRide> rides, LocalDateTime start, LocalDateTime end) {
+        Set<Bus> buses = new HashSet<>();
+        if (driver.getAssignedBus() != null) {
+            buses.add(driver.getAssignedBus());
+        }
+        if (rides != null) {
+            rides.stream()
+                    .map(BusRide::getBus)
+                    .filter(Objects::nonNull)
+                    .forEach(buses::add);
+        }
+
+        double totalKm = 0d;
+        for (Bus bus : buses) {
+            totalKm += calculateBusDistance(bus, start, end);
+        }
+        return totalKm;
+    }
+
+    private double calculateBusDistance(Bus bus, LocalDateTime start, LocalDateTime end) {
+        if (bus == null) {
+            return 0d;
+        }
+
+        List<BusLocation> locations = busLocationRepository.findAllByBusAndTimestampBetweenOrderByTimestampDesc(bus, start, end);
+        if (locations == null || locations.size() < 2) {
+            return 0d;
+        }
+
+        locations.sort(Comparator.comparing(BusLocation::getTimestamp));
+        double totalKm = 0d;
+        BusLocation previous = locations.get(0);
+
+        for (int i = 1; i < locations.size(); i++) {
+            BusLocation current = locations.get(i);
+            double segmentKm = computeSegmentDistance(previous, current);
+            if (segmentKm <= 0) {
+                previous = current;
+                continue;
+            }
+            totalKm += segmentKm;
+            previous = current;
+        }
+
+        return totalKm;
+    }
+
+    private double computeSegmentDistance(BusLocation from, BusLocation to) {
+        if (from == null || to == null) {
+            return 0d;
+        }
+
+        double haversineKm = haversineKm(from.getLatitude(), from.getLongitude(), to.getLatitude(), to.getLongitude());
+        if (haversineKm < 0.01) {
+            return 0d;
+        }
+        if (haversineKm < 0.1) {
+            return haversineKm;
+        }
+
+        Double googleDistance = googleMapsService.getDrivingDistanceInKilometers(
+                from.getLatitude(), from.getLongitude(),
+                to.getLatitude(), to.getLongitude());
+
+        if (googleDistance != null && googleDistance > 0) {
+            return googleDistance;
+        }
+
+        return haversineKm;
+    }
+
+    private double haversineKm(double lat1, double lon1, double lat2, double lon2) {
+        final int R = 6371;
+
+        double latDistance = Math.toRadians(lat2 - lat1);
+        double lonDistance = Math.toRadians(lon2 - lon1);
+        double a = Math.sin(latDistance / 2) * Math.sin(latDistance / 2)
+                + Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2))
+                * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
+    private Double roundDouble(double value) {
+        return BigDecimal.valueOf(value).setScale(3, RoundingMode.HALF_UP).doubleValue();
+    }
+
+    private String getDriverFullName(Driver driver) {
+        if (driver.getProfileInfo() == null) {
+            return driver.getUserNumber();
+        }
+        return driver.getProfileInfo().getName() + " " + driver.getProfileInfo().getSurname();
+    }
+
+    private DateRange resolveDateRange(LocalDate startDate, LocalDate endDate) throws InvalidDateRangeException {
+        LocalDate effectiveEnd = endDate != null ? endDate : LocalDate.now();
+        LocalDate effectiveStart = startDate != null ? startDate : effectiveEnd.minusDays(7);
+
+        if (effectiveStart.isAfter(effectiveEnd)) {
+            throw new InvalidDateRangeException();
+        }
+
+        return new DateRange(
+                effectiveStart,
+                effectiveEnd,
+                effectiveStart.atStartOfDay(),
+                effectiveEnd.plusDays(1).atStartOfDay()
+        );
+    }
+
+    private record DateRange(LocalDate startDate, LocalDate endDate, LocalDateTime startDateTime, LocalDateTime endDateTime) {
+    }
 }

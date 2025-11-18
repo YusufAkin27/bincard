@@ -1,6 +1,7 @@
 package akin.city_card.bus.model;
 
 import akin.city_card.buscard.model.BusCard;
+import akin.city_card.driver.model.Driver;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -18,6 +19,11 @@ public class BusRide {
     // Biniş yapılan otobüs
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     private Bus bus;
+
+    // Sürüş sırasında atanmış olan şoför
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "driver_id")
+    private Driver driver;
 
     // Yolcuya ait kart
     @ManyToOne(fetch = FetchType.LAZY, optional = false)

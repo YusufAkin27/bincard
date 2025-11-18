@@ -30,7 +30,6 @@ import akin.city_card.superadmin.service.abstracts.SuperAdminService;
 import akin.city_card.user.exceptions.EmailAlreadyExistsException;
 import akin.city_card.user.model.LoginHistory;
 import akin.city_card.user.model.UserStatus;
-import akin.city_card.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -54,7 +53,6 @@ public class SuperAdminManager implements SuperAdminService {
     private final BusRideRepository busRideRepository;
     private final AuditLogRepository auditLogRepository;
     private final AuditLogConverter auditLogConverter;
-    private final UserRepository userRepository;
     private final SecurityUserRepository securityUserRepository;
     private final PasswordEncoder passwordEncoder;
 
@@ -120,12 +118,13 @@ public class SuperAdminManager implements SuperAdminService {
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(23, 59, 59);
 
-        List<BusRide> rides = busRideRepository.findByBoardingTimeBetweenAndBusDriverUserNumber(start, end, username);
+        List<BusRide> rides = busRideRepository.findByBoardingTimeBetweenAndDriverUserNumber(start, end, username);
 
         Map<String, BigDecimal> incomePerBus = new HashMap<>();
 
         for (BusRide ride : rides) {
             String plate = ride.getBus().getNumberPlate();
+            incomePerBus.merge(plate, ride.getFareCharged(), BigDecimal::add);
         }
 
         return new DataResponseMessage<>("başarılı", true, incomePerBus);
@@ -137,7 +136,7 @@ public class SuperAdminManager implements SuperAdminService {
         LocalDateTime start = startDate.atStartOfDay();
         LocalDateTime end = endDate.atTime(23, 59, 59);
 
-        List<BusRide> rides = busRideRepository.findByBoardingTimeBetweenAndBusDriverUserNumberAndStatus(
+        List<BusRide> rides = busRideRepository.findByBoardingTimeBetweenAndDriverUserNumberAndStatus(
                 start, end, username, RideStatus.SUCCESS);
 
         Map<String, BigDecimal> incomePerBus = new HashMap<>();
@@ -162,7 +161,7 @@ public class SuperAdminManager implements SuperAdminService {
 
     @Override
     public DataResponseMessage<Map<String, BigDecimal>> getIncomeSummary(String username) {
-        List<BusRide> rides = busRideRepository.findByBusDriverUserNumberAndStatus(username, RideStatus.SUCCESS);
+        List<BusRide> rides = busRideRepository.findByDriverUserNumberAndStatus(username, RideStatus.SUCCESS);
 
         Map<String, BigDecimal> incomePerBus = new HashMap<>();
 
@@ -637,7 +636,7 @@ public class SuperAdminManager implements SuperAdminService {
                 })
                 .toList();
 
-        return new  DataResponseMessage("Admin listesi başarıyla getirildi.",true, responses);
+        return new DataResponseMessage<>("Admin listesi başarıyla getirildi.", true, responses);
     }
 
     /*

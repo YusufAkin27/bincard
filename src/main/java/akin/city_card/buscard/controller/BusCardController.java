@@ -16,6 +16,7 @@ import akin.city_card.wallet.exceptions.WalletNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpHeaders;
@@ -31,9 +32,20 @@ import java.util.List;
 @RestController
 @RequestMapping("/v1/api/buscard")
 @RequiredArgsConstructor
+@Slf4j
 public class BusCardController {
     private final BusCardService busCardService;
 
+    private String safeUsername(UserDetails userDetails) {
+        return userDetails != null ? userDetails.getUsername() : "anonymous";
+    }
+
+    private String mask(String value) {
+        if (value == null || value.length() < 4) {
+            return "****";
+        }
+        return "****" + value.substring(value.length() - 4);
+    }
 
     private void isAdminOrSuperAdmin(UserDetails userDetails) throws UnauthorizedAccessException {
         if (userDetails == null || userDetails.getAuthorities() == null) {
@@ -53,6 +65,7 @@ public class BusCardController {
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public BusCardDTO registerCard(HttpServletRequest httpServletRequest, @RequestBody RegisterCardRequest req, @AuthenticationPrincipal UserDetails userDetails) throws UnauthorizedAccessException, AlreadyBusCardNumberException {
         isAdminOrSuperAdmin(userDetails);
+        log.info("Yeni kart kaydı isteği alındı | admin={}, uid={}", safeUsername(userDetails), req.getUid());
         return busCardService.registerCard(httpServletRequest, req, userDetails.getUsername());
     }
 
@@ -60,6 +73,7 @@ public class BusCardController {
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public BusCardDTO readCard(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ReadCardRequest req) throws UnauthorizedAccessException, BusCardNotFoundException {
         isAdminOrSuperAdmin(userDetails);
+        log.info("Kart okuma isteği | admin={}, uid={}", safeUsername(userDetails), req.getUid());
         return busCardService.readCard(req.getUid(), userDetails.getUsername());
     }
 
@@ -69,6 +83,7 @@ public class BusCardController {
             @AuthenticationPrincipal UserDetails userDetails,
             Pageable pageable
     ) throws BusCardNotActiveException, BusCardNotFoundException, AdminNotFoundException {
+        log.info("Kart listeleme isteği | admin={}", safeUsername(userDetails));
         Page<BusCardDTO> result = busCardService.getAllCards(userDetails.getUsername(), pageable);
         return ResponseEntity.ok(result);
     }
@@ -79,6 +94,7 @@ public class BusCardController {
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public BusCardDTO topUpBalance(@AuthenticationPrincipal UserDetails userDetails, @RequestBody TopUpBalanceCardRequest request) throws UnauthorizedAccessException, BusCardNotActiveException, BusCardNotFoundException, AdminNotFoundException, TransactionCounterException {
         isAdminOrSuperAdmin(userDetails);
+        log.info("Yönetici kart yükleme isteği | admin={}, uid={}", safeUsername(userDetails), request.getUid());
         return busCardService.topUpBalance(userDetails.getUsername(), request);
 
     }
@@ -87,18 +103,21 @@ public class BusCardController {
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public BusCardDTO cardVisa(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ReadCardRequest request) throws UnauthorizedAccessException, BusCardNotStudentException, BusCardNotActiveException, BusCardNotFoundException, AdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
+        log.info("Kart vizeleme isteği | admin={}, uid={}", safeUsername(userDetails), request.getUid());
         return busCardService.cardVisa(request, userDetails.getUsername());
     }
 
     @PostMapping("/card-blocked")
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public BusCardDTO cardBlocked(@RequestBody ReadCardRequest request, @AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, BusCardAlreadyIsBlockedException, AdminNotFoundException {
+        log.warn("Kart bloklama isteği | admin={}, uid={}", safeUsername(userDetails), request.getUid());
         return busCardService.cardBlocked(request, userDetails.getUsername());
     }
 
     @GetMapping("/card-blocked")
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public List<BusCardDTO> getBlockedCards(@AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, AdminNotFoundException {
+        log.info("Bloke kartlar listeleniyor | admin={}", safeUsername(userDetails));
         return busCardService.getBlockedCards(userDetails.getUsername());
     }
 
@@ -106,18 +125,21 @@ public class BusCardController {
     @DeleteMapping("/card-blocked")
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public BusCardDTO deleteCardBlocked(@RequestBody ReadCardRequest request, @AuthenticationPrincipal UserDetails userDetails) throws BusCardNotActiveException, BusCardNotFoundException, BusCardAlreadyIsBlockedException, AdminNotFoundException, BusCardNotBlockedException {
+        log.info("Kart blokesi kaldırma isteği | admin={}, uid={}", safeUsername(userDetails), request.getUid());
         return busCardService.deleteCardBlocked(request, userDetails.getUsername());
     }
 
     @PostMapping("/abonman")
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public BusCardDTO abonmanOluştur(@RequestBody CreateSubscriptionRequest createSubscriptionRequest, @AuthenticationPrincipal UserDetails userDetails) throws BusCardNotFoundException, AdminNotFoundException {
+        log.info("Abonman oluşturma isteği | admin={}, uid={}", safeUsername(userDetails), createSubscriptionRequest.getUid());
         return busCardService.abonmanOluştur(createSubscriptionRequest, userDetails.getUsername());
     }
 
 
     @PostMapping("/get-on")
     public BusCardDTO getOn(@RequestBody GetOnBusRequest request) throws InsufficientBalanceException, CorruptedDataException, CardInactiveException, CardPricingNotFoundException, SubscriptionNotFoundException, SubscriptionExpiredException, BusNotFoundException {
+        log.debug("Kart kullanım isteği | uid={}, validator={}", request.getUid(), request.getValidatorId());
         return busCardService.getOn(request);
     }
 
@@ -125,6 +147,7 @@ public class BusCardController {
     @PostMapping("/card-pricing")
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage createCardPricing(@AuthenticationPrincipal UserDetails userDetails, @RequestBody CreateCardPricingRequest createCardPricingRequest) throws AdminNotFoundException {
+        log.info("Kart fiyatlandırma oluşturma isteği | admin={}, type={}", safeUsername(userDetails), createCardPricingRequest.getCardType());
         return busCardService.createCardPricing(createCardPricingRequest, userDetails.getUsername());
 
     }
@@ -132,12 +155,14 @@ public class BusCardController {
     @PutMapping("/card-pricing")
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage updateCardPricing(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdateCardPricingRequest updateCardPricingRequest) throws AdminNotFoundException, CardPricingNotFoundException {
+        log.info("Kart fiyatlandırma güncelleme isteği | admin={}, type={}", safeUsername(userDetails), updateCardPricingRequest.getCardType());
         return busCardService.updateCardPricing(userDetails.getUsername(), updateCardPricingRequest);
     }
 
     @GetMapping("/card-pricing")
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public List<CardPricingDTO> getAllCardPricing() {
+        log.debug("Kart fiyatlandırma listesi istendi");
         return busCardService.getAllCardPricing();
     }
 
@@ -145,12 +170,14 @@ public class BusCardController {
     @PutMapping("/edit-card")
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public BusCardDTO editCard(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdateBusCardRequest updateCardRequest) throws BusCardNotFoundException {
+        log.info("Kart güncelleme isteği | admin={}, uid={}", safeUsername(userDetails), updateCardRequest.getUid());
         return busCardService.editCard(userDetails.getUsername(), updateCardRequest);
     }
 
     @DeleteMapping("/delete-card")
     @PreAuthorize("hasAuthority('ADMIN_ALL') or hasAuthority('BUS_CARD_ADMIN') or hasAuthority('SUPERADMIN')")
     public ResponseMessage deleteCard(@AuthenticationPrincipal UserDetails userDetails, @RequestBody ReadCardRequest deleteCardRequest) throws BusCardNotFoundException, AdminNotFoundException {
+        log.warn("Kart silme isteği | admin={}, uid={}", safeUsername(userDetails), deleteCardRequest.getUid());
         return busCardService.deleteCard(userDetails.getUsername(), deleteCardRequest);
     }
 
@@ -158,6 +185,7 @@ public class BusCardController {
     public ResponseEntity<byte[]> generateQrCode(@AuthenticationPrincipal UserDetails userDetails)
             throws Exception {
         String username = userDetails.getUsername();
+        log.info("QR üretim isteği | user={}", username);
         byte[] qrBytes = busCardService.generateQrCode(username);
 
         return ResponseEntity.ok()
@@ -168,6 +196,7 @@ public class BusCardController {
 
     @GetMapping("/qr-status/{token}")
     public boolean checkQrStatus(@PathVariable String token) {
+        log.debug("QR durum sorgusu | tokenHash={}", token != null ? token.hashCode() : 0);
         return busCardService.qrStatus(token);
 
     }
@@ -175,6 +204,7 @@ public class BusCardController {
 
     @PostMapping("/scan-qr")
     public ResponseMessage scanQrCode(@RequestBody QrScanRequest request) throws UserNotFoundException, InvalidQrCodeException, WalletNotFoundException, InsufficientBalanceException, ExpiredQrCodeException, WalletNotActiveException, CardPricingNotFoundException {
+        log.info("QR tarama isteği alındı");
         return busCardService.verifyQrToken(request.getQrToken());
     }
 
@@ -184,6 +214,7 @@ public class BusCardController {
             @Valid @RequestBody TopUpBalanceRequest topUpBalanceRequest,
             @RequestParam String cardNumber,
             @AuthenticationPrincipal UserDetails userDetails) throws BusCardIsBlockedException, UserNotFoundException, BusCardNotActiveException, BusCardNotFoundException, MinumumTopUpAmountException {
+        log.info("Kredi kartı ile top-up isteği | user={}, card={}", safeUsername(userDetails), mask(cardNumber));
         if (userDetails != null){
             return busCardService.topUp(userDetails.getUsername(),cardNumber,topUpBalanceRequest);
         }
@@ -198,17 +229,20 @@ public class BusCardController {
             @RequestParam(name = "conversationId", required = false) String conversationId,
             HttpServletRequest httpServletRequest) {
 
+        log.info("3D callback isteği alındı | paymentId={}, conversationId={}", paymentId, conversationId);
         return busCardService.complete3DPayment(paymentId, conversationId,httpServletRequest);
     }
     @PostMapping("/top-up/wallet")
     public ResponseMessage topUpWallet(@Valid @RequestBody TopUpCardRequest topUpCardRequest,
                                        @AuthenticationPrincipal UserDetails userDetails,
                                        HttpServletRequest httpServletRequest) throws WalletNotFoundException, InsufficientBalanceException, WalletNotActiveException, BusCardIsBlockedException, UserNotFoundException, BusCardNotActiveException, BusCardNotFoundException, MinumumTopUpAmountException {
+        log.info("Cüzdandan karta yükleme isteği | user={}, card={}", safeUsername(userDetails), mask(topUpCardRequest.getCardNumber()));
         return busCardService.topUpUsingWallet(userDetails.getUsername(),topUpCardRequest,httpServletRequest);
     }
 
     @GetMapping("/balance inquiry")
     public BusCardDTO balanceInquiry(@RequestParam String cardNumber) throws BusCardNotFoundException, WalletNotFoundException, WalletNotActiveException {
+        log.debug("Bakiye sorgulama isteği | card={}", mask(cardNumber));
         return busCardService.balanceInquiry(cardNumber);
     }
 

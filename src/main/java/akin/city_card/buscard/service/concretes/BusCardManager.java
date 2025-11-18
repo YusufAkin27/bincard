@@ -112,20 +112,24 @@ public class BusCardManager implements BusCardService {
     @Transactional
     public BusCardDTO registerCard(HttpServletRequest httpServletRequest, RegisterCardRequest req, String username) throws AlreadyBusCardNumberException {
         Admin admin = adminRepository.findByUserNumber(username);
+        log.info("Yeni kart kaydı başlatıldı | admin={}, uid={}", username, req.getUid());
         createAuditLog(admin, ActionType.NEW_CARD_REGISTRATION, "Yeni kart kaydedildi", admin.getCurrentDeviceInfo(), admin.getId(), admin.getRoles().toString(), null, null, null);
 
         if (busCardRepository.existsByCardNumber(req.getUid())) {
+            log.warn("Kart kaydı reddedildi (mevcut kayıt) | uid={}", req.getUid());
             throw new AlreadyBusCardNumberException();
 
         }
         BusCard busCard = busCardConverter.registerCard(req);
         busCardRepository.save(busCard);
+        log.info("Kart kaydı başarıyla tamamlandı | admin={}, cardId={}", username, busCard.getId());
         return busCardConverter.BusCardToBusCardDTO(busCard);
     }
 
     @Override
     public BusCardDTO readCard(String reqUid, String username) throws BusCardNotFoundException {
         Admin admin = adminRepository.findByUserNumber(username);
+        log.debug("Kart okuma işlemi | admin={}, uid={}", username, reqUid);
         createAuditLog(admin, ActionType.READ_CARD, "Kart okundu", admin.getCurrentDeviceInfo(), admin.getId(), admin.getRoles().toString(), null, null, null);
 
         return busCardConverter.BusCardToBusCardDTO(busCardRepository.findByCardNumberNative(reqUid).orElseThrow(BusCardNotFoundException::new));
@@ -142,6 +146,7 @@ public class BusCardManager implements BusCardService {
         String uid = request.getUid();
         uid = uid == null ? "" : uid.replaceAll("[^\\p{Print}]", "").trim();
         String validatorId = request.getValidatorId();
+        log.debug("Kart kullanım servisi çağrıldı | uid={}, validator={}", uid, validatorId);
 
 
         // 1. Kartı bul
@@ -149,6 +154,7 @@ public class BusCardManager implements BusCardService {
         BusCard busCard = optCard.orElse(null);
 
         if (!busCard.isActive() || busCard.getStatus() != CardStatus.ACTIVE) {
+            log.warn("Pasif kartla kullanım denemesi | uid={}, status={}", uid, busCard.getStatus());
             throw new CardInactiveException();
         }
 
@@ -157,6 +163,7 @@ public class BusCardManager implements BusCardService {
                 .orElseThrow(CardPricingNotFoundException::new);
 
         if (busCard.getTxCounter() == null || busCard.getTxCounter() < 0) {
+            log.error("Bozuk sayaç tespit edildi | uid={}, txCounter={}", uid, busCard.getTxCounter());
             throw new CorruptedDataException();
         }
 
@@ -184,9 +191,11 @@ public class BusCardManager implements BusCardService {
 
             if (sub == null) throw new SubscriptionNotFoundException();
             if (sub.getEndDate() != null && sub.getEndDate().isBefore(LocalDate.now())) {
+                log.warn("Abonman süresi dolmuş kart ile kullanım | uid={}", uid);
                 throw new SubscriptionExpiredException();
             }
             if (sub.getRemainingUses() <= 0) {
+                log.warn("Abonman hakları tükenmiş kart ile kullanım | uid={}", uid);
                 throw new SubscriptionExpiredException();
             }
 
@@ -236,6 +245,7 @@ public class BusCardManager implements BusCardService {
 
         // 6. Bakiye kontrolü
         if (busCard.getBalance().compareTo(fare) < 0) {
+            log.warn("Yetersiz bakiye nedeniyle kullanım reddedildi | uid={}, bakiye={}, ücret={}", uid, busCard.getBalance(), fare);
             throw new InsufficientBalanceException();
         }
 
@@ -257,6 +267,7 @@ public class BusCardManager implements BusCardService {
 
         BusRide busRide = new BusRide();
         busRide.setBus(bus);
+        busRide.setDriver(bus != null ? bus.getDriver() : null);
         busRide.setBusCard(busCard);
         busRide.setStatus(RideStatus.SUCCESS);
         busRide.setBoardingTime(LocalDateTime.now());
@@ -266,6 +277,7 @@ public class BusCardManager implements BusCardService {
         busRideRepository.save(busRide);
         busRepository.save(bus);
         busCardRepository.save(busCard);
+        log.info("Kart kullanımı tamamlandı | uid={}, validator={}, fare={}", uid, validatorId, fare);
 
         // 10. Lazy alanları yüklemeden önce initialize et
         Hibernate.initialize(busCard.getActivities());
@@ -306,6 +318,7 @@ public class BusCardManager implements BusCardService {
         if (admin == null) {
             throw new AdminNotFoundException();
         }
+        log.info("Kart fiyatlandırma oluşturma isteği | admin={}, type={}", username, createCardPricingRequest.getCardType());
 
         CardPricing cardPricing = new CardPricing();
         cardPricing.setCardType(createCardPricingRequest.getCardType());
@@ -327,6 +340,7 @@ public class BusCardManager implements BusCardService {
                 null
         );
 
+        log.info("Kart fiyatlandırma kaydedildi | admin={}, pricingId={}", username, cardPricing.getId());
         return new ResponseMessage("Kart fiyatlandırma başarılı", true);
     }
 
@@ -340,15 +354,18 @@ public class BusCardManager implements BusCardService {
         if (admin == null) {
             throw new AdminNotFoundException();
         }
+        log.info("Kart vizeleme işlemi | admin={}, uid={}", username, request.getUid());
 
         BusCard busCard = busCardRepository.findByCardNumberNative(request.getUid())
                 .orElseThrow(BusCardNotFoundException::new);
 
         if (!busCard.getStatus().equals(CardStatus.ACTIVE) || !busCard.isActive()) {
+            log.warn("Aktif olmayan karta vize talebi | uid={}", request.getUid());
             throw new BusCardNotActiveException();
         }
 
         if (!busCard.getType().equals(ÖĞRENCİ)) {
+            log.warn("Öğrenci olmayan karta vize talebi | uid={}", request.getUid());
             throw new BusCardNotStudentException();
         }
 
@@ -359,6 +376,7 @@ public class BusCardManager implements BusCardService {
         busCard.setTxCounter(0);
 
         busCardRepository.save(busCard);
+        log.info("Kart vizeleme tamamlandı | uid={}", request.getUid());
 
         return busCardConverter.BusCardToBusCardDTO(busCard);
     }
@@ -369,6 +387,7 @@ public class BusCardManager implements BusCardService {
     public BusCardDTO cardBlocked(ReadCardRequest request, String username) throws AdminNotFoundException, BusCardNotActiveException, BusCardNotFoundException, BusCardAlreadyIsBlockedException {
         Admin admin = adminRepository.findByUserNumber(username);
         if (admin == null) throw new AdminNotFoundException();
+        log.warn("Kart bloklama işlemi başlatıldı | admin={}, uid={}", username, request.getUid());
 
         BusCard busCard = busCardRepository.findByCardNumberNative(request.getUid()).orElseThrow(BusCardNotFoundException::new);
         if (!busCard.isActive()) throw new BusCardNotActiveException();
@@ -380,6 +399,7 @@ public class BusCardManager implements BusCardService {
 
         busCard.setStatus(CardStatus.BLOCKED);
         BusCard savedBusCard = busCardRepository.save(busCard);
+        log.info("Kart bloklandı | uid={}, admin={}", request.getUid(), username);
 
         return busCardConverter.BusCardToBusCardDTO(savedBusCard);
     }
@@ -456,6 +476,7 @@ public class BusCardManager implements BusCardService {
             throws UserNotFoundException, WalletNotFoundException, WalletNotActiveException,
             CardPricingNotFoundException, InsufficientBalanceException {
 
+        log.info("QR kod üretimi başlatıldı | user={}", username);
         User user = userRepository.findByUserNumber(username)
                 .orElseThrow(UserNotFoundException::new);
         Wallet wallet = walletRepository.findByUser(user)
@@ -464,9 +485,11 @@ public class BusCardManager implements BusCardService {
                 .orElseThrow(CardPricingNotFoundException::new);
 
         if (!WalletStatus.ACTIVE.equals(wallet.getStatus())) {
+            log.warn("Pasif cüzdan için QR talebi | user={}", username);
             throw new WalletNotActiveException();
         }
         if (wallet.getBalance().compareTo(cardPricing.getPrice()) < 0) {
+            log.warn("QR üretimi reddedildi (yetersiz bakiye) | user={}, bakiye={}", username, wallet.getBalance());
             throw new InsufficientBalanceException();
         }
 
@@ -500,11 +523,12 @@ public class BusCardManager implements BusCardService {
             qr.setExpiresAt(expiresAt);
             qr.setUsed(false);
             qrTokenRepository.save(qr);
+            log.info("QR token kaydedildi | user={}, tokenId={}", username, qr.getId());
 
             return generateQrImageBytes(token, 400, 400);
 
         } catch (Exception ex) {
-            ex.printStackTrace();
+            log.error("QR kod üretiminde hata oluştu", ex);
             throw new RuntimeException("Unable to create signed QR", ex);
         }
     }
@@ -516,12 +540,15 @@ public class BusCardManager implements BusCardService {
             UserNotFoundException, WalletNotFoundException,
             InsufficientBalanceException, WalletNotActiveException, CardPricingNotFoundException {
 
+        log.info("QR token doğrulama isteği alındı | tokenHash={}", qrToken != null ? qrToken.hashCode() : 0);
         if (!qrStatus(qrToken)) {
+            log.warn("Geçersiz QR token | tokenHash={}", qrToken != null ? qrToken.hashCode() : 0);
             throw new InvalidQrCodeException();
         }
 
         String[] parts = qrToken.split("\\.");
         if (parts.length != 2) {
+            log.warn("QR token formatı hatalı");
             throw new InvalidQrCodeException();
         }
 
@@ -532,12 +559,14 @@ public class BusCardManager implements BusCardService {
         try {
             json = new String(Base64.getUrlDecoder().decode(encodedPayload), StandardCharsets.UTF_8);
         } catch (IllegalArgumentException e) {
+            log.warn("QR token Base64 çözümlemesi başarısız");
             throw new InvalidQrCodeException();
         }
 
         String secret = "8de51002adb5ed3faf17076a91d4bbb98ffdd5be3c98812ed15c5f82e2f80e03";
         String expectedSignature = hmacSha256(json, secret);
         if (!expectedSignature.equals(providedSignature)) {
+            log.warn("QR token imza doğrulaması başarısız");
             throw new InvalidQrCodeException();
         }
 
@@ -557,9 +586,11 @@ public class BusCardManager implements BusCardService {
 
         Instant now = Instant.now();
         if (qr.isUsed()) {
+            log.warn("Daha önce kullanılmış QR token | tokenId={}", qr.getId());
             throw new InvalidQrCodeException();
         }
         if (qr.getExpiresAt().isBefore(now) || now.toEpochMilli() > expiresAtMs) {
+            log.warn("Süresi dolmuş QR token | tokenId={}", qr.getId());
             throw new ExpiredQrCodeException();
         }
 
@@ -570,6 +601,7 @@ public class BusCardManager implements BusCardService {
                 .orElseThrow(WalletNotFoundException::new);
 
         if (!WalletStatus.ACTIVE.equals(wallet.getStatus())) {
+            log.warn("Pasif cüzdan ile QR doğrulama denemesi | user={}", userNumber);
             throw new WalletNotActiveException();
         }
 
@@ -578,6 +610,7 @@ public class BusCardManager implements BusCardService {
 
         BigDecimal qrPrice = qrPricing.getPrice();
         if (wallet.getBalance().compareTo(qrPrice) < 0) {
+            log.warn("QR ödeme için yetersiz bakiye | user={}, bakiye={}, ücret={}", userNumber, wallet.getBalance(), qrPrice);
             throw new InsufficientBalanceException();
         }
 
@@ -598,6 +631,7 @@ public class BusCardManager implements BusCardService {
         qr.setUsed(true);
         qrTokenRepository.save(qr);
 
+        log.info("QR token başarıyla doğrulandı | tokenId={}, user={}", qr.getId(), userNumber);
         return new ResponseMessage(
                 "QR doğrulandı, " + qrPrice + "₺ düşüldü. Güncel bakiye: " + wallet.getBalance(),
                 true
@@ -646,6 +680,7 @@ public class BusCardManager implements BusCardService {
         if (admin == null) {
             throw new AdminNotFoundException();
         }
+        log.info("Kart blokesi kaldırma isteği | admin={}, uid={}", username, request.getUid());
 
         BusCard busCard = busCardRepository.findByCardNumberNative(request.getUid()).orElseThrow(BusCardNotFoundException::new);
         if (!busCard.isActive()) throw new BusCardNotActiveException();
@@ -657,12 +692,14 @@ public class BusCardManager implements BusCardService {
 
         busCard.setStatus(CardStatus.ACTIVE);
         BusCard savedBusCard = busCardRepository.save(busCard);
+        log.info("Kart blokesi kaldırıldı | uid={}, admin={}", request.getUid(), username);
 
         return busCardConverter.BusCardToBusCardDTO(savedBusCard);
     }
 
     @Override
     public List<BusCardDTO> getBlockedCards(String username) {
+        log.debug("Bloke kart listesi getiriliyor | admin={}", username);
         return busCardRepository.findAll().stream().filter(busCard -> busCard.getStatus().equals(CardStatus.BLOCKED)).filter(BusCard::isActive).map(busCardConverter::BusCardToBusCardDTO).toList();
 
     }
@@ -676,11 +713,13 @@ public class BusCardManager implements BusCardService {
         if (securityUser == null) {
             throw new AdminNotFoundException();
         }
+        log.info("Yönetici kart yükleme işlemi | admin={}, uid={}", username, request.getUid());
 
         BusCard busCard = busCardRepository.findByCardNumberNative(request.getUid())
                 .orElseThrow(BusCardNotFoundException::new);
 
         if (!busCard.getStatus().equals(CardStatus.ACTIVE) || !busCard.isActive()) {
+            log.warn("Pasif kart için yönetici yükleme denemesi | uid={}", request.getUid());
             throw new BusCardNotActiveException();
         }
 
@@ -695,6 +734,8 @@ public class BusCardManager implements BusCardService {
 
         busCardRepository.save(busCard);
 
+        log.info("Kart bakiyesi güncellendi | uid={}, eskiBakiye={}, yeniBakiye={}",
+                request.getUid(), oldBalance, newBalance);
         return busCardConverter.BusCardToBusCardDTO(busCard);
     }
 
@@ -703,6 +744,7 @@ public class BusCardManager implements BusCardService {
     public BusCardDTO editCard(String username, UpdateBusCardRequest updateCardRequest) throws BusCardNotFoundException {
         BusCard busCard = busCardRepository.findByCardNumberNative(updateCardRequest.getUid())
                 .orElseThrow(BusCardNotFoundException::new);
+        log.info("Kart güncelleme işlemi | admin={}, uid={}", username, updateCardRequest.getUid());
 
         if (updateCardRequest.getFullName() != null)
             busCard.setFullName(updateCardRequest.getFullName());
@@ -718,7 +760,7 @@ public class BusCardManager implements BusCardService {
 
         BusCard saved = busCardRepository.save(busCard);
 
-
+        log.info("Kart bilgileri güncellendi | uid={}", updateCardRequest.getUid());
         return busCardConverter.BusCardToBusCardDTO(saved);
     }
 
@@ -728,10 +770,12 @@ public class BusCardManager implements BusCardService {
         // 1. Kartı bul
         BusCard busCard = busCardRepository.findByCardNumberNative(deleteCardRequest.getUid())
                 .orElseThrow(BusCardNotFoundException::new);
+        log.warn("Kart pasif hale getirme işlemi | admin={}, uid={}", username, deleteCardRequest.getUid());
 
         // 2. Kullanıcı yetkisi kontrolü (isteğe bağlı)
         SecurityUser user = securityUserRepository.findByUserNumber(username)
                 .orElseThrow(AdminNotFoundException::new);
+        log.debug("Kart pasif etme yetki kontrolü tamamlandı | admin={}, adminId={}", username, user.getId());
 
 
 
@@ -747,6 +791,7 @@ public class BusCardManager implements BusCardService {
         busCardRepository.save(busCard);
 
         // 5. Geri bildirim döndür
+        log.info("Kart pasif hale getirildi | uid={}", deleteCardRequest.getUid());
         return new  ResponseMessage("Kart başarıyla pasif hale getirildi: " + busCard.getCardNumber(),true);
     }
 
@@ -758,6 +803,7 @@ public class BusCardManager implements BusCardService {
         if (admin == null) {
             throw new AdminNotFoundException();
         }
+        log.info("Abonman oluşturma işlemi | admin={}, uid={}", username, createSubscriptionRequest.getUid());
 
         BusCard busCard = busCardRepository.findByCardNumberNative(createSubscriptionRequest.getUid())
                 .orElseThrow(BusCardNotFoundException::new);
@@ -784,6 +830,7 @@ public class BusCardManager implements BusCardService {
 
         BusCard savedBusCard = busCardRepository.save(busCard);
 
+        log.info("Abonman kartı güncellendi | uid={}, type={}", createSubscriptionRequest.getUid(), createSubscriptionRequest.getType());
         return busCardConverter.BusCardToBusCardDTO(savedBusCard);
     }
 
@@ -793,6 +840,7 @@ public class BusCardManager implements BusCardService {
                 .orElseThrow(() -> new AdminNotFoundException());
 
         Page<BusCard> cards = busCardRepository.findAll(pageable);
+        log.debug("Kart listesi getirildi | admin={}, adminId={}, pageSize={}", username, admin.getId(), pageable.getPageSize());
 
         return cards.map(busCardConverter::BusCardToBusCardDTO);
     }
@@ -805,6 +853,7 @@ public class BusCardManager implements BusCardService {
         if (qr == null) return false;
         if (qr.isUsed()) return false;
         if (qr.getExpiresAt().isBefore(Instant.now())) return false;
+        log.debug("QR statüsü doğrulandı | tokenHash={}", token != null ? token.hashCode() : 0);
         return true;
     }
 
@@ -949,12 +998,14 @@ public class BusCardManager implements BusCardService {
         User user = userRepository.findByUserNumber(username)
                 .orElseThrow(UserNotFoundException::new);
 
+        log.info("3D top-up isteği alındı | user={}, busCard={}, amount={}", username, maskCardNumber(cardNumber), topUpBalanceRequest.getAmount());
         if (!user.isEnabled()) {
             return new ResponseMessage("Kullanıcı hesabı aktif değil.", false);
         }
 
         if (topUpBalanceRequest.getAmount() == null
                 || topUpBalanceRequest.getAmount().compareTo(BigDecimal.valueOf(20)) < 0) {
+            log.warn("Minimum tutarın altında top-up denemesi | user={}, amount={}", username, topUpBalanceRequest.getAmount());
             throw new MinumumTopUpAmountException();
         }
         BusCard busCard = busCardRepository.findByCardNumberNative(cardNumber).orElseThrow(BusCardNotFoundException::new);
@@ -1028,7 +1079,7 @@ public class BusCardManager implements BusCardService {
 
 
             String baseUrl;
-            System.out.println(topUpBalanceRequest.getPlatformType());
+            log.debug("Top-up platform bilgisi | type={}", topUpBalanceRequest.getPlatformType());
             if (topUpBalanceRequest.getPlatformType() == PlatformType.MOBILE) {
                 baseUrl = "http://192.168.174.214:8080";
             } else if (topUpBalanceRequest.getPlatformType() == PlatformType.WEB) {
@@ -1054,14 +1105,17 @@ public class BusCardManager implements BusCardService {
 
                 topUpSessionCache.put(conversationId,
                         new TopUpSessionData(username, busCard.getCardNumber(),topUpBalanceRequest.getAmount()));
+                log.debug("TopUpSessionCache kaydı oluşturuldu | conversationId={}, user={}", conversationId, username);
 
                 String htmlContent = threedsInitialize.getHtmlContent();
                 return new DataResponseMessage<>("3D doğrulama başlatıldı. Yönlendirme yapılıyor.", true, htmlContent);
             } else {
+                log.warn("3D başlatma başarısız oldu | user={}, mesaj={}", username, threedsInitialize.getErrorMessage());
                 return new ResponseMessage("3D başlatma başarısız: " + threedsInitialize.getErrorMessage(), false);
             }
 
         } catch (Exception e) {
+            log.error("3D top-up başlatılırken hata oluştu | user={}", username, e);
             return new ResponseMessage("3D başlatma hatası: " + e.getMessage(), false);
         }
     }
@@ -1070,8 +1124,10 @@ public class BusCardManager implements BusCardService {
     @Transactional
     public ResponseMessage topUpAsGuest(String cardNumber, TopUpBalanceRequest topUpBalanceRequest) throws BusCardNotFoundException, BusCardNotActiveException, BusCardIsBlockedException, MinumumTopUpAmountException {
 
+        log.info("Misafir top-up isteği | card={}, amount={}", maskCardNumber(cardNumber), topUpBalanceRequest.getAmount());
         if (topUpBalanceRequest.getAmount() == null
                 || topUpBalanceRequest.getAmount().compareTo(BigDecimal.valueOf(20)) < 0) {
+            log.warn("Minimum tutarın altında misafir top-up denemesi | card={}", maskCardNumber(cardNumber));
             throw new MinumumTopUpAmountException();
         }
 
@@ -1159,20 +1215,24 @@ public class BusCardManager implements BusCardService {
             if ("success".equals(threedsInitialize.getStatus())) {
                 topUpSessionCache.put(conversationId,
                         new TopUpSessionData(null, busCard.getCardNumber(), topUpBalanceRequest.getAmount()));
+                log.debug("Misafir top-up için cache kaydı oluşturuldu | conversationId={}", conversationId);
 
                 String htmlContent = threedsInitialize.getHtmlContent();
                 return new DataResponseMessage<>("3D doğrulama başlatıldı. Yönlendirme yapılıyor.", true, htmlContent);
             } else {
+                log.warn("Misafir top-up 3D başlatma başarısız | card={}", maskCardNumber(cardNumber));
                 return new ResponseMessage("3D başlatma başarısız: " + threedsInitialize.getErrorMessage(), false);
             }
 
         } catch (Exception e) {
+            log.error("Misafir top-up başlatılırken hata oluştu | card={}", maskCardNumber(cardNumber), e);
             return new ResponseMessage("3D başlatma hatası: " + e.getMessage(), false);
         }
     }
 
     @Override
     public BusCardDTO balanceInquiry(String cardNumber) throws BusCardNotFoundException {
+        log.debug("Kart bakiye sorgusu | card={}", maskCardNumber(cardNumber));
         return busCardConverter.BusCardToBusCardDTO(busCardRepository.findByCardNumberNative(cardNumber).orElseThrow(BusCardNotFoundException::new));
     }
 
@@ -1183,6 +1243,8 @@ public class BusCardManager implements BusCardService {
         User user = userRepository.findByUserNumber(username)
                 .orElseThrow(UserNotFoundException::new);
 
+        log.info("Cüzdandan kart yükleme isteği | user={}, card={}, amount={}",
+                username, maskCardNumber(topUpCardRequest.getCardNumber()), topUpCardRequest.getAmount());
         BusCard busCard = busCardRepository.findByCardNumberNative(topUpCardRequest.getCardNumber())
                 .orElseThrow(BusCardNotFoundException::new);
 
@@ -1196,17 +1258,21 @@ public class BusCardManager implements BusCardService {
         }
 
         if (busCard.getStatus() == CardStatus.BLOCKED) {
+            log.warn("Bloke karta cüzdan yükleme denemesi | user={}, card={}", username, busCard.getCardNumber());
             throw new BusCardIsBlockedException();
         }
         if (busCard.getStatus() != CardStatus.ACTIVE) {
+            log.warn("Aktif olmayan karta cüzdan yükleme denemesi | user={}, card={}", username, busCard.getCardNumber());
             throw new BusCardNotActiveException();
         }
 
         if (amount == null || amount.compareTo(BigDecimal.valueOf(20)) < 0) {
+            log.warn("Minimum tutarın altında cüzdan yükleme isteği | user={}, amount={}", username, amount);
             throw new MinumumTopUpAmountException();
         }
 
         if (wallet.getBalance().compareTo(amount) < 0) {
+            log.warn("Cüzdan bakiyesi yetersiz | user={}, bakiye={}, amount={}", username, wallet.getBalance(), amount);
             throw new InsufficientBalanceException();
         }
 
@@ -1278,6 +1344,8 @@ public class BusCardManager implements BusCardService {
     @Transactional
     public ResponseMessage handleSuccessfulTopUp(User user, BigDecimal amount, String paymentId, String cardNumber,HttpServletRequest httpServletRequest) throws BusCardIsBlockedException, BusCardNotActiveException, BusCardNotFoundException {
 
+        log.debug("Başarılı top-up sonrası işlem kaydı | user={}, card={}, amount={}, paymentId={}",
+                user.getUserNumber(), maskCardNumber(cardNumber), amount, paymentId);
         BusCard busCard = busCardRepository.findByCardNumberNative(cardNumber)
                 .orElseThrow(BusCardNotFoundException::new);
 
@@ -1347,6 +1415,13 @@ public class BusCardManager implements BusCardService {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream);
         return outputStream.toByteArray();
+    }
+
+    private String maskCardNumber(String value) {
+        if (value == null || value.length() < 4) {
+            return "****";
+        }
+        return "****" + value.substring(value.length() - 4);
     }
 
 
