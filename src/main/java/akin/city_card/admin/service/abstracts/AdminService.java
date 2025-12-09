@@ -19,6 +19,8 @@ import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.List;
+
 public interface AdminService {
     ResponseMessage signUp(@Valid CreateAdminRequest adminRequest, HttpServletRequest httpServletRequest) throws PhoneIsNotValidException, PhoneNumberAlreadyExistsException;
 
@@ -38,4 +40,6 @@ public interface AdminService {
     DataResponseMessage<AdminDTO> getProfile(String username) throws AdminNotFoundException;
 
     DataResponseMessage<Page<AuditLogDTO>> getAuditLogs(String fromDate, String toDate, String action, String username);
+
+    DataResponseMessage<List<String>> getMyRoles(String username) throws AdminNotFoundException;
 }

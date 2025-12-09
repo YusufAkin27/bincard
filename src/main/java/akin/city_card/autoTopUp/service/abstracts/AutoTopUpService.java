@@ -48,4 +48,11 @@ public interface AutoTopUpService {
     boolean hasActiveAutoTopUpForCard(Long busCardId);
 
     boolean canProcessAutoTopUp(Long busCardId, BigDecimal currentBalance);
+
+    // Admin İşlemleri
+    List<AutoTopUpConfigDTO> getAllAutoTopUpConfigs();
+
+    List<AutoTopUpLogDTO> getAllAutoTopUpLogs();
+
+    AutoTopUpStatsDTO getAllAutoTopUpStats();
 }

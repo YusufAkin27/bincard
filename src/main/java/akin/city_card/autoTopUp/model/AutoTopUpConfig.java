@@ -41,6 +41,7 @@ public class AutoTopUpConfig {
     @Column(nullable = false)
     private BigDecimal amount;
 
+    @Builder.Default
     private boolean active = true;
 
     private LocalDateTime lastTopUpAt;

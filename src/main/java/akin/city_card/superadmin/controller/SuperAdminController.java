@@ -9,18 +9,14 @@ import akin.city_card.response.ResponseMessage;
 import akin.city_card.security.exception.SuperAdminNotFoundException;
 import akin.city_card.superadmin.core.request.AddRoleAdminRequest;
 import akin.city_card.superadmin.core.request.BulkRoleAssignmentRequest;
-import akin.city_card.superadmin.core.request.SystemConfigRequest;
 import akin.city_card.superadmin.core.request.UpdateAdminRequest;
 import akin.city_card.superadmin.core.response.AdminDetailsResponse;
-import akin.city_card.superadmin.core.response.SystemStatsResponse;
 import akin.city_card.superadmin.exceptions.AdminApprovalRequestNotFoundException;
 import akin.city_card.superadmin.exceptions.AdminNotActiveException;
 import akin.city_card.superadmin.exceptions.RequestAlreadyProcessedException;
 import akin.city_card.superadmin.exceptions.ThisTelephoneAlreadyUsedException;
 import akin.city_card.superadmin.service.abstracts.SuperAdminService;
-import akin.city_card.user.core.response.Views;
 import akin.city_card.user.exceptions.EmailAlreadyExistsException;
-import com.fasterxml.jackson.annotation.JsonView;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -144,6 +140,7 @@ public class SuperAdminController {
     }
 
     @DeleteMapping("/admins/{adminId}")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseMessage deleteAdmin(@AuthenticationPrincipal UserDetails userDetails,
                                        @PathVariable Long adminId) throws AdminNotFoundException {
         return superAdminService.deleteAdmin(userDetails.getUsername(), adminId);
@@ -171,19 +168,6 @@ public class SuperAdminController {
             @PageableDefault(size = 20, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
         return superAdminService.getAllAdmins(userDetails.getUsername(), status, role, searchTerm, pageable);
     }
-/*
-    @PostMapping("/admins/{adminId}/reset-password")
-    public ResponseMessage resetAdminPassword(@AuthenticationPrincipal UserDetails userDetails,
-                                              @PathVariable Long adminId) throws AdminNotFoundException {
-        return superAdminService.resetAdminPassword(userDetails.getUsername(), adminId);
-    }
-
-    @PostMapping("/admins/{adminId}/terminate-session")
-    public ResponseMessage terminateAdminSessions(@AuthenticationPrincipal UserDetails userDetails,
-                                                  @PathVariable Long adminId) throws AdminNotFoundException {
-        return superAdminService.terminateAdminSessions(userDetails.getUsername(), adminId);
-    }
-
     // ===== TOPLU İŞLEMLER =====
 
     @PostMapping("/admins/bulk-create")
@@ -209,8 +193,6 @@ public class SuperAdminController {
                                                   @RequestBody List<Long> adminIds) {
         return superAdminService.activateMultipleAdmins(userDetails.getUsername(), adminIds);
     }
-
- */
 
 
 

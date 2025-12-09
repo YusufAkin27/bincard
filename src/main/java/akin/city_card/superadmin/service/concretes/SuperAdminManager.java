@@ -245,7 +245,15 @@ public class SuperAdminManager implements SuperAdminService {
             return new ResponseMessage("Rol verisi göndermelisin", false);
         }
 
+        // Mevcut rolleri al veya yeni Set oluştur
         Set<Role> adminRoles = admin.getRoles();
+        if (adminRoles == null) {
+            adminRoles = new HashSet<>();
+        } else {
+            // JPA @ElementCollection için yeni Set oluştur (değişikliklerin algılanması için)
+            adminRoles = new HashSet<>(adminRoles);
+        }
+
         List<Role> addedRoles = new ArrayList<>();
         List<Role> alreadyHasRoles = new ArrayList<>();
 
@@ -262,8 +270,12 @@ public class SuperAdminManager implements SuperAdminService {
             }
         }
 
-        admin.setRoles(adminRoles);
+        // Yeni Set'i set et (JPA değişikliği algılasın)
+        admin.setRoles(new HashSet<>(adminRoles));
         adminRepository.save(admin);
+        
+        // Değişikliğin kaydedildiğinden emin olmak için flush
+        adminRepository.flush();
 
         StringBuilder message = new StringBuilder();
         if (!addedRoles.isEmpty()) {
@@ -297,7 +309,15 @@ public class SuperAdminManager implements SuperAdminService {
             return new ResponseMessage("Silinicek Rol verisi yok", false);
         }
 
+        // Mevcut rolleri al veya yeni Set oluştur
         Set<Role> currentRoles = admin.getRoles();
+        if (currentRoles == null) {
+            currentRoles = new HashSet<>();
+        } else {
+            // JPA @ElementCollection için yeni Set oluştur (değişikliklerin algılanması için)
+            currentRoles = new HashSet<>(currentRoles);
+        }
+
         List<Role> removedRoles = new ArrayList<>();
         List<Role> notFoundRoles = new ArrayList<>();
 
@@ -312,8 +332,12 @@ public class SuperAdminManager implements SuperAdminService {
             }
         }
 
-        admin.setRoles(currentRoles);
+        // Yeni Set'i set et (JPA değişikliği algılasın)
+        admin.setRoles(new HashSet<>(currentRoles));
         adminRepository.save(admin);
+        
+        // Değişikliğin kaydedildiğinden emin olmak için flush
+        adminRepository.flush();
 
         // Bilgilendirme mesajı
         StringBuilder message = new StringBuilder();
@@ -387,9 +411,9 @@ public class SuperAdminManager implements SuperAdminService {
         // 5. Roller
         List<Role> roles = request.getRoles();
         if (roles == null || roles.isEmpty()) {
-            admin.setRoles(Set.of(Role.ADMIN_ALL)); // Varsayılan olarak sadece ADMIN verilebilir
+            admin.setRoles(new HashSet<>(Set.of(Role.ADMIN_ALL))); // Varsayılan olarak sadece ADMIN verilebilir
         } else {
-            admin.setRoles(Set.copyOf(roles));
+            admin.setRoles(new HashSet<>(roles)); // JPA @ElementCollection için HashSet kullan
         }
 
         // 6. Audit Log
@@ -406,8 +430,9 @@ public class SuperAdminManager implements SuperAdminService {
 
         // 7. Kaydet
         adminRepository.save(admin);
+        adminRepository.flush(); // Değişikliklerin hemen kaydedilmesini sağla
 
-        return new ResponseMessage("Admin created successfully", true);
+        return new ResponseMessage("Admin başarıyla oluşturuldu.", true);
     }
 
     @Override
@@ -451,7 +476,8 @@ public class SuperAdminManager implements SuperAdminService {
 
         // 5. Roller güncellemesi
         if (request.getRoles() != null && !request.getRoles().isEmpty()) {
-            admin.setRoles(Set.copyOf(request.getRoles()));
+            // JPA @ElementCollection için yeni HashSet oluştur
+            admin.setRoles(new HashSet<>(request.getRoles()));
         }
 
         admin.setUpdatedAt(LocalDateTime.now());
@@ -470,8 +496,9 @@ public class SuperAdminManager implements SuperAdminService {
 
         // 7. Kaydet
         adminRepository.save(admin);
+        adminRepository.flush(); // Değişikliklerin hemen kaydedilmesini sağla
 
-        return new ResponseMessage("Admin updated successfully.", true);
+        return new ResponseMessage("Admin başarıyla güncellendi.", true);
     }
 
     @Override
@@ -639,122 +666,216 @@ public class SuperAdminManager implements SuperAdminService {
         return new DataResponseMessage<>("Admin listesi başarıyla getirildi.", true, responses);
     }
 
-    /*
     @Override
-    public ResponseMessage resetAdminPassword(String username, Long adminId) {
-
-        Admin admin = adminRepository.findById(adminId)
-                .orElseThrow(AdminNotFoundException::new);
-
-        String newPassword = UUID.randomUUID().toString().substring(0, 8); // 8 karakterlik random şifre
-        admin.setPassword(passwordEncoder.encode(newPassword));
-        adminRepository.save(admin);
-
-        // audit kaydı (isteğe bağlı)
-        auditLogService.logAction(username, "RESET_ADMIN_PASSWORD", "Admin: " + admin.getEmail());
-
-        return ResponseMessage.success("Şifre başarıyla sıfırlandı. Yeni şifre: " + newPassword);
-    }
-
-    // ==============================================================
-    // 2. OTURUM SONLANDIRMA
-    // ==============================================================
-    @Override
-    public ResponseMessage terminateAdminSessions(String username, Long adminId) {
-
-        Admin admin = adminRepository.findById(adminId)
-                .orElseThrow(AdminNotFoundException::new);
-
-        sessionManager.terminateSessionsForUser(admin.getEmail()); // aktif tokenları iptal et
-
-        auditLogService.logAction(username, "TERMINATE_ADMIN_SESSIONS", "Admin: " + admin.getEmail());
-
-        return ResponseMessage.success("Adminin aktif oturumları başarıyla sonlandırıldı.");
-    }
-
-
-    @Override
+    @Transactional
     public ResponseMessage createBulkAdmins(String username, List<CreateAdminRequest> createRequests) {
+        if (createRequests == null || createRequests.isEmpty()) {
+            return new ResponseMessage("Oluşturulacak admin verisi bulunamadı.", false);
+        }
 
         List<Admin> newAdmins = new ArrayList<>();
+        int successCount = 0;
+        int failCount = 0;
 
         for (CreateAdminRequest request : createRequests) {
-            Admin admin = Admin.builder()
-                    .profileInfo(ProfileInfo.builder()
-                            .name(request.getName())
-                            .surname(request.getSurname())
-                            .email(request.getEmail())
-                            .build())
-                    .userNumber(request.getTelephone())
-                    .password(passwordEncoder.encode(request.getPassword()))
-                    .roles(Collections.singleton(Role.ROLE_EMPTY))
-                    .status(UserStatus.ACTIVE)
-                    .superAdminApproved(true)
-                    .registeredAt(LocalDateTime.now())
-                    .build();
+            try {
+                // Telefon numarası kontrolü
+                if (securityUserRepository.existsByUserNumber(request.getTelephone())) {
+                    failCount++;
+                    continue;
+                }
 
-            newAdmins.add(admin);
+                // E-posta kontrolü
+                if (securityUserRepository.existsByProfileInfoEmail(request.getEmail())) {
+                    failCount++;
+                    continue;
+                }
+
+                ProfileInfo profileInfo = new ProfileInfo();
+                profileInfo.setName(request.getName());
+                profileInfo.setSurname(request.getSurname());
+                profileInfo.setEmail(request.getEmail());
+
+                Admin admin = new Admin();
+                admin.setUserNumber(request.getTelephone());
+                admin.setPassword(passwordEncoder.encode(request.getPassword()));
+                admin.setProfileInfo(profileInfo);
+                admin.setStatus(UserStatus.ACTIVE);
+                admin.setSuperAdminApproved(true);
+                admin.setApprovedAt(LocalDateTime.now());
+                admin.setRegisteredAt(LocalDateTime.now());
+                admin.setCreatedAt(LocalDateTime.now());
+                admin.setDeleted(false);
+                admin.setEmailVerified(false);
+                admin.setPhoneVerified(true);
+
+                // Roller
+                List<Role> roles = request.getRoles();
+                if (roles == null || roles.isEmpty()) {
+                    admin.setRoles(new HashSet<>(Set.of(Role.ADMIN_ALL)));
+                } else {
+                    admin.setRoles(new HashSet<>(roles));
+                }
+
+                newAdmins.add(admin);
+                successCount++;
+            } catch (Exception e) {
+                failCount++;
+            }
         }
 
-        adminRepository.saveAll(newAdmins);
-        auditLogService.logAction(username, "BULK_CREATE_ADMINS", "Toplam " + newAdmins.size() + " admin eklendi.");
+        if (!newAdmins.isEmpty()) {
+            adminRepository.saveAll(newAdmins);
+            adminRepository.flush();
+        }
 
-        return ResponseMessage.success(newAdmins.size() + " yeni admin başarıyla oluşturuldu.");
+        // Audit log
+        for (Admin admin : newAdmins) {
+            AuditLog auditLog = new AuditLog();
+            auditLog.setAction(ActionType.BULK_USER_CREATED);
+            auditLog.setDescription("Toplu admin oluşturuldu: " + admin.getUserNumber());
+            auditLog.setTimestamp(LocalDateTime.now());
+            auditLog.setTargetEntityId(admin.getId());
+            auditLog.setTargetEntityType("Admin");
+            auditLog.setUser(admin);
+            auditLog.setDeviceInfo(admin.getCurrentDeviceInfo());
+            auditLogRepository.save(auditLog);
+        }
+
+        return new ResponseMessage(
+                String.format("Toplu admin oluşturma tamamlandı. Başarılı: %d, Başarısız: %d", successCount, failCount),
+                successCount > 0
+        );
     }
 
-
     @Override
+    @Transactional
     public ResponseMessage deactivateMultipleAdmins(String username, List<Long> adminIds) {
+        if (adminIds == null || adminIds.isEmpty()) {
+            return new ResponseMessage("Devre dışı bırakılacak admin ID'leri bulunamadı.", false);
+        }
 
         List<Admin> admins = adminRepository.findAllById(adminIds);
+        if (admins.isEmpty()) {
+            return new ResponseMessage("Belirtilen ID'lere sahip admin bulunamadı.", false);
+        }
 
         for (Admin admin : admins) {
-            admin.setStatus(AccountStatus.SUSPENDED);
+            admin.setStatus(UserStatus.INACTIVE);
+            admin.setUpdatedAt(LocalDateTime.now());
+
+            // Audit log
+            AuditLog auditLog = new AuditLog();
+            auditLog.setAction(ActionType.ADMIN_BULK_UPDATE_USER_STATUS);
+            auditLog.setDescription("Toplu admin devre dışı bırakıldı: " + admin.getId());
+            auditLog.setTimestamp(LocalDateTime.now());
+            auditLog.setTargetEntityId(admin.getId());
+            auditLog.setTargetEntityType("Admin");
+            auditLog.setUser(admin);
+            auditLog.setDeviceInfo(admin.getCurrentDeviceInfo());
+            auditLogRepository.save(auditLog);
         }
 
         adminRepository.saveAll(admins);
-        auditLogService.logAction(username, "BULK_DEACTIVATE_ADMINS", "Devre dışı bırakılan: " + adminIds);
+        adminRepository.flush();
 
-        return ResponseMessage.success(admins.size() + " admin devre dışı bırakıldı.");
+        return new ResponseMessage(
+                String.format("%d admin başarıyla devre dışı bırakıldı.", admins.size()),
+                true
+        );
     }
 
-
     @Override
+    @Transactional
     public ResponseMessage activateMultipleAdmins(String username, List<Long> adminIds) {
+        if (adminIds == null || adminIds.isEmpty()) {
+            return new ResponseMessage("Aktifleştirilecek admin ID'leri bulunamadı.", false);
+        }
 
         List<Admin> admins = adminRepository.findAllById(adminIds);
+        if (admins.isEmpty()) {
+            return new ResponseMessage("Belirtilen ID'lere sahip admin bulunamadı.", false);
+        }
 
         for (Admin admin : admins) {
-            admin.setStatus(AccountStatus.ACTIVE);
+            admin.setStatus(UserStatus.ACTIVE);
+            admin.setUpdatedAt(LocalDateTime.now());
+
+            // Audit log
+            AuditLog auditLog = new AuditLog();
+            auditLog.setAction(ActionType.ADMIN_BULK_UPDATE_USER_STATUS);
+            auditLog.setDescription("Toplu admin aktifleştirildi: " + admin.getId());
+            auditLog.setTimestamp(LocalDateTime.now());
+            auditLog.setTargetEntityId(admin.getId());
+            auditLog.setTargetEntityType("Admin");
+            auditLog.setUser(admin);
+            auditLog.setDeviceInfo(admin.getCurrentDeviceInfo());
+            auditLogRepository.save(auditLog);
         }
 
         adminRepository.saveAll(admins);
-        auditLogService.logAction(username, "BULK_ACTIVATE_ADMINS", "Aktifleştirilen: " + adminIds);
+        adminRepository.flush();
 
-        return ResponseMessage.success(admins.size() + " admin yeniden aktifleştirildi.");
+        return new ResponseMessage(
+                String.format("%d admin başarıyla aktifleştirildi.", admins.size()),
+                true
+        );
     }
 
-
     @Override
+    @Transactional
     public ResponseMessage assignRolesToMultipleAdmins(String username, Long adminId, List<String> roles) {
+        if (roles == null || roles.isEmpty()) {
+            return new ResponseMessage("Atanacak roller bulunamadı.", false);
+        }
 
         Admin admin = adminRepository.findById(adminId)
-                .orElseThrow(AdminNotFoundException::new);
+                .orElse(null);
+        
+        if (admin == null) {
+            return new ResponseMessage("Admin bulunamadı.", false);
+        }
 
-        // Enum’a uygun hale getir
-        List<Role> assignedRoles = roles.stream()
-                .map(r -> Role.valueOf(r.toUpperCase()))
-                .toList();
+        if (!admin.isEnabled()) {
+            return new ResponseMessage("Admin aktif değil.", false);
+        }
 
-        admin.setRoles(new HashSet<>(assignedRoles)); // eğer @ElementCollection varsa
+        // Enum'a uygun hale getir
+        Set<Role> assignedRoles = new HashSet<>();
+        for (String roleStr : roles) {
+            try {
+                Role role = Role.valueOf(roleStr.toUpperCase());
+                assignedRoles.add(role);
+            } catch (IllegalArgumentException e) {
+                // Geçersiz rol atlanır
+            }
+        }
+
+        if (assignedRoles.isEmpty()) {
+            return new ResponseMessage("Geçerli rol bulunamadı.", false);
+        }
+
+        // JPA @ElementCollection için yeni HashSet oluştur
+        admin.setRoles(new HashSet<>(assignedRoles));
         adminRepository.save(admin);
+        adminRepository.flush();
 
-        auditLogService.logAction(username, "ASSIGN_ROLES_TO_ADMIN", "Admin: " + admin.getEmail() + " - Roles: " + roles);
+        // Audit log
+        AuditLog auditLog = new AuditLog();
+        auditLog.setAction(ActionType.ADMIN_ASSIGN_ROLES);
+        auditLog.setDescription("Toplu rol atandı: " + roles);
+        auditLog.setTimestamp(LocalDateTime.now());
+        auditLog.setTargetEntityId(adminId);
+        auditLog.setTargetEntityType("Admin");
+        auditLog.setUser(admin);
+        auditLog.setDeviceInfo(admin.getCurrentDeviceInfo());
+        auditLogRepository.save(auditLog);
 
-        return ResponseMessage.success("Admin rolleri başarıyla güncellendi: " + roles);
+        return new ResponseMessage(
+                String.format("Admin rolleri başarıyla güncellendi: %s", roles),
+                true
+        );
     }
-
-     */
 
 
 }
