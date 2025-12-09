@@ -5,6 +5,7 @@ import akin.city_card.admin.exceptions.AdminNotFoundException;
 import akin.city_card.bus.core.request.*;
 import akin.city_card.bus.core.response.BusDTO;
 import akin.city_card.bus.core.response.BusLocationDTO;
+import akin.city_card.bus.core.response.CurrentStationInfoDTO;
 import akin.city_card.bus.core.response.StationDTO;
 import akin.city_card.bus.exceptions.*;
 import akin.city_card.bus.service.abstracts.BusService;
@@ -322,6 +323,19 @@ public class BusController {
             log.error("Error getting estimated arrival time: ", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new DataResponseMessage<>("Tahmini varış süresi hesaplanırken hata oluştu.", false, null));
+        }
+    }
+
+    @GetMapping("/{busId}/current-station-info")
+    public ResponseEntity<DataResponseMessage<CurrentStationInfoDTO>> getCurrentStationInfo(
+            @PathVariable Long busId) {
+        try {
+            DataResponseMessage<CurrentStationInfoDTO> response = busService.getCurrentStationInfo(busId);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("Error getting current station info: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new DataResponseMessage<>("Durak bilgisi alınırken hata oluştu.", false, null));
         }
     }
 

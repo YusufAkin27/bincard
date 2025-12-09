@@ -10,6 +10,7 @@ import akin.city_card.bus.core.request.CreateBusRequest;
 import akin.city_card.bus.core.request.UpdateBusRequest;
 import akin.city_card.bus.core.response.BusDTO;
 import akin.city_card.bus.core.response.BusLocationDTO;
+import akin.city_card.bus.core.response.CurrentStationInfoDTO;
 import akin.city_card.bus.core.response.StationDTO;
 import akin.city_card.bus.exceptions.*;
 import akin.city_card.bus.model.Bus;
@@ -356,6 +357,13 @@ public class BusManager implements BusService {
             bus.setLastKnownSpeed(request.getSpeed());
         }
 
+        // Otobüsün rotasındaki en yakın durağı bul ve güncelle
+        try {
+            updateBusStationInfo(bus, request.getLatitude(), request.getLongitude());
+        } catch (Exception e) {
+            log.warn("Could not update bus station info for bus {}: {}", busId, e.getMessage());
+        }
+
         busRepository.save(bus);
 
         log.debug("Location updated for bus {}: {}, {}", busId, request.getLatitude(), request.getLongitude());
@@ -528,6 +536,37 @@ public class BusManager implements BusService {
         } catch (Exception e) {
             log.error("Error calculating estimated arrival time: ", e);
             return new DataResponseMessage<>("Tahmini varış süresi hesaplanırken hata oluştu.", false, null);
+        }
+    }
+
+    @Override
+    public DataResponseMessage<CurrentStationInfoDTO> getCurrentStationInfo(Long busId) {
+        try {
+            Bus bus = busRepository.findByIdAndIsDeletedFalse(busId)
+                    .orElseThrow(() -> new BusNotFoundException(busId));
+
+            CurrentStationInfoDTO dto = CurrentStationInfoDTO.builder()
+                    .currentStation(bus.getLastSeenStation() != null ? 
+                            stationConverter.toDTO(bus.getLastSeenStation()) : null)
+                    .currentStationTime(bus.getLastSeenStationTime())
+                    .nextStation(bus.getNextStation() != null ? 
+                            stationConverter.toDTO(bus.getNextStation()) : null)
+                    .estimatedArrivalMinutes(bus.getEstimatedArrivalMinutes())
+                    .routeName(bus.getAssignedRoute() != null ? bus.getAssignedRoute().getName() : null)
+                    .directionName(bus.getCurrentDirection() != null ? bus.getCurrentDirection().getName() : null)
+                    .currentLatitude(bus.getCurrentLatitude())
+                    .currentLongitude(bus.getCurrentLongitude())
+                    .lastLocationUpdate(bus.getLastLocationUpdate())
+                    .build();
+
+            return new DataResponseMessage<>("Şu anki durak bilgisi başarıyla getirildi.", true, dto);
+
+        } catch (BusNotFoundException e) {
+            log.error("Bus not found: {}", busId);
+            return new DataResponseMessage<>("Otobüs bulunamadı.", false, null);
+        } catch (Exception e) {
+            log.error("Error getting current station info: ", e);
+            return new DataResponseMessage<>("Durak bilgisi alınırken hata oluştu.", false, null);
         }
     }
 
@@ -887,5 +926,84 @@ public class BusManager implements BusService {
                 * Math.sin(lonDistance / 2) * Math.sin(lonDistance / 2);
         double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         return R * c * 1000; // Metre cinsinden döndür
+    }
+
+    /**
+     * Otobüsün rotasındaki en yakın durağı bulur ve lastSeenStation ile nextStation'ı günceller
+     */
+    private void updateBusStationInfo(Bus bus, double latitude, double longitude) {
+        RouteDirection direction = bus.getCurrentDirection();
+        if (direction == null || direction.getStationNodes() == null || direction.getStationNodes().isEmpty()) {
+            return;
+        }
+
+        List<RouteStationNode> stationNodes = direction.getStationNodes().stream()
+                .sorted((a, b) -> Integer.compare(a.getSequenceOrder(), b.getSequenceOrder()))
+                .collect(Collectors.toList());
+
+        if (stationNodes.isEmpty()) {
+            return;
+        }
+
+        // En yakın durağı bul (100m mesafe içinde)
+        Station closestStationInRoute = null;
+        double minDistance = Double.MAX_VALUE;
+        RouteStationNode closestNode = null;
+
+        for (RouteStationNode node : stationNodes) {
+            Station fromStation = node.getFromStation();
+            Station toStation = node.getToStation();
+
+            if (fromStation != null && fromStation.getLocation() != null) {
+                double distance = calculateDistance(latitude, longitude,
+                        fromStation.getLocation().getLatitude(), fromStation.getLocation().getLongitude());
+                if (distance < minDistance && distance <= 100) { // 100m mesafe içinde
+                    minDistance = distance;
+                    closestStationInRoute = fromStation;
+                    closestNode = node;
+                }
+            }
+
+            if (toStation != null && toStation.getLocation() != null) {
+                double distance = calculateDistance(latitude, longitude,
+                        toStation.getLocation().getLatitude(), toStation.getLocation().getLongitude());
+                if (distance < minDistance && distance <= 100) { // 100m mesafe içinde
+                    minDistance = distance;
+                    closestStationInRoute = toStation;
+                    closestNode = node;
+                }
+            }
+        }
+
+        // Eğer yakın bir durak bulunduysa güncelle
+        if (closestStationInRoute != null && closestNode != null) {
+            bus.setLastSeenStation(closestStationInRoute);
+            bus.setLastSeenStationTime(LocalDateTime.now());
+
+            // Sonraki durağı bul
+            int currentIndex = stationNodes.indexOf(closestNode);
+            if (currentIndex >= 0 && currentIndex < stationNodes.size() - 1) {
+                Station nextStation = stationNodes.get(currentIndex + 1).getToStation();
+                if (nextStation != null) {
+                    bus.setNextStation(nextStation);
+                    // Tahmini varış süresini hesapla
+                    try {
+                        if (nextStation.getLocation() != null) {
+                            Integer eta = googleMapsService.getEstimatedTimeInMinutes(
+                                    latitude, longitude,
+                                    nextStation.getLocation().getLatitude(),
+                                    nextStation.getLocation().getLongitude());
+                            bus.setEstimatedArrivalMinutes(eta);
+                        }
+                    } catch (Exception e) {
+                        log.debug("Could not calculate ETA for next station: {}", e.getMessage());
+                    }
+                }
+            } else {
+                // Son durağa ulaşıldıysa nextStation'ı null yap
+                bus.setNextStation(null);
+                bus.setEstimatedArrivalMinutes(null);
+            }
+        }
     }
 }

@@ -217,15 +217,28 @@ public class BusCardManager implements BusCardService {
             Hibernate.initialize(busCard.getActivities());
             Hibernate.initialize(busCard.getSubscriptionInfo());
 
-            return busCardConverter.BusCardToBusCardDTO(busCard);
+            // Abonman kullanımı - ücretsiz
+            BusCardDTO dto = busCardConverter.BusCardToBusCardDTO(busCard);
+            dto.setChargedCardType(busCard.getType()); // Abonman için kart tipi
+            dto.setIsTransfer(false);
+            dto.setFareCharged(BigDecimal.ZERO);
+            return dto;
         }
 
         // 5. Ücret belirleme (transfer kontrolü)
         BigDecimal fare;
+        CardType chargedCardType; // Hangi kart tipinden ücret kesildi
+        
         if (sameValidator) {
-            fare = pricing.getPrice();
+            // Aynı validatorId'den ikinci ve üçüncü kez istek gelirse TAM ücret kes
+            CardPricing tamPricing = cardPricingRepository.findByCardType(CardType.TAM)
+                    .orElseThrow(CardPricingNotFoundException::new);
+            fare = tamPricing.getPrice();
             isTransfer = false;
+            chargedCardType = CardType.TAM; // TAM ücret kesildi
+            log.info("Aynı validatorId'den tekrar kullanım - TAM ücret kesiliyor | uid={}, validator={}", uid, validatorId);
         } else if (isTransfer) {
+            // Farklı validatorId'den istek gelirse aktarma ücreti kes
             CardType transferType = switch (busCard.getType()) {
                 case TAM -> CardType.TAM_AKTARMA;
                 case ÖĞRENCİ -> CardType.ÖĞRENCİ_AKTARMA;
@@ -236,11 +249,17 @@ public class BusCardManager implements BusCardService {
                 CardPricing transferPricing = cardPricingRepository.findByCardType(transferType)
                         .orElseThrow(CardPricingNotFoundException::new);
                 fare = transferPricing.getPrice();
+                chargedCardType = transferType; // Aktarma kart tipi (TAM_AKTARMA veya ÖĞRENCİ_AKTARMA)
+                log.info("Aktarma kullanımı - {} ücret kesiliyor | uid={}, validator={}", transferType, uid, validatorId);
             } else {
                 fare = pricing.getPrice();
+                chargedCardType = busCard.getType(); // Normal kart tipi
             }
         } else {
+            // İlk kullanım - normal kart tipi fiyatı
             fare = pricing.getPrice();
+            chargedCardType = busCard.getType(); // Normal kart tipi (TAM, ÖĞRENCİ, vb.)
+            log.info("İlk kullanım - {} ücret kesiliyor | uid={}, validator={}", busCard.getType(), uid, validatorId);
         }
 
         // 6. Bakiye kontrolü
@@ -283,7 +302,13 @@ public class BusCardManager implements BusCardService {
         Hibernate.initialize(busCard.getActivities());
         Hibernate.initialize(busCard.getSubscriptionInfo());
 
-        return busCardConverter.BusCardToBusCardDTO(busCard);
+        // DTO'yu oluştur ve ücret kesme bilgilerini ekle
+        BusCardDTO dto = busCardConverter.BusCardToBusCardDTO(busCard);
+        dto.setChargedCardType(chargedCardType);
+        dto.setIsTransfer(isTransfer);
+        dto.setFareCharged(fare);
+        
+        return dto;
     }
 
 

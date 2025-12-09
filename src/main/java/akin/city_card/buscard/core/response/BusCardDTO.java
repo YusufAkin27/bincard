@@ -28,4 +28,9 @@ public class BusCardDTO {
     private LocalDate lastTransactionDate;
     private SubscriptionInfo subscriptionInfo;
     private Integer txCounter;
+    
+    // Ücret kesme bilgileri (get-on API için)
+    private CardType chargedCardType; // Hangi kart tipinden ücret kesildi (TAM, ÖĞRENCİ, TAM_AKTARMA, ÖĞRENCİ_AKTARMA)
+    private Boolean isTransfer; // Aktarma mı değil mi
+    private BigDecimal fareCharged; // Kesilen ücret
 }

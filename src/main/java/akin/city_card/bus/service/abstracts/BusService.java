@@ -7,6 +7,7 @@ import akin.city_card.bus.core.request.CreateBusRequest;
 import akin.city_card.bus.core.request.UpdateBusRequest;
 import akin.city_card.bus.core.response.BusDTO;
 import akin.city_card.bus.core.response.BusLocationDTO;
+import akin.city_card.bus.core.response.CurrentStationInfoDTO;
 import akin.city_card.bus.core.response.StationDTO;
 import akin.city_card.bus.exceptions.*;
 import akin.city_card.news.core.response.PageDTO;
@@ -58,6 +59,8 @@ public interface BusService {
     DataResponseMessage<List<StationDTO>> getRouteStations(Long busId, String username);
 
     DataResponseMessage<Double> getEstimatedArrivalTime(Long busId, Long stationId);
+
+    DataResponseMessage<CurrentStationInfoDTO> getCurrentStationInfo(Long busId);
 
     ResponseMessage switchDirection(Long busId, String username) throws BusNotFoundException;
 
