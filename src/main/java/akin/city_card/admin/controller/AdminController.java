@@ -33,6 +33,7 @@ import java.util.List;
 @RequestMapping("/v1/api/admin")
 @RequiredArgsConstructor
 @Slf4j
+//asd
 public class AdminController {
 
     private final AdminService adminService;
