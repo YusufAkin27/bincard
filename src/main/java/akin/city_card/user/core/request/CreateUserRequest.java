@@ -1,6 +1,8 @@
 package akin.city_card.user.core.request;
 
+import akin.city_card.validations.UniqueEmail;
 import akin.city_card.validations.UniquePhoneNumber;
+import akin.city_card.validations.ValidEmail;
 import akin.city_card.validations.ValidPassword;
 import akin.city_card.validations.ValidTelephone;
 import jakarta.validation.constraints.NotNull;
@@ -26,6 +28,9 @@ public class CreateUserRequest {
     @ValidPassword
     private String password;
 
+    @ValidEmail
+    @UniqueEmail
+    private String email;
 
 }
 

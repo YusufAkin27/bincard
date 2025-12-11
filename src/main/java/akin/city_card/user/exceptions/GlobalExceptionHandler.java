@@ -97,12 +97,16 @@ public class GlobalExceptionHandler {
 
         // Constraint violation mesajlarını analiz et
         if (message != null) {
-            if (message.contains("email") || message.contains("EMAIL")) {
-                errors.put("email", "Bu email adresi zaten kullanılıyor");
-            } else if (message.contains("phone") || message.contains("PHONE") || message.contains("userNumber")) {
-                errors.put("phoneNumber", "Bu telefon numarası zaten kullanılıyor");
-            } else if (message.contains("national") || message.contains("NATIONAL") || message.contains("nationalId")) {
+            String messageLower = message.toLowerCase();
+            // Önce daha spesifik kontrolleri yap (telefon numarası, TC kimlik)
+            if (messageLower.contains("user_number") || messageLower.contains("usernumber") || 
+                messageLower.contains("phone") || messageLower.contains("userNumber")) {
+                errors.put("telephone", "Bu telefon numarası zaten kullanılıyor");
+            } else if (messageLower.contains("national") || messageLower.contains("nationalid") || 
+                       messageLower.contains("national_id")) {
                 errors.put("nationalId", "Bu TC kimlik numarası zaten kullanılıyor");
+            } else if (messageLower.contains("email")) {
+                errors.put("email", "Bu email adresi zaten kullanılıyor");
             } else {
                 errors.put("general", "Bu bilgi zaten sistemde kayıtlı");
             }

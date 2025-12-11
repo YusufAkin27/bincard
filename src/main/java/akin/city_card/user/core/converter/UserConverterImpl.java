@@ -147,6 +147,7 @@ public class UserConverterImpl implements UserConverter {
         ProfileInfo profileInfo = ProfileInfo.builder()
                 .name(request.getFirstName())
                 .surname(request.getLastName())
+                .email(request.getEmail() != null && !request.getEmail().isBlank() ? request.getEmail().trim().toLowerCase() : null)
                 .profilePicture("https://upload.wikimedia.org/wikipedia/commons/a/ac/Default_pfp.jpg")
                 .build();
         DeviceInfo deviceInfo = DeviceInfo.builder()

@@ -81,7 +81,7 @@ public class AdminReportController {
     }
 
     @PostMapping("/assign-to-admin")
-    @PreAuthorize("hasRole('SUPERADMIN')")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> assignReportToAdmin(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestBody @Valid AssignReportRequest request,
@@ -141,7 +141,7 @@ public class AdminReportController {
     // ================== TÜM ŞİKAYETLER (SUPERADMIN) ==================
 
     @GetMapping("/all")
-    @PreAuthorize("hasRole('SUPERADMIN')")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<PageDTO<AdminReportDTO>> getAllReports(
             @RequestParam(required = false) ReportCategory category,
             @RequestParam(required = false) ReportStatus status,
@@ -347,7 +347,7 @@ public class AdminReportController {
     }
 
     @GetMapping("/admin-performances")
-    @PreAuthorize("hasRole('SUPERADMIN')")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<PageDTO<AdminPerformanceDTO>> getAllAdminPerformances(
             @AuthenticationPrincipal UserDetails userDetails,
             @PageableDefault(size = 20, sort = "totalAssignedReports", direction = Sort.Direction.DESC) Pageable pageable)
@@ -369,7 +369,7 @@ public class AdminReportController {
     // ================== SİLİNMİŞ ŞİKAYETLER ==================
 
     @GetMapping("/deleted")
-    @PreAuthorize("hasRole('SUPERADMIN')")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<PageDTO<AdminReportDTO>> getDeletedReports(
             @RequestParam(required = false) ReportCategory category,
             @RequestParam(required = false) ReportStatus status,
@@ -382,7 +382,7 @@ public class AdminReportController {
     }
 
     @PatchMapping("/restore/{reportId}")
-    @PreAuthorize("hasRole('SUPERADMIN')")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<ResponseMessage> restoreReport(
             @PathVariable Long reportId,
             @AuthenticationPrincipal UserDetails userDetails)
@@ -412,7 +412,7 @@ public class AdminReportController {
     // ================== ADMIN LİSTESİ (SUPERADMIN) ==================
 
     @GetMapping("/admins")
-    @PreAuthorize("hasRole('SUPERADMIN')")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseEntity<List<AdminSummaryDTO>> getAdminsList(@AuthenticationPrincipal UserDetails userDetails)
             throws AdminNotFoundException {
 

@@ -92,7 +92,9 @@ public class AdminUserManager implements AdminUserService {
 
     @Override
     public PageDTO<CacheUserDTO> getAllUsers(Pageable pageable, String username, HttpServletRequest httpServletRequest) throws AdminNotFoundException {
-        Page<User> userPage = userRepository.findAll(pageable);
+        // Silinmemiş kullanıcıları getir (isDeleted = false)
+        Page<User> userPage = userRepository.findAll((root, query, cb) -> 
+            cb.equal(root.get("isDeleted"), false), pageable);
 
         // Admin loglama
         SecurityUser currentAdmin = securityUserRepository.findByUserNumber(username).orElseThrow(AdminNotFoundException::new); // Mevcut admin bilgisi

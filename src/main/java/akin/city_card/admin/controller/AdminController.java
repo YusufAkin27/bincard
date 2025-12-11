@@ -23,6 +23,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -33,7 +34,6 @@ import java.util.List;
 @RequestMapping("/v1/api/admin")
 @RequiredArgsConstructor
 @Slf4j
-//asd
 public class AdminController {
 
     private final AdminService adminService;
@@ -58,6 +58,7 @@ public class AdminController {
     }
 
     @PutMapping("/change-password")
+    @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'WALLET_ADMIN', 'REPORT_ADMIN', 'CONTRACT_ADMIN', 'PAYMENT_POINT_ADMIN', 'BUS_ADMIN', 'BUS_CARD_ADMIN', 'ROUTE_ADMIN', 'STATION_ADMIN', 'DRIVER_ADMIN', 'NEWS_ADMIN', 'AUTO_TOP_UP_ADMIN', 'FEED_BACK_ADMIN', 'GEO_ALERT_ADMIN', 'HEALTH_ADMIN', 'LOCATION_ADMIN', 'NOTIFICATION_ADMIN', 'SCHEDULE_ADMIN', 'CARD_VISA_ADMIN', 'SUPERADMIN')")
     public ResponseMessage changePassword(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody ChangePasswordRequest request) throws IncorrectCurrentPasswordException, PasswordSameAsOldException, AdminNotFoundException, PasswordTooShortException {
         log.debug("AdminController.changePassword - Method called for user: {}", userDetails.getUsername());
         try {
@@ -74,6 +75,7 @@ public class AdminController {
     }
 
     @GetMapping("/profile")
+    @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'WALLET_ADMIN', 'REPORT_ADMIN', 'CONTRACT_ADMIN', 'PAYMENT_POINT_ADMIN', 'BUS_ADMIN', 'BUS_CARD_ADMIN', 'ROUTE_ADMIN', 'STATION_ADMIN', 'DRIVER_ADMIN', 'NEWS_ADMIN', 'AUTO_TOP_UP_ADMIN', 'FEED_BACK_ADMIN', 'GEO_ALERT_ADMIN', 'HEALTH_ADMIN', 'LOCATION_ADMIN', 'NOTIFICATION_ADMIN', 'SCHEDULE_ADMIN', 'CARD_VISA_ADMIN', 'SUPERADMIN')")
     public DataResponseMessage<AdminDTO> getProfile(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundException {
         log.debug("AdminController.getProfile - Method called for user: {}", userDetails.getUsername());
         try {
@@ -90,6 +92,7 @@ public class AdminController {
     }
 
     @PutMapping("/update-profile")
+    @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'WALLET_ADMIN', 'REPORT_ADMIN', 'CONTRACT_ADMIN', 'PAYMENT_POINT_ADMIN', 'BUS_ADMIN', 'BUS_CARD_ADMIN', 'ROUTE_ADMIN', 'STATION_ADMIN', 'DRIVER_ADMIN', 'NEWS_ADMIN', 'AUTO_TOP_UP_ADMIN', 'FEED_BACK_ADMIN', 'GEO_ALERT_ADMIN', 'HEALTH_ADMIN', 'LOCATION_ADMIN', 'NOTIFICATION_ADMIN', 'SCHEDULE_ADMIN', 'CARD_VISA_ADMIN', 'SUPERADMIN')")
     public ResponseMessage updateProfile(@AuthenticationPrincipal UserDetails userDetails, @Valid @RequestBody UpdateProfileRequest request) throws AdminNotFoundException {
         log.debug("AdminController.updateProfile - Method called for user: {}, Request: name={}, surname={}, email={}", 
                 userDetails.getUsername(), request.getName(), request.getSurname(), request.getEmail());
@@ -107,6 +110,7 @@ public class AdminController {
     }
 
     @PutMapping("/update-device-info")
+    @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'WALLET_ADMIN', 'REPORT_ADMIN', 'CONTRACT_ADMIN', 'PAYMENT_POINT_ADMIN', 'BUS_ADMIN', 'BUS_CARD_ADMIN', 'ROUTE_ADMIN', 'STATION_ADMIN', 'DRIVER_ADMIN', 'NEWS_ADMIN', 'AUTO_TOP_UP_ADMIN', 'FEED_BACK_ADMIN', 'GEO_ALERT_ADMIN', 'HEALTH_ADMIN', 'LOCATION_ADMIN', 'NOTIFICATION_ADMIN', 'SCHEDULE_ADMIN', 'CARD_VISA_ADMIN', 'SUPERADMIN')")
     public ResponseMessage updateDeviceInfo(@AuthenticationPrincipal UserDetails userDetails, @RequestBody UpdateDeviceInfoRequest request) throws AdminNotFoundException {
         log.debug("AdminController.updateDeviceInfo - Method called for user: {}, IP: {}, FCM: {}", 
                 userDetails.getUsername(), request.getIpAddress(), request.getFcmToken() != null ? "provided" : "not provided");
@@ -125,6 +129,7 @@ public class AdminController {
 
     // 4. Konum & Oturum Bilgileri
     @GetMapping("/location")
+    @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'WALLET_ADMIN', 'REPORT_ADMIN', 'CONTRACT_ADMIN', 'PAYMENT_POINT_ADMIN', 'BUS_ADMIN', 'BUS_CARD_ADMIN', 'ROUTE_ADMIN', 'STATION_ADMIN', 'DRIVER_ADMIN', 'NEWS_ADMIN', 'AUTO_TOP_UP_ADMIN', 'FEED_BACK_ADMIN', 'GEO_ALERT_ADMIN', 'HEALTH_ADMIN', 'LOCATION_ADMIN', 'NOTIFICATION_ADMIN', 'SCHEDULE_ADMIN', 'CARD_VISA_ADMIN', 'SUPERADMIN')")
     public LocationDTO getLocation(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundException, NoLocationFoundException {
         log.debug("AdminController.getLocation - Method called for user: {}", userDetails.getUsername());
         try {
@@ -141,6 +146,7 @@ public class AdminController {
     }
 
     @PutMapping("/location")
+    @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'WALLET_ADMIN', 'REPORT_ADMIN', 'CONTRACT_ADMIN', 'PAYMENT_POINT_ADMIN', 'BUS_ADMIN', 'BUS_CARD_ADMIN', 'ROUTE_ADMIN', 'STATION_ADMIN', 'DRIVER_ADMIN', 'NEWS_ADMIN', 'AUTO_TOP_UP_ADMIN', 'FEED_BACK_ADMIN', 'GEO_ALERT_ADMIN', 'HEALTH_ADMIN', 'LOCATION_ADMIN', 'NOTIFICATION_ADMIN', 'SCHEDULE_ADMIN', 'CARD_VISA_ADMIN', 'SUPERADMIN')")
     public ResponseMessage updateLocation(@AuthenticationPrincipal UserDetails userDetails, @RequestBody @Valid UpdateLocationRequest request) throws AdminNotFoundException {
         log.debug("AdminController.updateLocation - Method called for user: {}, Lat: {}, Lon: {}", 
                 userDetails.getUsername(), request.getLatitude(), request.getLongitude());
@@ -158,6 +164,7 @@ public class AdminController {
     }
 
     @GetMapping("/login-history")
+    @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'WALLET_ADMIN', 'REPORT_ADMIN', 'CONTRACT_ADMIN', 'PAYMENT_POINT_ADMIN', 'BUS_ADMIN', 'BUS_CARD_ADMIN', 'ROUTE_ADMIN', 'STATION_ADMIN', 'DRIVER_ADMIN', 'NEWS_ADMIN', 'AUTO_TOP_UP_ADMIN', 'FEED_BACK_ADMIN', 'GEO_ALERT_ADMIN', 'HEALTH_ADMIN', 'LOCATION_ADMIN', 'NOTIFICATION_ADMIN', 'SCHEDULE_ADMIN', 'CARD_VISA_ADMIN', 'SUPERADMIN')")
     public DataResponseMessage<Page<LoginHistoryDTO>> getLoginHistory(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "0") int page,
@@ -185,6 +192,7 @@ public class AdminController {
         }
     }
     @GetMapping("/audit-logs")
+    @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'WALLET_ADMIN', 'REPORT_ADMIN', 'CONTRACT_ADMIN', 'PAYMENT_POINT_ADMIN', 'BUS_ADMIN', 'BUS_CARD_ADMIN', 'ROUTE_ADMIN', 'STATION_ADMIN', 'DRIVER_ADMIN', 'NEWS_ADMIN', 'AUTO_TOP_UP_ADMIN', 'FEED_BACK_ADMIN', 'GEO_ALERT_ADMIN', 'HEALTH_ADMIN', 'LOCATION_ADMIN', 'NOTIFICATION_ADMIN', 'SCHEDULE_ADMIN', 'CARD_VISA_ADMIN', 'SUPERADMIN')")
     public DataResponseMessage<Page<AuditLogDTO>> getAuditLogs(
             @RequestParam(required = false) String fromDate,
             @RequestParam(required = false) String toDate,
@@ -204,6 +212,7 @@ public class AdminController {
     }
 
     @GetMapping("/roles")
+    @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'WALLET_ADMIN', 'REPORT_ADMIN', 'CONTRACT_ADMIN', 'PAYMENT_POINT_ADMIN', 'BUS_ADMIN', 'BUS_CARD_ADMIN', 'ROUTE_ADMIN', 'STATION_ADMIN', 'DRIVER_ADMIN', 'NEWS_ADMIN', 'AUTO_TOP_UP_ADMIN', 'FEED_BACK_ADMIN', 'GEO_ALERT_ADMIN', 'HEALTH_ADMIN', 'LOCATION_ADMIN', 'NOTIFICATION_ADMIN', 'SCHEDULE_ADMIN', 'CARD_VISA_ADMIN', 'SUPERADMIN')")
     public DataResponseMessage<List<String>> getMyRoles(@AuthenticationPrincipal UserDetails userDetails) throws AdminNotFoundException {
         log.debug("AdminController.getMyRoles - Method called for user: {}", userDetails.getUsername());
         try {

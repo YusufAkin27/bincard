@@ -111,9 +111,32 @@ public class SecurityConfig {
             "/v1/api/admin/roles/**"
     };
 
+    /* ---------------------- ADMIN ENDPOINTS (Genel Admin İşlemleri - sign-up hariç) ---------------------- */
+    private static final String[] adminPaths = {
+            "/v1/api/admin/change-password",
+            "/v1/api/admin/profile",
+            "/v1/api/admin/update-profile",
+            "/v1/api/admin/update-device-info",
+            "/v1/api/admin/location",
+            "/v1/api/admin/login-history",
+            "/v1/api/admin/audit-logs",
+            "/v1/api/admin/roles"
+    };
+
+    /* ---------------------- REPORT ADMIN ENDPOINTS ---------------------- */
+    private static final String[] reportAdminPaths = {
+            "/v1/api/admin/report/**"
+    };
+
+    /* ---------------------- CONTRACT ADMIN ENDPOINTS ---------------------- */
+    private static final String[] contractAdminPaths = {
+            "/v1/api/admin/contract/**"
+    };
+
     /* ---------------------- SUPER ADMIN ENDPOINTS ---------------------- */
     private static final String[] superAdminPaths = {
             "/v1/api/super-admin/**",
+            "/v1/api/superadmin/**",
             "/v1/api/health/**"
     };
 
@@ -150,6 +173,42 @@ public class SecurityConfig {
             Role.USER_ADMIN.getAuthority()
     };
 
+    private static final String[] adminRoles = {
+            Role.SUPERADMIN.getAuthority(),
+            Role.ADMIN_ALL.getAuthority(),
+            Role.USER_ADMIN.getAuthority(),
+            Role.WALLET_ADMIN.getAuthority(),
+            Role.REPORT_ADMIN.getAuthority(),
+            Role.CONTRACT_ADMIN.getAuthority(),
+            Role.PAYMENT_POINT_ADMIN.getAuthority(),
+            Role.BUS_ADMIN.getAuthority(),
+            Role.BUS_CARD_ADMIN.getAuthority(),
+            Role.ROUTE_ADMIN.getAuthority(),
+            Role.STATION_ADMIN.getAuthority(),
+            Role.DRIVER_ADMIN.getAuthority(),
+            Role.NEWS_ADMIN.getAuthority(),
+            Role.AUTO_TOP_UP_ADMIN.getAuthority(),
+            Role.FEED_BACK_ADMIN.getAuthority(),
+            Role.GEO_ALERT_ADMIN.getAuthority(),
+            Role.HEALTH_ADMIN.getAuthority(),
+            Role.LOCATION_ADMIN.getAuthority(),
+            Role.NOTIFICATION_ADMIN.getAuthority(),
+            Role.SCHEDULE_ADMIN.getAuthority(),
+            Role.CARD_VISA_ADMIN.getAuthority()
+    };
+
+    private static final String[] reportAdminRoles = {
+            Role.SUPERADMIN.getAuthority(),
+            Role.ADMIN_ALL.getAuthority(),
+            Role.REPORT_ADMIN.getAuthority()
+    };
+
+    private static final String[] contractAdminRoles = {
+            Role.SUPERADMIN.getAuthority(),
+            Role.ADMIN_ALL.getAuthority(),
+            Role.CONTRACT_ADMIN.getAuthority()
+    };
+
     private static final String[] userRoles = {
             Role.USER.getAuthority(),
             Role.SUPERADMIN.getAuthority(),
@@ -181,10 +240,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(publicPaths).permitAll()
                         .requestMatchers(superAdminPaths).hasAnyAuthority(allAdminRoles)
+                        .requestMatchers(reportAdminPaths).hasAnyAuthority(reportAdminRoles)
+                        .requestMatchers(contractAdminPaths).hasAnyAuthority(contractAdminRoles)
                         .requestMatchers(userAdminPaths).hasAnyAuthority(userAdminRoles)
                         .requestMatchers(walletAdminPaths).hasAnyAuthority(walletAdminRoles)
                         .requestMatchers(paymentPointAdminPaths).hasAnyAuthority(paymentPointAdminRoles)
                         .requestMatchers(busAdminPaths).hasAnyAuthority(busAdminRoles)
+                        .requestMatchers(adminPaths).hasAnyAuthority(adminRoles)
                         .requestMatchers(userPaths).hasAnyAuthority(userRoles)
                         .anyRequest().authenticated()
                 )

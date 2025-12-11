@@ -302,7 +302,7 @@ public class AdminUserController {
 
     // Kullanıcıyı askıya alma
     @PostMapping("/admin/{userId}/suspend")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'SUPERADMIN')")
     public ResponseMessage suspendUser(
             @PathVariable Long userId,
             @RequestBody SuspendUserRequest request,
@@ -313,7 +313,7 @@ public class AdminUserController {
 
     // Kullanıcı hesabını kalıcı olarak silme
     @DeleteMapping("/admin/{userId}/delete")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseMessage permanentlyDeleteUser(
             @PathVariable Long userId,
             @RequestBody PermanentDeleteRequest request,
@@ -324,7 +324,7 @@ public class AdminUserController {
 
     // Kullanıcı askıya alma işlemini kaldırma
     @PostMapping("/admin/{userId}/unsuspend")
-    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'SUPERADMIN')")
     public ResponseMessage unsuspendUser(
             @PathVariable Long userId,
             @RequestBody UnsuspendUserRequest request,
