@@ -19,8 +19,10 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     boolean existsByIdentityInfo_NationalId(String nationalId);
 
-
     Page<User> findAll(Pageable pageable);
+    
+    @Query("SELECT u FROM User u WHERE u.isDeleted = false")
+    Page<User> findAllByIsDeletedFalse(Pageable pageable);
 
     User findByIdentityInfo_NationalId(String nationalId);
 

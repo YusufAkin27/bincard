@@ -14,6 +14,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.HashMap;
 import java.util.List;
@@ -158,6 +159,28 @@ public class GlobalExceptionHandler {
         ResponseMessage errorResponse = new ResponseMessage();
         errorResponse.setSuccess(false);
         errorResponse.setMessage("Zorunlu alan eksik");
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ResponseMessage> handleMethodArgumentTypeMismatchException(
+            MethodArgumentTypeMismatchException ex) {
+
+        ResponseMessage errorResponse = new ResponseMessage();
+        errorResponse.setSuccess(false);
+        
+        String parameterName = ex.getName();
+        String requiredType = ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "bilinmeyen";
+        String actualValue = ex.getValue() != null ? ex.getValue().toString() : "null";
+        
+        // Eğer değerde süslü parantez varsa, kullanıcıya daha açıklayıcı mesaj ver
+        if (actualValue.contains("{") || actualValue.contains("}")) {
+            errorResponse.setMessage("URL parametresi hatalı. Lütfen URL'de süslü parantez kullanmayın. Örnek: /users/162 yerine /users/{162} yazmayın.");
+        } else {
+            errorResponse.setMessage(String.format("'%s' parametresi '%s' tipinde olmalı, ancak '%s' değeri gönderildi.", 
+                parameterName, requiredType, actualValue));
+        }
 
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }

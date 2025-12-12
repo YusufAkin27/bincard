@@ -37,6 +37,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -69,13 +71,17 @@ public class AdminUserController {
      * Tüm kullanıcıları sayfalama ile listele
      */
     @GetMapping
-    @JsonView(Views.Admin.class)
+    // @JsonView(Views.Admin.class) // Geçici olarak kaldırıldı - test için
     public PageDTO<CacheUserDTO> getAllUsers(
             @AuthenticationPrincipal UserDetails userDetails,
             Pageable pageable,
             HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, AdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
-        return adminUserService.getAllUsers(pageable, userDetails.getUsername(), httpServletRequest);
+        PageDTO<CacheUserDTO> result = adminUserService.getAllUsers(pageable, userDetails.getUsername(), httpServletRequest);
+        // Debug log
+        System.out.println("AdminUserController.getAllUsers - Result: " + 
+                (result != null ? "PageDTO with " + (result.getContent() != null ? result.getContent().size() : 0) + " items" : "NULL"));
+        return result;
     }
 
     /**
@@ -85,7 +91,7 @@ public class AdminUserController {
     @JsonView(Views.Admin.class)
     public PageDTO<CacheUserDTO> searchUsers(
             @AuthenticationPrincipal UserDetails userDetails,
-            @RequestParam String query,
+            @RequestParam(required = false) String query,
             Pageable pageable,
             HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, AdminNotFoundException {
 
@@ -105,7 +111,23 @@ public class AdminUserController {
             HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, AdminOrSuperAdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
-        List<Long> userIds = (List<Long>) request.get("userIds");
+        // Integer'ları Long'a dönüştür (JSON'dan gelen sayılar Integer olabilir)
+        List<Long> userIds = new ArrayList<>();
+        Object userIdsObj = request.get("userIds");
+        if (userIdsObj instanceof List) {
+            for (Object id : (List<?>) userIdsObj) {
+                if (id instanceof Integer) {
+                    userIds.add(((Integer) id).longValue());
+                } else if (id instanceof Long) {
+                    userIds.add((Long) id);
+                } else if (id instanceof Number) {
+                    userIds.add(((Number) id).longValue());
+                } else {
+                    userIds.add(Long.parseLong(id.toString()));
+                }
+            }
+        }
+        
         UserStatus newStatus = UserStatus.valueOf((String) request.get("status"));
 
         return adminUserService.bulkUpdateUserStatus(userIds, newStatus, userDetails.getUsername(), httpServletRequest);
@@ -133,7 +155,7 @@ public class AdminUserController {
     @GetMapping("/{userId}")
     public CacheUserDTO getUserDetails(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException, AdminOrSuperAdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
@@ -146,7 +168,7 @@ public class AdminUserController {
     @GetMapping("/{userId}/device-info")
     public Map<String, Object> getUserDeviceInfo(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException, AdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
@@ -162,7 +184,7 @@ public class AdminUserController {
     @PostMapping("/{userId}/roles")
     public ResponseMessage assignRolesToUser(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestBody Set<Role> roles,
             HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, AdminOrSuperAdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
@@ -177,7 +199,7 @@ public class AdminUserController {
     @DeleteMapping("/{userId}/roles")
     public ResponseMessage removeRolesFromUser(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestBody Set<Role> roles,
             HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, AdminOrSuperAdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
@@ -196,8 +218,31 @@ public class AdminUserController {
             HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException, AdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
-        List<Long> userIds = (List<Long>) request.get("userIds");
-        Set<Role> roles = Set.of(Role.valueOf((String) request.get("role")));
+        // Integer'ları Long'a dönüştür (JSON'dan gelen sayılar Integer olabilir)
+        List<Long> userIds = new ArrayList<>();
+        Object userIdsObj = request.get("userIds");
+        if (userIdsObj instanceof List) {
+            for (Object id : (List<?>) userIdsObj) {
+                if (id instanceof Integer) {
+                    userIds.add(((Integer) id).longValue());
+                } else if (id instanceof Long) {
+                    userIds.add((Long) id);
+                } else if (id instanceof Number) {
+                    userIds.add(((Number) id).longValue());
+                } else {
+                    userIds.add(Long.parseLong(id.toString()));
+                }
+            }
+        }
+        
+        // Set.of immutable döndürür, HashSet kullan
+        Set<Role> roles = new HashSet<>();
+        Object roleObj = request.get("role");
+        if (roleObj instanceof String) {
+            roles.add(Role.valueOf((String) roleObj));
+        } else if (roleObj instanceof List) {
+            ((List<?>) roleObj).forEach(r -> roles.add(Role.valueOf(r.toString())));
+        }
 
         return adminUserService.bulkAssignRoles(userIds, roles, userDetails.getUsername(), httpServletRequest);
 
@@ -211,11 +256,16 @@ public class AdminUserController {
     @PostMapping("/{userId}/reset-password")
     public ResponseMessage resetUserPassword(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
-            @RequestParam String newPassword,
+            @PathVariable("userId") Long userId,
+            @RequestBody Map<String, String> request,
             HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException, AdminNotFoundException {
 
         isAdminOrSuperAdmin(userDetails);
+
+        String newPassword = request.get("newPassword");
+        if (newPassword == null || newPassword.isBlank()) {
+            throw new IllegalArgumentException("newPassword alanı boş olamaz");
+        }
 
         return adminUserService.resetUserPassword(userId, newPassword, userDetails.getUsername(), httpServletRequest);
     }
@@ -227,7 +277,7 @@ public class AdminUserController {
     @PutMapping("/{userId}/email-verification")
     public ResponseMessage updateEmailVerificationStatus(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestBody Map<String, Boolean> request,
             HttpServletRequest httpServletRequest) throws UnauthorizedAccessException, UserNotFoundException, AdminOrSuperAdminNotFoundException {
         isAdminOrSuperAdmin(userDetails);
@@ -261,7 +311,7 @@ public class AdminUserController {
     @GetMapping("/{userId}/active-sessions")
     public List<Map<String, Object>> getUserActiveSessions(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             HttpServletRequest httpServletRequest) throws UnauthorizedAccessException {
         isAdminOrSuperAdmin(userDetails);
 
@@ -274,8 +324,8 @@ public class AdminUserController {
     @DeleteMapping("/{userId}/sessions/{sessionId}")
     public ResponseMessage terminateUserSession(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
-            @PathVariable String sessionId,
+            @PathVariable("userId") Long userId,
+            @PathVariable("sessionId") String sessionId,
             HttpServletRequest httpServletRequest) throws UnauthorizedAccessException {
         isAdminOrSuperAdmin(userDetails);
 
@@ -304,7 +354,7 @@ public class AdminUserController {
     @PostMapping("/admin/{userId}/suspend")
     @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'SUPERADMIN')")
     public ResponseMessage suspendUser(
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestBody SuspendUserRequest request,
             @AuthenticationPrincipal UserDetails adminDetails
     ) throws UserNotFoundException, UnauthorizedAreaException {
@@ -315,7 +365,7 @@ public class AdminUserController {
     @DeleteMapping("/admin/{userId}/delete")
     @PreAuthorize("hasAuthority('SUPERADMIN')")
     public ResponseMessage permanentlyDeleteUser(
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestBody PermanentDeleteRequest request,
             @AuthenticationPrincipal UserDetails adminDetails
     ) throws UserNotFoundException, UnauthorizedAreaException {
@@ -326,7 +376,7 @@ public class AdminUserController {
     @PostMapping("/admin/{userId}/unsuspend")
     @PreAuthorize("hasAnyAuthority('ADMIN_ALL', 'USER_ADMIN', 'SUPERADMIN')")
     public ResponseMessage unsuspendUser(
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestBody UnsuspendUserRequest request,
             @AuthenticationPrincipal UserDetails adminDetails
     ) throws UserNotFoundException, UnauthorizedAreaException {
@@ -339,7 +389,7 @@ public class AdminUserController {
     @PostMapping("/{userId}/device-ban")
     public ResponseMessage banUserDevice(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestBody Map<String, Object> request) throws UnauthorizedAccessException {
         isAdminOrSuperAdmin(userDetails);
 
@@ -375,7 +425,7 @@ public class AdminUserController {
     @GetMapping("/{userId}/audit-logs")
     public Page<Map<String, Object>> getUserAuditLogs(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             @RequestParam(required = false) String action,
@@ -405,7 +455,7 @@ public class AdminUserController {
     @GetMapping("/{userId}/login-history")
     public Page<LoginHistory> getUserLoginHistory(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             Pageable pageable) throws UnauthorizedAccessException {
@@ -420,7 +470,7 @@ public class AdminUserController {
     @GetMapping("/{userId}/search-history")
     public Page<SearchHistoryDTO> getUserSearchHistory(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestParam(required = false) String startDate,
             @RequestParam(required = false) String endDate,
             Pageable pageable) throws UnauthorizedAccessException {
@@ -437,7 +487,7 @@ public class AdminUserController {
     @PostMapping("/{userId}/send-notification")
     public ResponseMessage sendNotificationToUser(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestBody Map<String, Object> notificationData) throws UnauthorizedAccessException, UserNotFoundException {
         isAdminOrSuperAdmin(userDetails);
 
@@ -471,7 +521,7 @@ public class AdminUserController {
      * Kullanıcı bilgilerini PDF olarak e-posta ile gönderme
      */
     @GetMapping("/{userId}/export-pdf")
-    public void exportUserPdf(@PathVariable Long userId, HttpServletResponse response) {
+    public void exportUserPdf(@PathVariable("userId") Long userId, HttpServletResponse response) {
         try {
             byte[] pdfBytes = adminUserService.generateUserDataPdf(userId);
 
@@ -491,7 +541,7 @@ public class AdminUserController {
 
     // Eğer mail ile PDF göndermek istersen ayrı endpoint
     @PostMapping("/{userId}/send-pdf-email")
-    public ResponseMessage sendUserPdfByEmail(@PathVariable Long userId, @RequestParam String email) {
+    public ResponseMessage sendUserPdfByEmail(@PathVariable("userId") Long userId, @RequestParam String email) {
         try {
             adminUserService.sendUserDataPdfByEmail(userId, email);
             return new ResponseMessage("PDF mail olarak gönderildi.", true);
@@ -524,7 +574,7 @@ public class AdminUserController {
     @GetMapping("/{userId}/behavior-analysis")
     public Map<String, Object> getUserBehaviorAnalysis(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable Long userId,
+            @PathVariable("userId") Long userId,
             @RequestParam(required = false, defaultValue = "30") int days) throws UnauthorizedAccessException {
         isAdminOrSuperAdmin(userDetails);
 

@@ -92,12 +92,27 @@ public class AdminUserManager implements AdminUserService {
 
     @Override
     public PageDTO<CacheUserDTO> getAllUsers(Pageable pageable, String username, HttpServletRequest httpServletRequest) throws AdminNotFoundException {
-        // Silinmemiş kullanıcıları getir (isDeleted = false)
-        Page<User> userPage = userRepository.findAll((root, query, cb) -> 
-            cb.equal(root.get("isDeleted"), false), pageable);
+        // Önce tüm kullanıcıları sayalım (debug için)
+        long totalCount = userRepository.count();
+        log.info("AdminUserManager.getAllUsers - Total users in DB: {}", totalCount);
+        
+        // Silinmemiş kullanıcıları getir (isDeleted = false) - @Query ile güvenli sorgu
+        Page<User> userPage = userRepository.findAllByIsDeletedFalse(pageable);
+
+        log.info("AdminUserManager.getAllUsers - Non-deleted users found: {}, Page: {}, Size: {}, Total pages: {}", 
+                userPage.getTotalElements(), userPage.getNumber(), userPage.getSize(), userPage.getTotalPages());
+
+        // Eğer hiç kullanıcı yoksa, tüm kullanıcıları getirmeyi dene (debug için)
+        if (userPage.getTotalElements() == 0 && totalCount > 0) {
+            log.warn("AdminUserManager.getAllUsers - No non-deleted users found, but total count is {}. Fetching all users for debug.", totalCount);
+            Page<User> allUsersPage = userRepository.findAll(pageable);
+            log.info("AdminUserManager.getAllUsers - All users (including deleted): {}, First user deleted status: {}", 
+                    allUsersPage.getTotalElements(), 
+                    allUsersPage.getContent().isEmpty() ? "N/A" : allUsersPage.getContent().get(0).isDeleted());
+        }
 
         // Admin loglama
-        SecurityUser currentAdmin = securityUserRepository.findByUserNumber(username).orElseThrow(AdminNotFoundException::new); // Mevcut admin bilgisi
+        SecurityUser currentAdmin = securityUserRepository.findByUserNumber(username).orElseThrow(AdminNotFoundException::new);
         updateDeviceInfoAndCreateAuditLog(
                 currentAdmin,
                 httpServletRequest,
@@ -108,7 +123,52 @@ public class AdminUserManager implements AdminUserService {
                 "Toplam kullanıcı sayısı: " + userPage.getTotalElements()
         );
 
-        return new PageDTO<>(userPage.map(userConverter::toCacheUserDTO));
+        // Page'i DTO'ya dönüştür
+        log.debug("AdminUserManager.getAllUsers - Converting {} users to DTO...", userPage.getContent().size());
+        Page<CacheUserDTO> dtoPage = userPage.map(user -> {
+            try {
+                CacheUserDTO dto = userConverter.toCacheUserDTO(user);
+                log.debug("AdminUserManager.getAllUsers - Converted user ID: {} to DTO. DTO is null: {}", 
+                        user.getId(), dto == null);
+                return dto;
+            } catch (Exception e) {
+                log.error("AdminUserManager.getAllUsers - Error converting user {} to DTO: {}", 
+                        user.getId(), e.getMessage(), e);
+                return null;
+            }
+        });
+        
+        // Null olanları filtrele (eğer varsa)
+        List<CacheUserDTO> validDtos = dtoPage.getContent().stream()
+                .filter(dto -> dto != null)
+                .collect(Collectors.toList());
+        
+        log.info("AdminUserManager.getAllUsers - Valid DTOs: {}, Total in page: {}", 
+                validDtos.size(), dtoPage.getContent().size());
+        
+        // Yeni bir Page oluştur (null olanları çıkar)
+        Page<CacheUserDTO> filteredPage = new org.springframework.data.domain.PageImpl<>(
+                validDtos,
+                dtoPage.getPageable(),
+                dtoPage.getTotalElements()
+        );
+        
+        PageDTO<CacheUserDTO> result = new PageDTO<>(filteredPage);
+        log.info("AdminUserManager.getAllUsers - PageDTO created. Content size: {}, Total elements: {}, Page number: {}, Page size: {}", 
+                result.getContent() != null ? result.getContent().size() : 0, 
+                result.getTotalElements(),
+                result.getPageNumber(),
+                result.getPageSize());
+        
+        // İlk kullanıcının ID'sini logla (eğer varsa)
+        if (result.getContent() != null && !result.getContent().isEmpty()) {
+            log.info("AdminUserManager.getAllUsers - First user ID in result: {}", 
+                    result.getContent().get(0).getId());
+        } else {
+            log.warn("AdminUserManager.getAllUsers - Result content is empty or null!");
+        }
+        
+        return result;
     }
 
 
@@ -207,53 +267,65 @@ public class AdminUserManager implements AdminUserService {
 
     @Override
     public PageDTO<CacheUserDTO> searchUsers(String query, Pageable pageable, String username, HttpServletRequest httpServletRequest) throws AdminNotFoundException {
-        Specification<User> spec = (root, cq, cb) -> cb.conjunction();
+        try {
+            // Önce isDeleted = false filtresini ekle
+            Specification<User> spec = (root, cq, cb) -> cb.equal(root.get("isDeleted"), false);
 
-        if (query != null && !query.isBlank()) {
-            String likeQuery = "%" + query.toLowerCase() + "%";
+            if (query != null && !query.isBlank()) {
+                String likeQuery = "%" + query.toLowerCase() + "%";
 
-            spec = spec.and((root, cq, cb) -> {
-                var rolesJoin = root.joinSet("roles", JoinType.LEFT);
+                spec = spec.and((root, cq, cb) -> {
+                    var rolesJoin = root.joinSet("roles", JoinType.LEFT);
 
-                return cb.or(
-                        cb.like(cb.lower(root.get("name")), likeQuery),
-                        cb.like(cb.lower(root.get("surname")), likeQuery),
-                        cb.like(cb.lower(root.get("email")), likeQuery),
-                        cb.like(cb.lower(root.get("phone")), likeQuery),
-                        cb.like(cb.lower(root.get("userNumber")), likeQuery),
-                        cb.like(cb.lower(root.get("status").as(String.class)), likeQuery),
-                        cb.like(cb.lower(rolesJoin.get("name").as(String.class)), likeQuery),
-                        cb.like(cb.lower(root.get("emailVerified").as(String.class)), likeQuery),
-                        cb.like(cb.lower(root.get("phoneVerified").as(String.class)), likeQuery)
-                );
-            });
+                    // Embedded alanlar için join yapmaya gerek yok, doğrudan eriş
+                    return cb.or(
+                            // ProfileInfo embedded alanları (null-safe)
+                            cb.like(cb.lower(cb.coalesce(root.get("profileInfo").get("name"), cb.literal(""))), likeQuery),
+                            cb.like(cb.lower(cb.coalesce(root.get("profileInfo").get("surname"), cb.literal(""))), likeQuery),
+                            cb.like(cb.lower(cb.coalesce(root.get("profileInfo").get("email"), cb.literal(""))), likeQuery),
+                            // SecurityUser alanları
+                            cb.like(cb.lower(root.get("userNumber")), likeQuery),
+                            cb.like(cb.lower(root.get("status").as(String.class)), likeQuery),
+                            // Role enum'u string olarak cast et (authority alanına erişilemez)
+                            cb.like(cb.lower(rolesJoin.as(String.class)), likeQuery),
+                            // IdentityInfo alanları (null-safe) - OneToOne ilişki
+                            cb.like(cb.lower(cb.coalesce(root.join("identityInfo", JoinType.LEFT).get("nationalId"), cb.literal(""))), likeQuery)
+                    );
+                });
+            }
+
+            Page<User> userPage = userRepository.findAll(spec, pageable);
+            
+            log.info("AdminUserManager.searchUsers - Query: '{}', Found: {} users, Page: {}, Size: {}", 
+                    query, userPage.getTotalElements(), userPage.getNumber(), userPage.getSize());
+
+            SecurityUser currentAdmin = securityUserRepository
+                    .findByUserNumber(username)
+                    .orElseThrow(AdminNotFoundException::new);
+
+            String metadata = String.format(
+                    "Arama sorgusu: %s, Toplam sonuç: %d, Sayfa numarası: %d, Sayfa boyutu: %d",
+                    query != null ? query : "",
+                    userPage.getTotalElements(),
+                    pageable.getPageNumber(),
+                    pageable.getPageSize()
+            );
+
+            updateDeviceInfoAndCreateAuditLog(
+                    currentAdmin,
+                    httpServletRequest,
+                    geoIpService,
+                    ActionType.ADMIN_SEARCH_USERS,
+                    "Kullanıcı arama işlemi",
+                    null,
+                    metadata
+            );
+
+            return new PageDTO<>(userPage.map(userConverter::toCacheUserDTO));
+        } catch (Exception e) {
+            log.error("AdminUserManager.searchUsers - Error searching users with query: '{}'", query, e);
+            throw new RuntimeException("Kullanıcı arama işlemi sırasında hata oluştu: " + e.getMessage(), e);
         }
-
-        Page<User> userPage = userRepository.findAll(spec, pageable);
-
-        SecurityUser currentAdmin = securityUserRepository
-                .findByUserNumber(username)
-                .orElseThrow(AdminNotFoundException::new);
-
-        String metadata = String.format(
-                "Arama sorgusu: %s, Toplam sonuç: %d, Sayfa numarası: %d, Sayfa boyutu: %d",
-                query != null ? query : "",
-                userPage.getTotalElements(),
-                pageable.getPageNumber(),
-                pageable.getPageSize()
-        );
-
-        updateDeviceInfoAndCreateAuditLog(
-                currentAdmin,
-                httpServletRequest,
-                geoIpService,
-                ActionType.ADMIN_SEARCH_USERS,
-                "Kullanıcı arama işlemi",
-                null,
-                metadata
-        );
-
-        return new PageDTO<>(userPage.map(userConverter::toCacheUserDTO));
     }
 
 
@@ -327,33 +399,37 @@ public class AdminUserManager implements AdminUserService {
         Map<String, Object> result = new HashMap<>();
 
         // Aktif cihazlar
-        List<Map<String, ? extends Comparable<? extends Comparable<?>>>> activeDevices = deviceHistories.stream()
+        List<Map<String, Object>> activeDevices = deviceHistories.stream()
                 .filter(DeviceHistory::getIsActive)
                 .filter(device -> !device.getIsDeleted())
-                .map(device -> Map.of(
-                        "deviceId", device.getDeviceId() != null ? device.getDeviceId() : "N/A",
-                        "deviceName", device.getDeviceName() != null ? device.getDeviceName() : "Bilinmeyen Cihaz",
-                        "deviceType", device.getDeviceType() != null ? device.getDeviceType() : "N/A",
-                        "operatingSystem", device.getOperatingSystem() != null ? device.getOperatingSystem() : "N/A",
-                        "ipAddress", device.getIpAddress() != null ? device.getIpAddress() : "N/A",
-                        "city", device.getCity() != null ? device.getCity() : "Bilinmeyen",
-                        "lastActiveAt", device.getLastActiveAt(),
-                        "loginCount", device.getLoginCount(),
-                        "isTrusted", device.getIsTrusted(),
-                        "isBanned", device.getIsBanned()
-                ))
+                .map(device -> {
+                    Map<String, Object> deviceMap = new HashMap<>();
+                    deviceMap.put("deviceId", device.getDeviceId() != null ? device.getDeviceId() : "N/A");
+                    deviceMap.put("deviceName", device.getDeviceName() != null ? device.getDeviceName() : "Bilinmeyen Cihaz");
+                    deviceMap.put("deviceType", device.getDeviceType() != null ? device.getDeviceType() : "N/A");
+                    deviceMap.put("operatingSystem", device.getOperatingSystem() != null ? device.getOperatingSystem() : "N/A");
+                    deviceMap.put("ipAddress", device.getIpAddress() != null ? device.getIpAddress() : "N/A");
+                    deviceMap.put("city", device.getCity() != null ? device.getCity() : "Bilinmeyen");
+                    deviceMap.put("lastActiveAt", device.getLastActiveAt());
+                    deviceMap.put("loginCount", device.getLoginCount());
+                    deviceMap.put("isTrusted", device.getIsTrusted());
+                    deviceMap.put("isBanned", device.getIsBanned());
+                    return deviceMap;
+                })
                 .collect(Collectors.toList());
 
         // Engelli cihazlar
-        List<Map<String, ? extends Comparable<? extends Comparable<?>>>> bannedDevices = deviceHistories.stream()
+        List<Map<String, Object>> bannedDevices = deviceHistories.stream()
                 .filter(DeviceHistory::getIsBanned)
-                .map(device -> Map.of(
-                        "deviceId", device.getDeviceId() != null ? device.getDeviceId() : "N/A",
-                        "deviceName", device.getDeviceName() != null ? device.getDeviceName() : "Bilinmeyen Cihaz",
-                        "banReason", device.getBanReason() != null ? device.getBanReason() : "Sebep belirtilmemiş",
-                        "bannedAt", device.getBannedAt(),
-                        "bannedBy", device.getBannedBy() != null ? device.getBannedBy() : "Sistem"
-                ))
+                .map(device -> {
+                    Map<String, Object> deviceMap = new HashMap<>();
+                    deviceMap.put("deviceId", device.getDeviceId() != null ? device.getDeviceId() : "N/A");
+                    deviceMap.put("deviceName", device.getDeviceName() != null ? device.getDeviceName() : "Bilinmeyen Cihaz");
+                    deviceMap.put("banReason", device.getBanReason() != null ? device.getBanReason() : "Sebep belirtilmemiş");
+                    deviceMap.put("bannedAt", device.getBannedAt());
+                    deviceMap.put("bannedBy", device.getBannedBy() != null ? device.getBannedBy() : "Sistem");
+                    return deviceMap;
+                })
                 .collect(Collectors.toList());
 
         // Son 10 IP adresi
@@ -436,7 +512,6 @@ public class AdminUserManager implements AdminUserService {
 
         SecurityUser securityUser = securityUserRepository.findByUserNumber(username)
                 .orElseThrow(AdminOrSuperAdminNotFoundException::new);
-        user.setRoles(roles);
 
         updateDeviceInfoAndCreateAuditLog(
                 securityUser,
@@ -445,7 +520,7 @@ public class AdminUserManager implements AdminUserService {
                 ActionType.ADMIN_REMOVE_ROLES,
                 "Kullanıcıdan roller kaldırıldı",
                 null,
-                "Kullanıcı ID: " + userId + ", Roller: " + roles
+                "Kullanıcı ID: " + userId + ", Kaldırılan Roller: " + roles
         );
 
         return new ResponseMessage("Removed roles successfully from user " + userId, true);
